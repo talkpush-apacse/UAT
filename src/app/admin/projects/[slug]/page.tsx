@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import LiveProgressTable, { type TesterProgress } from "@/components/admin/live-progress-table"
+import LiveProgressTable from "@/components/admin/live-progress-table"
+import type { TesterProgress } from "@/components/admin/live-progress-table"
 import CopyLinkButton from "@/components/admin/copy-link-button"
 
 export default async function ProjectDetailPage({
