@@ -57,6 +57,37 @@ const STATUS_STYLES: Record<string, { active: string; inactive: string }> = {
   },
 }
 
+/** Check if a URL points to an image file */
+function isImageUrl(url: string): boolean {
+  // Check common image extensions (ignoring query params)
+  if (/\.(png|jpe?g|gif|webp|svg|bmp)(\?.*)?$/i.test(url)) return true
+  // Check common image hosting patterns
+  if (/\/(image|img|photo|screenshot)\//i.test(url)) return true
+  // Supabase storage with image content types
+  if (/supabase.*\/storage\/.*\.(png|jpe?g|gif|webp)/i.test(url)) return true
+  return false
+}
+
+/** Get card styling based on completion status */
+function getCardStyles(status: string | null): string {
+  if (!status) {
+    // Unanswered — subtle blue left border to signal "needs attention"
+    return "border-l-4 border-l-blue-200 bg-white"
+  }
+  switch (status) {
+    case "Pass":
+      return "border-l-4 border-l-green-500 bg-green-50/50"
+    case "Fail":
+      return "border-l-4 border-l-red-500 bg-red-50/50"
+    case "N/A":
+      return "border-l-4 border-l-gray-400 bg-gray-50/50"
+    case "Blocked":
+      return "border-l-4 border-l-amber-500 bg-amber-50/50"
+    default:
+      return "border-l-4 border-l-blue-200 bg-white"
+  }
+}
+
 export default function ChecklistItem({
   item,
   testerId,
@@ -158,63 +189,103 @@ export default function ChecklistItem({
     }
   }, [])
 
+  const hasImageSample = item.view_sample && isImageUrl(item.view_sample)
+  const hasNonImageSample = item.view_sample && !isImageUrl(item.view_sample)
+
+  // Comment prompt text based on status
+  const commentPrompt = status === "Fail"
+    ? "Please describe the issue you encountered"
+    : status === "Blocked"
+      ? "Please describe what is blocking this step"
+      : "Add a comment..."
+
   return (
-    <Card className={status ? "border-l-4 " + (
-      status === "Pass" ? "border-l-green-500" :
-      status === "Fail" ? "border-l-red-500" :
-      status === "N/A" ? "border-l-gray-400" :
-      "border-l-amber-500"
-    ) : ""}>
+    <Card className={getCardStyles(status)}>
       <CardContent className="py-4">
-        {/* Step header */}
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium text-muted-foreground">
-                Step {item.step_number}
-              </span>
-              {item.crm_module && (
-                <Badge variant="outline" className="text-xs">{item.crm_module}</Badge>
-              )}
-              {saveStatus === "saving" && (
-                <span className="text-xs text-muted-foreground">Saving...</span>
-              )}
-              {saveStatus === "saved" && (
-                <span className="text-xs text-green-600">Saved</span>
-              )}
-              {saveStatus === "error" && (
-                <span className="text-xs text-red-600">Error saving</span>
-              )}
-            </div>
-            <p className="text-sm">{item.action}</p>
-            {talkpushLoginLink && (
-              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-xs font-medium text-blue-800 mb-1">Talkpush Login Link:</p>
-                <a
-                  href={talkpushLoginLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline break-all"
-                >
-                  {talkpushLoginLink}
-                </a>
-              </div>
+        {/* === HEADER LINE === */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-muted-foreground">
+              {item.view_sample ? "\uD83D\uDCF7 " : ""}Step {item.step_number}
+            </span>
+            {item.crm_module && (
+              <Badge variant="outline" className="text-xs">{item.crm_module}</Badge>
             )}
-            {item.view_sample && (
-              <a
-                href={item.view_sample}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:underline mt-1 inline-block"
-              >
-                View Sample
-              </a>
+          </div>
+          <div className="flex items-center gap-1">
+            {saveStatus === "saving" && (
+              <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>
+            )}
+            {saveStatus === "saved" && (
+              <span className="text-xs text-green-600">Saved</span>
+            )}
+            {saveStatus === "error" && (
+              <span className="text-xs text-red-600">Error — tap to retry</span>
             )}
           </div>
         </div>
 
-        {/* Status buttons */}
-        <div className="flex gap-2 mb-3">
+        {/* === INSTRUCTION ZONE === */}
+        <p className="text-base leading-relaxed mb-4">{item.action}</p>
+
+        {/* === VISUAL REFERENCE (image preview) === */}
+        {hasImageSample && (
+          <div className="mb-4">
+            <p className="text-xs font-medium text-muted-foreground mb-2">
+              Reference — what it should look like:
+            </p>
+            <a
+              href={item.view_sample!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={item.view_sample!}
+                alt={`Reference for Step ${item.step_number}`}
+                className="max-h-[200px] rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer object-contain"
+                loading="lazy"
+              />
+              <span className="text-xs text-blue-600 mt-1 inline-block hover:underline">
+                Click to view full size
+              </span>
+            </a>
+          </div>
+        )}
+
+        {/* === NON-IMAGE REFERENCE LINK === */}
+        {hasNonImageSample && (
+          <div className="mb-4">
+            <a
+              href={item.view_sample!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 hover:bg-blue-100 transition-colors"
+            >
+              <span>View Reference</span>
+              <span className="text-xs">↗</span>
+            </a>
+          </div>
+        )}
+
+        {/* === TALKPUSH LOGIN LINK === */}
+        {talkpushLoginLink && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-xs font-medium text-blue-800 mb-1">Talkpush Login Link:</p>
+            <a
+              href={talkpushLoginLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:underline break-all"
+            >
+              {talkpushLoginLink}
+            </a>
+          </div>
+        )}
+
+        {/* === STATUS BUTTONS === */}
+        <div className="flex gap-2 mb-4">
           {STATUS_OPTIONS.map((opt) => {
             const isActive = status === opt
             const styles = STATUS_STYLES[opt]
@@ -235,8 +306,8 @@ export default function ChecklistItem({
           })}
         </div>
 
-        {/* Comment toggle + textarea */}
-        {!showComment && (
+        {/* === COMMENT SECTION === */}
+        {!showComment && !status && (
           <button
             type="button"
             onClick={() => setShowComment(true)}
@@ -245,17 +316,34 @@ export default function ChecklistItem({
             + Add comment
           </button>
         )}
-        {showComment && (
-          <Textarea
-            placeholder="Add a comment..."
-            value={comment}
-            onChange={(e) => handleCommentChange(e.target.value)}
-            rows={2}
-            className="text-sm mt-1"
-          />
+        {(showComment || status === "Fail" || status === "Blocked") && (
+          <div>
+            {(status === "Fail" || status === "Blocked") && (
+              <p className={`text-xs font-medium mb-1 ${status === "Fail" ? "text-red-600" : "text-amber-600"}`}>
+                {commentPrompt}
+              </p>
+            )}
+            <Textarea
+              placeholder={commentPrompt}
+              value={comment}
+              onChange={(e) => handleCommentChange(e.target.value)}
+              rows={2}
+              className="text-sm"
+            />
+          </div>
+        )}
+        {/* Show "Add comment" for completed non-Fail/Blocked if comment not yet shown */}
+        {!showComment && status && status !== "Fail" && status !== "Blocked" && (
+          <button
+            type="button"
+            onClick={() => setShowComment(true)}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            + Add comment
+          </button>
         )}
 
-        {/* File upload */}
+        {/* === FILE UPLOAD === */}
         {responseId && (
           <div className="mt-3">
             <FileUpload

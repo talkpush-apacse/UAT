@@ -128,11 +128,31 @@ export default function ChecklistView({
                 {path === "General" ? "General" : `${path} Path`}
               </h2>
 
-              {Object.entries(actors).map(([actor, items]) => (
+              {Object.entries(actors).map(([actor, items]) => {
+                const sectionCompleted = items.filter(
+                  (i) => responses[i.id]?.status !== null && responses[i.id]?.status !== undefined
+                ).length
+                const sectionTotal = items.length
+                const sectionPct = sectionTotal > 0 ? Math.round((sectionCompleted / sectionTotal) * 100) : 0
+
+                return (
                 <div key={`${path}-${actor}`} className="mb-6">
-                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                    {actor}
-                  </h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      {actor}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-medium ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "text-green-600" : "text-muted-foreground"}`}>
+                        {sectionCompleted} of {sectionTotal}
+                      </span>
+                      <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "bg-green-500" : "bg-blue-400"}`}
+                          style={{ width: `${sectionPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-3">
                     {items.map((item) => (
                       <ChecklistItem
@@ -153,7 +173,8 @@ export default function ChecklistView({
                     ))}
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )
         })}
