@@ -1,11 +1,10 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- gen_random_uuid() is built into PostgreSQL 13+ (used by Supabase)
 
 -- ============================================
 -- PROJECTS TABLE
 -- ============================================
 CREATE TABLE projects (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug TEXT UNIQUE NOT NULL,
   company_name TEXT NOT NULL,
   test_scenario TEXT,
@@ -18,7 +17,7 @@ CREATE INDEX idx_projects_slug ON projects(slug);
 -- CHECKLIST ITEMS TABLE
 -- ============================================
 CREATE TABLE checklist_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   step_number INTEGER NOT NULL,
   path TEXT CHECK (path IN ('Happy', 'Non-Happy') OR path IS NULL),
@@ -37,7 +36,7 @@ CREATE INDEX idx_checklist_items_sort ON checklist_items(project_id, sort_order)
 -- TESTERS TABLE
 -- ============================================
 CREATE TABLE testers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -55,7 +54,7 @@ CREATE INDEX idx_testers_mobile ON testers(project_id, mobile);
 -- RESPONSES TABLE
 -- ============================================
 CREATE TABLE responses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tester_id UUID NOT NULL REFERENCES testers(id) ON DELETE CASCADE,
   checklist_item_id UUID NOT NULL REFERENCES checklist_items(id) ON DELETE CASCADE,
   status TEXT CHECK (status IN ('Pass', 'Fail', 'N/A', 'Blocked')),
@@ -71,7 +70,7 @@ CREATE INDEX idx_responses_checklist_item ON responses(checklist_item_id);
 -- ATTACHMENTS TABLE
 -- ============================================
 CREATE TABLE attachments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   response_id UUID NOT NULL REFERENCES responses(id) ON DELETE CASCADE,
   file_name TEXT NOT NULL,
   file_url TEXT NOT NULL,
@@ -86,7 +85,7 @@ CREATE INDEX idx_attachments_response ON attachments(response_id);
 -- SIGNOFFS TABLE
 -- ============================================
 CREATE TABLE signoffs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   signoff_name TEXT NOT NULL,
   signoff_date DATE NOT NULL,
