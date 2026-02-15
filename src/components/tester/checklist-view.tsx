@@ -45,6 +45,32 @@ interface Tester {
   name: string
 }
 
+/** Build sequential sections based on the order items appear in the file.
+ *  A new section starts whenever the path OR actor changes from the previous item. */
+interface Section {
+  path: string
+  actor: string
+  items: ChecklistItemData[]
+}
+
+function buildSections(items: ChecklistItemData[]): Section[] {
+  const sections: Section[] = []
+
+  items.forEach((item) => {
+    const path = item.path || "General"
+    const actor = item.actor
+    const last = sections[sections.length - 1]
+
+    if (!last || last.path !== path || last.actor !== actor) {
+      sections.push({ path, actor, items: [item] })
+    } else {
+      last.items.push(item)
+    }
+  })
+
+  return sections
+}
+
 export default function ChecklistView({
   project,
   tester,
@@ -73,19 +99,8 @@ export default function ChecklistView({
   const totalCount = checklistItems.length
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
-  // Group items by path, then by actor
-  const grouped = useMemo(() => {
-    const groups: Record<string, Record<string, ChecklistItemData[]>> = {}
-
-    checklistItems.forEach((item) => {
-      const pathKey = item.path || "General"
-      if (!groups[pathKey]) groups[pathKey] = {}
-      if (!groups[pathKey][item.actor]) groups[pathKey][item.actor] = []
-      groups[pathKey][item.actor].push(item)
-    })
-
-    return groups
-  }, [checklistItems])
+  // Build sections in the original file order
+  const sections = useMemo(() => buildSections(checklistItems), [checklistItems])
 
   // Find the first Talkpush actor step to show the login link
   const firstTalkpushItemId = useMemo(() => {
@@ -93,11 +108,12 @@ export default function ChecklistView({
     return talkpushItem?.id || null
   }, [checklistItems])
 
-  const pathOrder = ["Happy", "Non-Happy", "General"]
-
   const handleResponseUpdate = (itemId: string, response: ResponseData) => {
     setResponses((prev) => ({ ...prev, [itemId]: response }))
   }
+
+  // Track which path headings we've already rendered so we only show them once
+  let lastRenderedPath: string | null = null
 
   return (
     <div className="max-w-3xl mx-auto px-4 pb-12">
@@ -116,65 +132,66 @@ export default function ChecklistView({
         <Progress value={progressPct} className="h-2" />
       </div>
 
-      {/* Checklist Groups */}
-      <div className="mt-6 space-y-8">
-        {pathOrder.map((path) => {
-          const actors = grouped[path]
-          if (!actors) return null
+      {/* Checklist — rendered in original file order */}
+      <div className="mt-6 space-y-6">
+        {sections.map((section, sIdx) => {
+          const sectionCompleted = section.items.filter(
+            (i) => responses[i.id]?.status !== null && responses[i.id]?.status !== undefined
+          ).length
+          const sectionTotal = section.items.length
+          const sectionPct = sectionTotal > 0 ? Math.round((sectionCompleted / sectionTotal) * 100) : 0
+
+          // Show a path heading when the path changes
+          const showPathHeading = section.path !== lastRenderedPath
+          lastRenderedPath = section.path
 
           return (
-            <div key={path}>
-              <h2 className="text-lg font-semibold mb-4 text-primary">
-                {path === "General" ? "General" : `${path} Path`}
-              </h2>
+            <div key={`section-${sIdx}`}>
+              {/* Path heading — only when path changes */}
+              {showPathHeading && (
+                <h2 className="text-lg font-semibold mb-4 mt-8 first:mt-0 text-primary">
+                  {section.path === "General" ? "General" : `${section.path} Path`}
+                </h2>
+              )}
 
-              {Object.entries(actors).map(([actor, items]) => {
-                const sectionCompleted = items.filter(
-                  (i) => responses[i.id]?.status !== null && responses[i.id]?.status !== undefined
-                ).length
-                const sectionTotal = items.length
-                const sectionPct = sectionTotal > 0 ? Math.round((sectionCompleted / sectionTotal) * 100) : 0
-
-                return (
-                <div key={`${path}-${actor}`} className="mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      {actor}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-medium ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "text-green-600" : "text-muted-foreground"}`}>
-                        {sectionCompleted} of {sectionTotal}
-                      </span>
-                      <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "bg-green-500" : "bg-blue-400"}`}
-                          style={{ width: `${sectionPct}%` }}
-                        />
-                      </div>
+              {/* Actor section with progress */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    {section.actor}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "text-green-600" : "text-muted-foreground"}`}>
+                      {sectionCompleted} of {sectionTotal}
+                    </span>
+                    <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "bg-green-500" : "bg-blue-400"}`}
+                        style={{ width: `${sectionPct}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    {items.map((item) => (
-                      <ChecklistItem
-                        key={item.id}
-                        item={item}
-                        testerId={tester.id}
-                        response={responses[item.id] || null}
-                        attachments={initialAttachments.filter(
-                          (a) => responses[item.id] && a.response_id === responses[item.id].id
-                        )}
-                        onResponseUpdate={handleResponseUpdate}
-                        talkpushLoginLink={
-                          item.id === firstTalkpushItemId
-                            ? project.talkpush_login_link
-                            : null
-                        }
-                      />
-                    ))}
-                  </div>
                 </div>
-                )
-              })}
+                <div className="space-y-3">
+                  {section.items.map((item) => (
+                    <ChecklistItem
+                      key={item.id}
+                      item={item}
+                      testerId={tester.id}
+                      response={responses[item.id] || null}
+                      attachments={initialAttachments.filter(
+                        (a) => responses[item.id] && a.response_id === responses[item.id].id
+                      )}
+                      onResponseUpdate={handleResponseUpdate}
+                      talkpushLoginLink={
+                        item.id === firstTalkpushItemId
+                          ? project.talkpush_login_link
+                          : null
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           )
         })}
