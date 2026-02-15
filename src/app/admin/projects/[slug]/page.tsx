@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import LiveProgressTable from "@/components/admin/live-progress-table"
+import LiveProgressTable, { type TesterProgress } from "@/components/admin/live-progress-table"
 import CopyLinkButton from "@/components/admin/copy-link-button"
 
 export default async function ProjectDetailPage({
@@ -42,6 +42,38 @@ export default async function ProjectDetailPage({
     .order("signoff_date", { ascending: false })
 
   const itemCount = checklistItems?.length || 0
+
+  // Query testers and their responses server-side for initial render
+  const { data: testers } = await supabase
+    .from("testers")
+    .select("id, name, email, mobile")
+    .eq("project_id", project.id)
+
+  let initialTesters: TesterProgress[] = []
+  if (testers && testers.length > 0) {
+    const { data: responses } = await supabase
+      .from("responses")
+      .select("tester_id, status")
+      .in("tester_id", testers.map((t) => t.id))
+
+    initialTesters = testers.map((tester) => {
+      const testerResponses = (responses || []).filter(
+        (r) => r.tester_id === tester.id && r.status !== null
+      )
+      return {
+        id: tester.id,
+        name: tester.name,
+        email: tester.email,
+        mobile: tester.mobile,
+        total: testerResponses.length,
+        completed: testerResponses.length,
+        pass: testerResponses.filter((r) => r.status === "Pass").length,
+        fail: testerResponses.filter((r) => r.status === "Fail").length,
+        na: testerResponses.filter((r) => r.status === "N/A").length,
+        blocked: testerResponses.filter((r) => r.status === "Blocked").length,
+      }
+    })
+  }
 
   return (
     <div>
@@ -162,6 +194,7 @@ export default async function ProjectDetailPage({
       <LiveProgressTable
         slug={project.slug}
         totalItems={itemCount}
+        initialTesters={initialTesters}
       />
     </div>
   )
