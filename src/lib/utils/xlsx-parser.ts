@@ -16,7 +16,13 @@ interface ParseResult {
 }
 
 const VALID_ACTORS = ['Candidate', 'Talkpush', 'Recruiter']
-const VALID_PATHS = ['Happy', 'Non-Happy']
+
+function normalizePath(value: string): string | null {
+  const cleaned = value.trim().toLowerCase().replace(/[\s_-]+/g, '')
+  if (cleaned === 'happy') return 'Happy'
+  if (cleaned === 'nonhappy') return 'Non-Happy'
+  return null // unrecognized
+}
 
 function normalizeHeader(header: string): string {
   return header.trim().toLowerCase().replace(/[\s_-]+/g, '')
@@ -125,8 +131,9 @@ export async function parseChecklistFile(
     const pathValue = getCellValue(pathCol)
     let path: string | null = null
     if (pathValue) {
-      if (VALID_PATHS.includes(pathValue)) {
-        path = pathValue
+      const normalized = normalizePath(pathValue)
+      if (normalized) {
+        path = normalized
       } else {
         errors.push(
           `Row ${rowNumber}: Invalid path "${pathValue}". Must be "Happy" or "Non-Happy"`
