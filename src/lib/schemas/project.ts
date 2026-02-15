@@ -11,6 +11,7 @@ export const createProjectSchema = z.object({
       'Slug must be lowercase alphanumeric with hyphens (e.g. "acme-corp-q1")'
     ),
   testScenario: z.string().max(2000).optional().or(z.literal('')),
+  talkpushLoginLink: z.string().url('Must be a valid URL').max(500).optional().or(z.literal('')),
 })
 
 export const updateProjectSchema = z.object({
@@ -25,6 +26,7 @@ export const updateProjectSchema = z.object({
     )
     .optional(),
   testScenario: z.string().max(2000).optional().or(z.literal('')),
+  talkpushLoginLink: z.string().url('Must be a valid URL').max(500).optional().or(z.literal('')),
 })
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>

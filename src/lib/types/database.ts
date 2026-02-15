@@ -15,6 +15,7 @@ export type Database = {
           slug: string
           company_name: string
           test_scenario: string | null
+          talkpush_login_link: string | null
           created_at: string
         }
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           slug: string
           company_name: string
           test_scenario?: string | null
+          talkpush_login_link?: string | null
           created_at?: string
         }
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           slug?: string
           company_name?: string
           test_scenario?: string | null
+          talkpush_login_link?: string | null
           created_at?: string
         }
         Relationships: []

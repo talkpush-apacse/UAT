@@ -25,6 +25,7 @@ export async function createProject(
     companyName: formData.get('companyName'),
     slug: formData.get('slug'),
     testScenario: formData.get('testScenario'),
+    talkpushLoginLink: formData.get('talkpushLoginLink'),
   })
 
   if (!parsed.success) {
@@ -36,6 +37,7 @@ export async function createProject(
     company_name: parsed.data.companyName,
     slug: parsed.data.slug,
     test_scenario: parsed.data.testScenario || null,
+    talkpush_login_link: parsed.data.talkpushLoginLink || null,
   })
 
   if (error) {
@@ -61,6 +63,7 @@ export async function updateProject(
     companyName: formData.get('companyName'),
     slug: formData.get('slug'),
     testScenario: formData.get('testScenario'),
+    talkpushLoginLink: formData.get('talkpushLoginLink'),
   })
 
   if (!parsed.success) {
@@ -73,6 +76,8 @@ export async function updateProject(
   if (parsed.data.slug) updates.slug = parsed.data.slug
   if (parsed.data.testScenario !== undefined)
     updates.test_scenario = parsed.data.testScenario || null
+  if (parsed.data.talkpushLoginLink !== undefined)
+    updates.talkpush_login_link = parsed.data.talkpushLoginLink || null
 
   const { error } = await supabase
     .from('projects')

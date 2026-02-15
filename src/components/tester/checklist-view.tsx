@@ -37,6 +37,7 @@ interface Project {
   slug: string
   company_name: string
   test_scenario: string | null
+  talkpush_login_link: string | null
 }
 
 interface Tester {
@@ -84,6 +85,12 @@ export default function ChecklistView({
     })
 
     return groups
+  }, [checklistItems])
+
+  // Find the first Talkpush actor step to show the login link
+  const firstTalkpushItemId = useMemo(() => {
+    const talkpushItem = checklistItems.find((item) => item.actor === "Talkpush")
+    return talkpushItem?.id || null
   }, [checklistItems])
 
   const pathOrder = ["Happy", "Non-Happy", "General"]
@@ -137,6 +144,11 @@ export default function ChecklistView({
                           (a) => responses[item.id] && a.response_id === responses[item.id].id
                         )}
                         onResponseUpdate={handleResponseUpdate}
+                        talkpushLoginLink={
+                          item.id === firstTalkpushItemId
+                            ? project.talkpush_login_link
+                            : null
+                        }
                       />
                     ))}
                   </div>

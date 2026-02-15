@@ -17,7 +17,7 @@ export default async function ChecklistPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug, company_name, test_scenario")
+    .select("id, slug, company_name, test_scenario, talkpush_login_link")
     .eq("slug", params.slug)
     .single()
 

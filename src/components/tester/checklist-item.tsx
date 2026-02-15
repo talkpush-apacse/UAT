@@ -63,12 +63,14 @@ export default function ChecklistItem({
   response,
   attachments,
   onResponseUpdate,
+  talkpushLoginLink,
 }: {
   item: ChecklistItemData
   testerId: string
   response: ResponseData | null
   attachments: AttachmentData[]
   onResponseUpdate: (itemId: string, response: ResponseData) => void
+  talkpushLoginLink?: string | null
 }) {
   const [status, setStatus] = useState<string | null>(response?.status || null)
   const [comment, setComment] = useState(response?.comment || "")
@@ -185,6 +187,19 @@ export default function ChecklistItem({
               )}
             </div>
             <p className="text-sm">{item.action}</p>
+            {talkpushLoginLink && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-xs font-medium text-blue-800 mb-1">Talkpush Login Link:</p>
+                <a
+                  href={talkpushLoginLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline break-all"
+                >
+                  {talkpushLoginLink}
+                </a>
+              </div>
+            )}
             {item.view_sample && (
               <a
                 href={item.view_sample}

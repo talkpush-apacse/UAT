@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
@@ -42,16 +42,23 @@ export default function LiveProgressTable({
 }) {
   const [testers, setTesters] = useState<TesterProgress[]>(initialTesters || [])
   const [loading, setLoading] = useState(!initialTesters || initialTesters.length === 0)
+  const testersRef = useRef(testers)
+  testersRef.current = testers
 
   const fetchProgress = useCallback(async () => {
     try {
       const res = await fetch(`/api/projects/${slug}/progress`, { cache: "no-store" })
       if (res.ok) {
         const data = await res.json()
-        setTesters(data.testers || [])
+        const newTesters = data.testers || []
+        // Only update if we got data, or if we had no testers before.
+        // This prevents the list from disappearing due to transient API issues.
+        if (newTesters.length > 0 || testersRef.current.length === 0) {
+          setTesters(newTesters)
+        }
       }
     } catch {
-      // Silently ignore fetch errors during polling
+      // Silently ignore fetch errors during polling — keep existing data
     } finally {
       setLoading(false)
     }
