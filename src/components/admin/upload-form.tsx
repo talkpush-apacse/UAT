@@ -1,6 +1,8 @@
 "use client"
 
+import { useEffect } from "react"
 import { useFormState } from "react-dom"
+import { useRouter } from "next/navigation"
 import { importChecklist, type ChecklistActionState } from "@/lib/actions/checklist"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,6 +21,16 @@ export default function UploadForm({
     boundAction,
     {}
   )
+  const router = useRouter()
+
+  useEffect(() => {
+    if (state.success) {
+      const timer = setTimeout(() => {
+        router.push(`/admin/projects/${slug}`)
+      }, 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [state.success, router, slug])
 
   return (
     <Card>
@@ -60,7 +72,7 @@ export default function UploadForm({
           )}
           {state.success && (
             <p className="text-sm text-green-600">
-              Successfully imported {state.itemCount} checklist items.
+              Successfully imported {state.itemCount} checklist items. Redirecting...
             </p>
           )}
           <Button type="submit">

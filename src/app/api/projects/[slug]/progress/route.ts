@@ -35,7 +35,9 @@ export async function GET(
     }
 
     if (!testers || testers.length === 0) {
-      return NextResponse.json({ testers: [], debug: { projectId: project.id, testersError: testersError?.message } })
+      return NextResponse.json({ testers: [] }, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+      })
     }
 
     const { data: responses } = await supabase
@@ -61,7 +63,9 @@ export async function GET(
       }
     })
 
-    return NextResponse.json({ testers: testerProgress })
+    return NextResponse.json({ testers: testerProgress }, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+    })
   } catch (err) {
     console.error("Progress API - unexpected error:", err)
     return NextResponse.json({ error: "Internal server error", debug: String(err) }, { status: 500 })

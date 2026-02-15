@@ -42,7 +42,7 @@ export default function LiveProgressTable({
 
   const fetchProgress = useCallback(async () => {
     try {
-      const res = await fetch(`/api/projects/${slug}/progress`)
+      const res = await fetch(`/api/projects/${slug}/progress`, { cache: "no-store" })
       if (res.ok) {
         const data = await res.json()
         setTesters(data.testers || [])
