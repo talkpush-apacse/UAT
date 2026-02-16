@@ -8,6 +8,7 @@ export const updateChecklistItemSchema = z.object({
   action: z.string().min(1).max(2000).optional(),
   viewSample: z.string().max(2000).optional().or(z.literal('')),
   crmModule: z.string().max(200).optional().or(z.literal('')),
+  tip: z.string().max(500).optional().or(z.literal('')),
 })
 
 export const addChecklistItemSchema = z.object({
@@ -18,6 +19,7 @@ export const addChecklistItemSchema = z.object({
   action: z.string().min(1, 'Action is required').max(2000),
   viewSample: z.string().max(2000).optional().or(z.literal('')),
   crmModule: z.string().max(200).optional().or(z.literal('')),
+  tip: z.string().max(500).optional().or(z.literal('')),
 })
 
 export const reorderChecklistSchema = z.object({

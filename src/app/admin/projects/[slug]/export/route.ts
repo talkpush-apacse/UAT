@@ -87,6 +87,7 @@ export async function GET(
     { header: "Actor", key: "actor", width: 12 },
     { header: "CRM Module", key: "crmModule", width: 15 },
     { header: "Action", key: "action", width: 40 },
+    { header: "Tip", key: "tip", width: 30 },
     { header: "Status", key: "status", width: 10 },
     { header: "Comment", key: "comment", width: 40 },
   ]
@@ -105,6 +106,7 @@ export async function GET(
         actor: item.actor,
         crmModule: item.crm_module || "",
         action: item.action,
+        tip: item.tip || "",
         status: response?.status || "",
         comment: response?.comment || "",
       })

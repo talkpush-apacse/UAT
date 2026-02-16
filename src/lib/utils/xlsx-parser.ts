@@ -7,6 +7,7 @@ export interface ParsedChecklistItem {
   action: string
   viewSample: string | null
   crmModule: string | null
+  tip: string | null
   sortOrder: number
 }
 
@@ -83,6 +84,7 @@ export async function parseChecklistFile(
   const actionCol = findColumnIndex(headers, 'Action', 'Description', 'Test Step')
   const sampleCol = findColumnIndex(headers, 'View Sample', 'Sample', 'ViewSample', 'Link')
   const moduleCol = findColumnIndex(headers, 'CRM Module', 'CRMModule', 'Module')
+  const tipCol = findColumnIndex(headers, 'Tip', 'Tips', 'Hint', 'Hints', 'Helper')
 
   if (actionCol === null) {
     return {
@@ -144,6 +146,7 @@ export async function parseChecklistFile(
 
     const viewSample = getCellValue(sampleCol) || null
     const crmModule = getCellValue(moduleCol) || null
+    const tip = getCellValue(tipCol) || null
 
     items.push({
       stepNumber,
@@ -152,6 +155,7 @@ export async function parseChecklistFile(
       action,
       viewSample,
       crmModule,
+      tip,
       sortOrder,
     })
   })

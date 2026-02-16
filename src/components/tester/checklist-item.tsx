@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Lightbulb, Eye, ExternalLink } from "lucide-react"
 import FileUpload from "./file-upload"
 
 interface ChecklistItemData {
@@ -15,6 +16,7 @@ interface ChecklistItemData {
   action: string
   view_sample: string | null
   crm_module: string | null
+  tip: string | null
 }
 
 interface ResponseData {
@@ -206,8 +208,13 @@ export default function ChecklistItem({
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-muted-foreground">
-              {item.view_sample ? "\uD83D\uDCF7 " : ""}Step {item.step_number}
+              Step {item.step_number}
             </span>
+            {item.view_sample && (
+              <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+                Has Reference
+              </Badge>
+            )}
             {item.crm_module && (
               <Badge variant="outline" className="text-xs">{item.crm_module}</Badge>
             )}
@@ -228,12 +235,25 @@ export default function ChecklistItem({
         {/* === INSTRUCTION ZONE === */}
         <p className="text-base leading-relaxed mb-4">{item.action}</p>
 
+        {/* === TIP CALLOUT === */}
+        {item.tip && (
+          <div className="mb-4 flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+            <Lightbulb className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+            <p className="text-sm text-amber-800 leading-relaxed">
+              <span className="font-semibold">Tip:</span> {item.tip}
+            </p>
+          </div>
+        )}
+
         {/* === VISUAL REFERENCE (image preview) === */}
         {hasImageSample && (
-          <div className="mb-4">
-            <p className="text-xs font-medium text-muted-foreground mb-2">
-              Reference — what it should look like:
-            </p>
+          <div className="mb-4 p-3 bg-indigo-50 border-2 border-indigo-300 rounded-lg">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Eye className="h-4 w-4 text-indigo-600" />
+              <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
+                Review this before testing
+              </p>
+            </div>
             <a
               href={item.view_sample!}
               target="_blank"
@@ -244,10 +264,10 @@ export default function ChecklistItem({
               <img
                 src={item.view_sample!}
                 alt={`Reference for Step ${item.step_number}`}
-                className="max-h-[200px] rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer object-contain"
+                className="max-h-[280px] rounded-md border border-indigo-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer object-contain w-full"
                 loading="lazy"
               />
-              <span className="text-xs text-blue-600 mt-1 inline-block hover:underline">
+              <span className="text-xs text-indigo-600 mt-1.5 inline-block hover:underline font-medium">
                 Click to view full size
               </span>
             </a>
@@ -256,15 +276,21 @@ export default function ChecklistItem({
 
         {/* === NON-IMAGE REFERENCE LINK === */}
         {hasNonImageSample && (
-          <div className="mb-4">
+          <div className="mb-4 p-3 bg-indigo-50 border-2 border-indigo-300 rounded-lg">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Eye className="h-4 w-4 text-indigo-600" />
+              <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
+                Review this before testing
+              </p>
+            </div>
             <a
               href={item.view_sample!}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 hover:bg-blue-100 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-indigo-300 rounded-md text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm"
             >
-              <span>View Reference</span>
-              <span className="text-xs">↗</span>
+              <ExternalLink className="h-4 w-4" />
+              <span>Open Reference Guide</span>
             </a>
           </div>
         )}

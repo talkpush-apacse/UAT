@@ -39,7 +39,7 @@ export default function UploadForm({
         <CardDescription>
           Upload an XLSX or CSV file with your test steps. Expected columns:
           Step Number, Path (Happy/Non-Happy), Actor (Candidate/Talkpush/Recruiter),
-          Action, View Sample, CRM Module
+          Action, View Sample, CRM Module, Tip (optional)
         </CardDescription>
       </CardHeader>
       <CardContent>

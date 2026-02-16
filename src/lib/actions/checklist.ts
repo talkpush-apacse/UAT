@@ -64,6 +64,7 @@ export async function importChecklist(
     action: item.action,
     view_sample: item.viewSample,
     crm_module: item.crmModule,
+    tip: item.tip,
     sort_order: item.sortOrder,
   }))
 
@@ -101,6 +102,7 @@ export async function updateChecklistItem(
   if (parsed.data.action !== undefined) updates.action = parsed.data.action
   if (parsed.data.viewSample !== undefined) updates.view_sample = parsed.data.viewSample || null
   if (parsed.data.crmModule !== undefined) updates.crm_module = parsed.data.crmModule || null
+  if (parsed.data.tip !== undefined) updates.tip = parsed.data.tip || null
 
   const { error } = await supabase
     .from('checklist_items')
@@ -148,6 +150,7 @@ export async function addChecklistItem(
       action: parsed.data.action,
       view_sample: parsed.data.viewSample || null,
       crm_module: parsed.data.crmModule || null,
+      tip: parsed.data.tip || null,
       sort_order: sortOrder,
     })
     .select('id')

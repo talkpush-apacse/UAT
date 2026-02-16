@@ -50,6 +50,7 @@ interface ChecklistItem {
   action: string
   view_sample: string | null
   crm_module: string | null
+  tip: string | null
   sort_order: number
 }
 
@@ -83,6 +84,7 @@ function SortableRow({
       action: editData.action,
       viewSample: editData.view_sample || "",
       crmModule: editData.crm_module || "",
+      tip: editData.tip || "",
     })
     if (result.error) {
       toast.error(result.error)
@@ -149,6 +151,14 @@ function SortableRow({
           />
         </td>
         <td className="p-2">
+          <Input
+            value={editData.tip || ""}
+            onChange={(e) => setEditData({ ...editData, tip: e.target.value })}
+            className="h-8 w-40"
+            placeholder="Optional tip..."
+          />
+        </td>
+        <td className="p-2">
           <div className="flex gap-1">
             <Button size="sm" className="h-7" onClick={handleSave}>Save</Button>
             <Button size="sm" variant="ghost" className="h-7" onClick={() => { setEditing(false); setEditData(item) }}>
@@ -176,6 +186,7 @@ function SortableRow({
       <td className="p-2 text-sm">{item.actor}</td>
       <td className="p-2 text-sm">{item.action}</td>
       <td className="p-2 text-sm text-muted-foreground">{item.crm_module || "—"}</td>
+      <td className="p-2 text-sm text-muted-foreground">{item.tip || "—"}</td>
       <td className="p-2">
         <div className="flex gap-1">
           <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditing(true)}>
@@ -228,6 +239,7 @@ export default function ChecklistEditor({
     actor: "Candidate",
     action: "",
     crmModule: "",
+    tip: "",
   })
 
   const sensors = useSensors(
@@ -283,6 +295,7 @@ export default function ChecklistEditor({
       actor: newItem.actor as "Candidate" | "Talkpush" | "Recruiter",
       action: newItem.action,
       crmModule: newItem.crmModule,
+      tip: newItem.tip,
     })
 
     if (result.error) {
@@ -297,6 +310,7 @@ export default function ChecklistEditor({
         action: newItem.action,
         view_sample: null,
         crm_module: newItem.crmModule || null,
+        tip: newItem.tip || null,
         sort_order: items.length + 1,
       }
       setItems((prev) => [...prev, added])
@@ -307,6 +321,7 @@ export default function ChecklistEditor({
         actor: "Candidate",
         action: "",
         crmModule: "",
+        tip: "",
       })
       toast.success("Step added")
     }
@@ -342,6 +357,7 @@ export default function ChecklistEditor({
                     <th className="text-left p-2 font-medium">Actor</th>
                     <th className="text-left p-2 font-medium">Action</th>
                     <th className="text-left p-2 font-medium">Module</th>
+                    <th className="text-left p-2 font-medium">Tip</th>
                     <th className="p-2 font-medium w-32"></th>
                   </tr>
                 </thead>
@@ -369,7 +385,7 @@ export default function ChecklistEditor({
         {adding && (
           <div className="mt-4 p-4 border rounded bg-blue-50 space-y-3">
             <p className="font-medium text-sm">Add New Step</p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
               <Input
                 type="number"
                 placeholder="#"
@@ -408,6 +424,12 @@ export default function ChecklistEditor({
                 placeholder="CRM Module"
                 value={newItem.crmModule}
                 onChange={(e) => setNewItem({ ...newItem, crmModule: e.target.value })}
+              />
+              <Input
+                placeholder="Tip (optional)"
+                value={newItem.tip}
+                onChange={(e) => setNewItem({ ...newItem, tip: e.target.value })}
+                className="col-span-2 sm:col-span-1"
               />
             </div>
             <div className="flex gap-2">

@@ -12,6 +12,7 @@ interface ChecklistItemData {
   action: string
   view_sample: string | null
   crm_module: string | null
+  tip: string | null
   sort_order: number
 }
 

@@ -46,6 +46,7 @@ export type Database = {
           action: string
           view_sample: string | null
           crm_module: string | null
+          tip: string | null
           sort_order: number
         }
         Insert: {
@@ -57,6 +58,7 @@ export type Database = {
           action: string
           view_sample?: string | null
           crm_module?: string | null
+          tip?: string | null
           sort_order?: number
         }
         Update: {
@@ -68,6 +70,7 @@ export type Database = {
           action?: string
           view_sample?: string | null
           crm_module?: string | null
+          tip?: string | null
           sort_order?: number
         }
         Relationships: [
