@@ -191,8 +191,9 @@ export default function ChecklistItem({
     }
   }, [])
 
-  const hasImageSample = item.view_sample && isImageUrl(item.view_sample)
-  const hasNonImageSample = item.view_sample && !isImageUrl(item.view_sample)
+  const viewSample = item.view_sample?.trim() || null
+  const hasImageSample = viewSample && isImageUrl(viewSample)
+  const hasNonImageSample = viewSample && !isImageUrl(viewSample)
 
   // Comment prompt text based on status
   const commentPrompt = status === "Fail"
@@ -210,7 +211,7 @@ export default function ChecklistItem({
             <span className="text-sm font-semibold text-muted-foreground">
               Step {item.step_number}
             </span>
-            {item.view_sample && (
+            {viewSample && (
               <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
                 Has Reference
               </Badge>
@@ -255,14 +256,14 @@ export default function ChecklistItem({
               </p>
             </div>
             <a
-              href={item.view_sample!}
+              href={viewSample!}
               target="_blank"
               rel="noopener noreferrer"
               className="block"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={item.view_sample!}
+                src={viewSample!}
                 alt={`Reference for Step ${item.step_number}`}
                 className="max-h-[280px] rounded-md border border-indigo-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer object-contain w-full"
                 loading="lazy"
@@ -284,13 +285,13 @@ export default function ChecklistItem({
               </p>
             </div>
             <a
-              href={item.view_sample!}
+              href={viewSample!}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-indigo-300 rounded-md text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm"
             >
               <ExternalLink className="h-4 w-4" />
-              <span>Open Reference Guide</span>
+              <span>View Guide/Sample</span>
             </a>
           </div>
         )}
