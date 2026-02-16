@@ -30,51 +30,63 @@ export default async function ProjectDetailPage({
 
   if (!project) notFound()
 
-  const { data: checklistItems } = await supabase
-    .from("checklist_items")
-    .select("*")
-    .eq("project_id", project.id)
-    .order("sort_order")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let checklistItems: any[] | null = null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let signoffs: any[] | null = null
+  let initialTesters: TesterProgress[] = []
 
-  const { data: signoffs } = await supabase
-    .from("signoffs")
-    .select("*")
-    .eq("project_id", project.id)
-    .order("signoff_date", { ascending: false })
+  try {
+    const checklistResult = await supabase
+      .from("checklist_items")
+      .select("*")
+      .eq("project_id", project.id)
+      .order("sort_order")
+    checklistItems = checklistResult.data
+
+    const signoffResult = await supabase
+      .from("signoffs")
+      .select("*")
+      .eq("project_id", project.id)
+      .order("signoff_date", { ascending: false })
+    signoffs = signoffResult.data
+
+    // Query testers and their responses server-side for initial render
+    const { data: testers } = await supabase
+      .from("testers")
+      .select("id, name, email, mobile")
+      .eq("project_id", project.id)
+
+    if (testers && testers.length > 0) {
+      const { data: responses } = await supabase
+        .from("responses")
+        .select("tester_id, status")
+        .in("tester_id", testers.map((t) => t.id))
+
+      initialTesters = testers.map((tester) => {
+        const testerResponses = (responses || []).filter(
+          (r) => r.tester_id === tester.id && r.status !== null
+        )
+        return {
+          id: tester.id,
+          name: tester.name,
+          email: tester.email,
+          mobile: tester.mobile,
+          total: testerResponses.length,
+          completed: testerResponses.length,
+          pass: testerResponses.filter((r) => r.status === "Pass").length,
+          fail: testerResponses.filter((r) => r.status === "Fail").length,
+          na: testerResponses.filter((r) => r.status === "N/A").length,
+          blocked: testerResponses.filter((r) => r.status === "Blocked").length,
+        }
+      })
+    }
+  } catch (err) {
+    console.error("Project detail page data fetch error:", err)
+    // Continue rendering with empty data rather than crashing
+  }
 
   const itemCount = checklistItems?.length || 0
-
-  // Query testers and their responses server-side for initial render
-  const { data: testers } = await supabase
-    .from("testers")
-    .select("id, name, email, mobile")
-    .eq("project_id", project.id)
-
-  let initialTesters: TesterProgress[] = []
-  if (testers && testers.length > 0) {
-    const { data: responses } = await supabase
-      .from("responses")
-      .select("tester_id, status")
-      .in("tester_id", testers.map((t) => t.id))
-
-    initialTesters = testers.map((tester) => {
-      const testerResponses = (responses || []).filter(
-        (r) => r.tester_id === tester.id && r.status !== null
-      )
-      return {
-        id: tester.id,
-        name: tester.name,
-        email: tester.email,
-        mobile: tester.mobile,
-        total: testerResponses.length,
-        completed: testerResponses.length,
-        pass: testerResponses.filter((r) => r.status === "Pass").length,
-        fail: testerResponses.filter((r) => r.status === "Fail").length,
-        na: testerResponses.filter((r) => r.status === "N/A").length,
-        blocked: testerResponses.filter((r) => r.status === "Blocked").length,
-      }
-    })
-  }
 
   return (
     <div>
