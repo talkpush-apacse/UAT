@@ -61,11 +61,8 @@ const STATUS_STYLES: Record<string, { active: string; inactive: string }> = {
 
 /** Check if a URL points to an image file */
 function isImageUrl(url: string): boolean {
-  // Check common image extensions (ignoring query params)
   if (/\.(png|jpe?g|gif|webp|svg|bmp)(\?.*)?$/i.test(url)) return true
-  // Check common image hosting patterns
   if (/\/(image|img|photo|screenshot)\//i.test(url)) return true
-  // Supabase storage with image content types
   if (/supabase.*\/storage\/.*\.(png|jpe?g|gif|webp)/i.test(url)) return true
   return false
 }
@@ -73,8 +70,7 @@ function isImageUrl(url: string): boolean {
 /** Get card styling based on completion status */
 function getCardStyles(status: string | null): string {
   if (!status) {
-    // Unanswered — subtle blue left border to signal "needs attention"
-    return "border-l-4 border-l-blue-200 bg-white"
+    return "border-l-4 border-l-indigo-200 bg-white"
   }
   switch (status) {
     case "Pass":
@@ -86,7 +82,7 @@ function getCardStyles(status: string | null): string {
     case "Blocked":
       return "border-l-4 border-l-amber-500 bg-amber-50/50"
     default:
-      return "border-l-4 border-l-blue-200 bg-white"
+      return "border-l-4 border-l-indigo-200 bg-white"
   }
 }
 
@@ -170,7 +166,6 @@ export default function ChecklistItem({
       setShowComment(true)
     }
 
-    // Save immediately on status change
     if (debounceRef.current) clearTimeout(debounceRef.current)
     save(finalStatus, comment)
   }
@@ -178,7 +173,6 @@ export default function ChecklistItem({
   const handleCommentChange = (value: string) => {
     setComment(value)
 
-    // Debounce comment saves
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       save(status, value)
@@ -195,7 +189,6 @@ export default function ChecklistItem({
   const hasImageSample = viewSample && isImageUrl(viewSample)
   const hasNonImageSample = viewSample && !isImageUrl(viewSample)
 
-  // Comment prompt text based on status
   const commentPrompt = status === "Fail"
     ? "Please describe the issue you encountered"
     : status === "Blocked"
@@ -203,13 +196,13 @@ export default function ChecklistItem({
       : "Add a comment..."
 
   return (
-    <Card className={getCardStyles(status)}>
+    <Card className={`${getCardStyles(status)} rounded-xl shadow-sm hover:shadow-md transition-all duration-200`}>
       <CardContent className="py-4">
         {/* === HEADER LINE === */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-muted-foreground">
-              Step {item.step_number}
+            <span className="w-7 h-7 rounded-md bg-gray-100 text-xs font-semibold text-gray-600 flex items-center justify-center">
+              {item.step_number}
             </span>
             {viewSample && (
               <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
@@ -222,7 +215,7 @@ export default function ChecklistItem({
           </div>
           <div className="flex items-center gap-1">
             {saveStatus === "saving" && (
-              <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>
+              <span className="text-xs text-gray-400 animate-pulse">Saving...</span>
             )}
             {saveStatus === "saved" && (
               <span className="text-xs text-green-600">Saved</span>
@@ -234,7 +227,7 @@ export default function ChecklistItem({
         </div>
 
         {/* === INSTRUCTION ZONE === */}
-        <p className="text-base leading-relaxed mb-4">{item.action}</p>
+        <p className="text-base leading-relaxed mb-4 text-gray-800">{item.action}</p>
 
         {/* === TIP CALLOUT === */}
         {item.tip && (
@@ -298,13 +291,13 @@ export default function ChecklistItem({
 
         {/* === TALKPUSH LOGIN LINK === */}
         {talkpushLoginLink && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs font-medium text-blue-800 mb-1">Talkpush Login Link:</p>
+          <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <p className="text-xs font-medium text-indigo-800 mb-1">Talkpush Login Link:</p>
             <a
               href={talkpushLoginLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline break-all"
+              className="text-sm text-indigo-600 hover:underline break-all"
             >
               {talkpushLoginLink}
             </a>
@@ -322,7 +315,7 @@ export default function ChecklistItem({
                 type="button"
                 onClick={() => handleStatusChange(opt)}
                 className={`
-                  px-3 py-2 text-sm font-medium rounded-md border transition-colors
+                  px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
                   min-h-[44px] flex-1
                   ${isActive ? styles.active : styles.inactive}
                 `}
@@ -338,7 +331,7 @@ export default function ChecklistItem({
           <button
             type="button"
             onClick={() => setShowComment(true)}
-            className="text-xs text-muted-foreground hover:text-foreground"
+            className="text-xs text-gray-400 hover:text-indigo-600 transition-colors"
           >
             + Add comment
           </button>
@@ -359,12 +352,11 @@ export default function ChecklistItem({
             />
           </div>
         )}
-        {/* Show "Add comment" for completed non-Fail/Blocked if comment not yet shown */}
         {!showComment && status && status !== "Fail" && status !== "Blocked" && (
           <button
             type="button"
             onClick={() => setShowComment(true)}
-            className="text-xs text-muted-foreground hover:text-foreground"
+            className="text-xs text-gray-400 hover:text-indigo-600 transition-colors"
           >
             + Add comment
           </button>

@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteTester } from "@/lib/actions/testers"
+import { Users, ExternalLink, Trash2 } from "lucide-react"
 
 export interface TesterProgress {
   id: string
@@ -51,8 +52,6 @@ export default function LiveProgressTable({
       if (res.ok) {
         const data = await res.json()
         const newTesters = data.testers || []
-        // Only update if we got data, or if we had no testers before.
-        // This prevents the list from disappearing due to transient API issues.
         if (newTesters.length > 0 || testersRef.current.length === 0) {
           setTesters(newTesters)
         }
@@ -65,7 +64,6 @@ export default function LiveProgressTable({
   }, [slug])
 
   useEffect(() => {
-    // If we already have initial data, skip the first fetch
     if (!initialTesters || initialTesters.length === 0) {
       fetchProgress()
     }
@@ -81,100 +79,115 @@ export default function LiveProgressTable({
   }
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading tester progress...</p>
+    return <p className="text-sm text-gray-500">Loading tester progress...</p>
   }
 
   if (testers.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        No testers have registered yet. Share the tester link to get started.
-      </p>
+      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <Users className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-sm font-medium text-gray-500">No testers have registered yet</p>
+        <p className="text-xs text-gray-400 mt-1">Share the tester link to get started</p>
+      </div>
     )
   }
 
   return (
     <div className="space-y-1">
-      <p className="text-xs text-muted-foreground mb-3">Auto-refreshes every 5 seconds</p>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm border rounded-lg">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="text-left p-2 font-medium">Tester</th>
-              <th className="text-left p-2 font-medium">Email</th>
-              <th className="text-left p-2 font-medium w-48">Progress</th>
-              <th className="text-left p-2 font-medium">Pass</th>
-              <th className="text-left p-2 font-medium">Fail</th>
-              <th className="text-left p-2 font-medium">N/A</th>
-              <th className="text-left p-2 font-medium">Blocked</th>
-              <th className="p-2 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {testers.map((tester) => {
-              const pct = totalItems > 0
-                ? Math.round((tester.completed / totalItems) * 100)
-                : 0
-              return (
-                <tr key={tester.id} className="border-t">
-                  <td className="p-2 font-medium">{tester.name}</td>
-                  <td className="p-2 text-muted-foreground">{tester.email}</td>
-                  <td className="p-2">
-                    <div className="flex items-center gap-2">
-                      <Progress value={pct} className="h-2 flex-1" />
-                      <span className="text-xs whitespace-nowrap">{pct}%</span>
-                    </div>
-                  </td>
-                  <td className="p-2">
-                    {tester.pass > 0 && <Badge className="bg-green-600">{tester.pass}</Badge>}
-                  </td>
-                  <td className="p-2">
-                    {tester.fail > 0 && <Badge variant="destructive">{tester.fail}</Badge>}
-                  </td>
-                  <td className="p-2">
-                    {tester.na > 0 && <Badge variant="secondary">{tester.na}</Badge>}
-                  </td>
-                  <td className="p-2">
-                    {tester.blocked > 0 && <Badge variant="outline">{tester.blocked}</Badge>}
-                  </td>
-                  <td className="p-2">
-                    <div className="flex items-center gap-1">
-                      <Link href={`/test/${slug}/checklist?tester=${tester.id}`} target="_blank">
-                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                          View Checklist
-                        </Button>
-                      </Link>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 h-7 px-2">
-                            Delete
+      <p className="text-xs text-gray-400 mb-3">Auto-refreshes every 5 seconds</p>
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100">
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Tester</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide w-48">Progress</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Pass</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Fail</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">N/A</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Blocked</th>
+                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {testers.map((tester) => {
+                const pct = totalItems > 0
+                  ? Math.round((tester.completed / totalItems) * 100)
+                  : 0
+                return (
+                  <tr key={tester.id} className="group border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-sm text-gray-800">{tester.name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500">{tester.email}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Progress value={pct} className="h-2 flex-1" />
+                        <span className="text-xs text-gray-500 whitespace-nowrap">{pct}%</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {tester.pass > 0 && (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">{tester.pass}</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {tester.fail > 0 && (
+                        <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">{tester.fail}</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {tester.na > 0 && (
+                        <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600 border-gray-200">{tester.na}</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {tester.blocked > 0 && (
+                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">{tester.blocked}</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <Link href={`/test/${slug}/checklist?tester=${tester.id}`} target="_blank">
+                          <Button variant="outline" size="sm" className="h-7 px-2 text-xs text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            View
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Tester</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete {tester.name} and all their responses.
-                              This cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(tester.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                        </Link>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-7 px-2 text-gray-400 hover:text-red-600 hover:bg-red-50">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Tester</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete {tester.name} and all their responses.
+                                  This cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(tester.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

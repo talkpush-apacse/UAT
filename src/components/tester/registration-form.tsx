@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ClipboardCheck } from "lucide-react"
 
 const COUNTRY_CODES = [
   { code: "+63", country: "PH", label: "PH +63" },
@@ -43,9 +44,11 @@ const initialState: RegisterTesterState = {}
 export default function RegistrationForm({
   projectId,
   slug,
+  companyName,
 }: {
   projectId: string
   slug: string
+  companyName?: string
 }) {
   const [state, formAction] = useFormState(registerTester, initialState)
   const router = useRouter()
@@ -67,68 +70,81 @@ export default function RegistrationForm({
   }, [countryCode, phoneNumber])
 
   return (
-    <form action={formAction} className="space-y-4">
-      <input type="hidden" name="projectId" value={projectId} />
-      <input type="hidden" name="mobile" ref={mobileRef} />
-
-      {state.returning && state.testerName && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-          Welcome back, {state.testerName}! Redirecting to your checklist...
+    <div className="space-y-6">
+      {/* Branding header */}
+      <div className="text-center">
+        <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-3">
+          <ClipboardCheck className="h-6 w-6 text-indigo-600" />
         </div>
-      )}
-
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
-        <Input id="name" name="name" placeholder="John Smith" required />
-        {state.fieldErrors?.name && (
-          <p className="text-sm text-red-600">{state.fieldErrors.name[0]}</p>
+        {companyName && (
+          <h2 className="text-lg font-semibold text-gray-900">{companyName}</h2>
         )}
+        <p className="text-sm text-gray-500 mt-1">UAT Checklist Registration</p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" placeholder="john@example.com" required />
-        {state.fieldErrors?.email && (
-          <p className="text-sm text-red-600">{state.fieldErrors.email[0]}</p>
-        )}
-      </div>
+      <form action={formAction} className="space-y-4">
+        <input type="hidden" name="projectId" value={projectId} />
+        <input type="hidden" name="mobile" ref={mobileRef} />
 
-      <div className="space-y-2">
-        <Label>Mobile Number</Label>
-        <div className="flex gap-2">
-          <Select value={countryCode} onValueChange={setCountryCode}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {COUNTRY_CODES.map((c) => (
-                <SelectItem key={c.code} value={c.code}>
-                  {c.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input
-            type="tel"
-            placeholder="912 345 6789"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            className="flex-1"
-            required
-          />
+        {state.returning && state.testerName && (
+          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
+            Welcome back, {state.testerName}! Redirecting to your checklist...
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <Label htmlFor="name" className="text-xs text-gray-500">Full Name</Label>
+          <Input id="name" name="name" placeholder="John Smith" required className="h-10" />
+          {state.fieldErrors?.name && (
+            <p className="text-sm text-red-600">{state.fieldErrors.name[0]}</p>
+          )}
         </div>
-        {state.fieldErrors?.mobile && (
-          <p className="text-sm text-red-600">{state.fieldErrors.mobile[0]}</p>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs text-gray-500">Email</Label>
+          <Input id="email" name="email" type="email" placeholder="john@example.com" required className="h-10" />
+          {state.fieldErrors?.email && (
+            <p className="text-sm text-red-600">{state.fieldErrors.email[0]}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs text-gray-500">Mobile Number</Label>
+          <div className="flex gap-2">
+            <Select value={countryCode} onValueChange={setCountryCode}>
+              <SelectTrigger className="w-[120px] h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COUNTRY_CODES.map((c) => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="tel"
+              placeholder="912 345 6789"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="flex-1 h-10"
+              required
+            />
+          </div>
+          {state.fieldErrors?.mobile && (
+            <p className="text-sm text-red-600">{state.fieldErrors.mobile[0]}</p>
+          )}
+        </div>
+
+        {state.error && (
+          <p className="text-sm text-red-600">{state.error}</p>
         )}
-      </div>
 
-      {state.error && (
-        <p className="text-sm text-red-600">{state.error}</p>
-      )}
-
-      <Button type="submit" className="w-full">
-        Start Checklist
-      </Button>
-    </form>
+        <Button type="submit" className="w-full h-10">
+          Start Checklist
+        </Button>
+      </form>
+    </div>
   )
 }

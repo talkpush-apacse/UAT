@@ -5,12 +5,32 @@ import { notFound, redirect } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import LiveProgressTable from "@/components/admin/live-progress-table"
 import type { TesterProgress } from "@/components/admin/live-progress-table"
 import CopyLinkButton from "@/components/admin/copy-link-button"
+import {
+  ArrowLeft,
+  Pencil,
+  Upload,
+  ListChecks,
+  BarChart3,
+  FileCheck,
+  Download,
+  CheckCircle2,
+} from "lucide-react"
+
+const ACTOR_STYLES: Record<string, string> = {
+  Candidate: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  Talkpush: "bg-purple-50 text-purple-700 border-purple-200",
+  Recruiter: "bg-emerald-50 text-emerald-700 border-emerald-200",
+}
+
+const PATH_STYLES: Record<string, string> = {
+  Happy: "bg-green-50 text-green-700 border-green-200",
+  "Non-Happy": "bg-orange-50 text-orange-700 border-orange-200",
+}
 
 export default async function ProjectDetailPage({
   params,
@@ -88,113 +108,135 @@ export default async function ProjectDetailPage({
 
   const itemCount = checklistItems?.length || 0
 
+  const actionCards = [
+    {
+      href: `/admin/projects/${project.slug}/upload`,
+      icon: Upload,
+      label: "Upload Checklist",
+      sub: `${itemCount} steps`,
+    },
+    {
+      href: `/admin/projects/${project.slug}/checklist`,
+      icon: ListChecks,
+      label: "Manage Steps",
+      sub: "Edit & Reorder",
+    },
+    {
+      href: `/admin/projects/${project.slug}/analytics`,
+      icon: BarChart3,
+      label: "Analytics",
+      sub: "Charts & Filters",
+    },
+    {
+      href: `/admin/projects/${project.slug}/signoff`,
+      icon: FileCheck,
+      label: "Sign Off",
+      sub: `${signoffs?.length || 0} sign-offs`,
+    },
+  ]
+
   return (
     <div>
-      <div className="mb-6">
-        <Link href="/admin" className="text-sm text-muted-foreground hover:underline">
-          &larr; Back to Projects
-        </Link>
-      </div>
+      <Link
+        href="/admin"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-6"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back to Projects
+      </Link>
 
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold">{project.company_name}</h1>
-          <p className="text-sm text-muted-foreground font-mono">/{project.slug}</p>
+          <h1 className="text-xl font-semibold text-gray-900">{project.company_name}</h1>
+          <p className="text-xs text-gray-400 font-mono mt-0.5">/{project.slug}</p>
           {project.test_scenario && (
-            <p className="text-sm text-muted-foreground mt-1">{project.test_scenario}</p>
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed">{project.test_scenario}</p>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
           <CopyLinkButton slug={project.slug} />
           <Link href={`/admin/projects/${project.slug}/edit`}>
-            <Button variant="outline" size="sm">Edit Project</Button>
+            <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-50">
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              Edit Project
+            </Button>
           </Link>
         </div>
       </div>
 
       {(signoffs && signoffs.length > 0) && (
-        <Card className="mb-6 border-green-200 bg-green-50">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge className="bg-green-600">Signed Off</Badge>
-              <span className="text-sm font-medium">UAT Sign-Off Complete</span>
-            </div>
-            <div className="text-sm text-muted-foreground space-y-1">
-              {signoffs.map((s) => (
-                <p key={s.id}>{s.signoff_name} — {new Date(s.signoff_date).toLocaleDateString()}</p>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-6 p-4 bg-green-50/50 rounded-xl border border-green-200">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <span className="text-sm font-semibold text-green-800">UAT Sign-Off Complete</span>
+          </div>
+          <div className="text-sm text-gray-600 space-y-1">
+            {signoffs.map((s) => (
+              <p key={s.id}>{s.signoff_name} — {new Date(s.signoff_date).toLocaleDateString()}</p>
+            ))}
+          </div>
+        </div>
       )}
 
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 mb-6">
-        <Link href={`/admin/projects/${project.slug}/upload`}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="py-4 text-center">
-              <p className="text-sm font-medium">Upload Checklist</p>
-              <p className="text-xs text-muted-foreground">{itemCount} steps</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href={`/admin/projects/${project.slug}/checklist`}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="py-4 text-center">
-              <p className="text-sm font-medium">Manage Steps</p>
-              <p className="text-xs text-muted-foreground">Edit & Reorder</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href={`/admin/projects/${project.slug}/analytics`}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="py-4 text-center">
-              <p className="text-sm font-medium">Analytics</p>
-              <p className="text-xs text-muted-foreground">Charts & Filters</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href={`/admin/projects/${project.slug}/signoff`}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="py-4 text-center">
-              <p className="text-sm font-medium">Sign Off</p>
-              <p className="text-xs text-muted-foreground">{signoffs?.length || 0} sign-offs</p>
-            </CardContent>
-          </Card>
-        </Link>
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 mb-8">
+        {actionCards.map((card) => (
+          <Link key={card.href} href={card.href}>
+            <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200 cursor-pointer p-5 text-center">
+              <card.icon className="h-5 w-5 text-gray-400 group-hover:text-indigo-600 mx-auto mb-2 transition-colors" />
+              <p className="text-sm font-medium text-gray-700">{card.label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
+            </div>
+          </Link>
+        ))}
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-8">
         <a href={`/admin/projects/${project.slug}/export`}>
-          <Button variant="outline" size="sm">Export Results (.xlsx)</Button>
+          <Button variant="outline" size="sm" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Export Results (.xlsx)
+          </Button>
         </a>
       </div>
 
-      <Separator className="mb-6" />
+      <Separator className="mb-8" />
 
       {itemCount > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Checklist Summary</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border rounded-lg">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="text-left p-2 font-medium">#</th>
-                  <th className="text-left p-2 font-medium">Path</th>
-                  <th className="text-left p-2 font-medium">Actor</th>
-                  <th className="text-left p-2 font-medium">Action</th>
-                  <th className="text-left p-2 font-medium">Module</th>
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">Checklist Summary</h2>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">#</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Path</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Actor</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Action</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Module</th>
                 </tr>
               </thead>
               <tbody>
                 {checklistItems?.map((item) => (
-                  <tr key={item.id} className="border-t">
-                    <td className="p-2">{item.step_number}</td>
-                    <td className="p-2">
-                      {item.path && <Badge variant="outline">{item.path}</Badge>}
+                  <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <span className="w-7 h-7 rounded-md bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">
+                        {item.step_number}
+                      </span>
                     </td>
-                    <td className="p-2">{item.actor}</td>
-                    <td className="p-2">{item.action}</td>
-                    <td className="p-2 text-muted-foreground">{item.crm_module || "—"}</td>
+                    <td className="px-4 py-3">
+                      {item.path && (
+                        <Badge variant="outline" className={`text-xs ${PATH_STYLES[item.path] || ""}`}>
+                          {item.path}
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant="outline" className={`text-xs ${ACTOR_STYLES[item.actor] || ""}`}>
+                        {item.actor}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 leading-relaxed">{item.action}</td>
+                    <td className="px-4 py-3 text-xs text-gray-400">{item.crm_module || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -203,7 +245,7 @@ export default async function ProjectDetailPage({
         </div>
       )}
 
-      <h2 className="text-lg font-semibold mb-3">Tester Progress</h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-3">Tester Progress</h2>
       <LiveProgressTable
         slug={project.slug}
         totalItems={itemCount}

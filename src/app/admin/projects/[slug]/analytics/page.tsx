@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import AnalyticsCharts from "@/components/admin/analytics-charts"
 import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 
 export default async function AnalyticsPage({
   params,
@@ -44,7 +45,6 @@ export default async function AnalyticsPage({
     responses = data || []
   }
 
-  // Extract unique CRM modules
   const crmModules = Array.from(
     new Set(
       (checklistItems || [])
@@ -53,22 +53,20 @@ export default async function AnalyticsPage({
     )
   ).sort()
 
-  // Extract unique actors
   const actors = Array.from(
     new Set((checklistItems || []).map((item) => item.actor))
   ).sort()
 
   return (
     <div>
-      <div className="mb-6">
-        <Link
-          href={`/admin/projects/${params.slug}`}
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          &larr; Back to Project
-        </Link>
-      </div>
-      <h1 className="text-2xl font-bold mb-6">
+      <Link
+        href={`/admin/projects/${params.slug}`}
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-6"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back to Project
+      </Link>
+      <h1 className="text-xl font-semibold text-gray-900 mb-6">
         Analytics — {project.company_name}
       </h1>
       <AnalyticsCharts

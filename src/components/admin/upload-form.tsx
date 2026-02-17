@@ -7,7 +7,9 @@ import { importChecklist, type ChecklistActionState } from "@/lib/actions/checkl
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Upload, CheckCircle2 } from "lucide-react"
 
 export default function UploadForm({
   projectId,
@@ -33,27 +35,35 @@ export default function UploadForm({
   }, [state.success, router, slug])
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Upload Checklist</CardTitle>
-        <CardDescription>
+    <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+      <CardHeader className="px-5 py-4 bg-gray-50/50 rounded-t-xl border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <Upload className="h-4 w-4 text-indigo-600" />
+          <CardTitle className="text-base font-semibold text-gray-900">Upload Checklist</CardTitle>
+        </div>
+        <p className="text-xs text-gray-400 mt-1 leading-relaxed">
           Upload an XLSX or CSV file with your test steps. Expected columns:
-          Step Number, Path (Happy/Non-Happy), Actor (Candidate/Talkpush/Recruiter),
-          Action, View Sample, CRM Module, Tip (optional)
-        </CardDescription>
+          Step Number, Path, Actor, Action, View Sample, CRM Module, Tip
+        </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-5">
         <form action={formAction} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="file">Checklist File</Label>
-            <Input
-              id="file"
-              name="file"
-              type="file"
-              accept=".xlsx,.csv"
-              required
-            />
-            <p className="text-xs text-muted-foreground">
+          <div className="space-y-1.5">
+            <Label htmlFor="file" className="text-xs text-gray-500">Checklist File</Label>
+            <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-indigo-300 hover:bg-indigo-50/50 transition-all duration-200">
+              <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-600 mb-1">Drop your file here or click to browse</p>
+              <p className="text-xs text-gray-400 mb-3">XLSX or CSV format</p>
+              <Input
+                id="file"
+                name="file"
+                type="file"
+                accept=".xlsx,.csv"
+                required
+                className="max-w-xs mx-auto"
+              />
+            </div>
+            <p className="text-xs text-gray-400">
               This will replace any existing checklist items for this project.
             </p>
           </div>
@@ -61,9 +71,9 @@ export default function UploadForm({
             <p className="text-sm text-red-600">{state.error}</p>
           )}
           {state.errors && state.errors.length > 0 && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
-              <p className="font-medium text-yellow-800 mb-1">Parsing warnings:</p>
-              <ul className="list-disc list-inside text-yellow-700 space-y-1">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+              <p className="font-medium text-amber-800 mb-1">Parsing warnings:</p>
+              <ul className="list-disc list-inside text-amber-700 space-y-1">
                 {state.errors.map((err, i) => (
                   <li key={i}>{err}</li>
                 ))}
@@ -71,10 +81,12 @@ export default function UploadForm({
             </div>
           )}
           {state.success && (
-            <p className="text-sm text-green-600">
+            <div className="flex items-center gap-2 text-sm text-green-600">
+              <CheckCircle2 className="h-4 w-4" />
               Successfully imported {state.itemCount} checklist items. Redirecting...
-            </p>
+            </div>
           )}
+          <Separator />
           <Button type="submit">
             Upload & Import
           </Button>

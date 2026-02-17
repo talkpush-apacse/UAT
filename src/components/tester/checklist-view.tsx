@@ -119,15 +119,15 @@ export default function ChecklistView({
   return (
     <div className="max-w-3xl mx-auto px-4 pb-12">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-gray-50 pt-4 pb-3 border-b">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pt-4 pb-3 border-b border-gray-200 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 className="font-semibold text-lg">{project.company_name}</h1>
-            <p className="text-sm text-muted-foreground">Hi {tester.name}</p>
+            <h1 className="font-semibold text-lg text-gray-900">{project.company_name}</h1>
+            <p className="text-sm text-gray-500">Hi {tester.name}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium">{completedCount} / {totalCount}</p>
-            <p className="text-xs text-muted-foreground">{progressPct}% complete</p>
+            <p className="text-sm font-medium text-indigo-600">{completedCount} / {totalCount}</p>
+            <p className="text-xs text-gray-400">{progressPct}% complete</p>
           </div>
         </div>
         <Progress value={progressPct} className="h-2" />
@@ -150,7 +150,7 @@ export default function ChecklistView({
             <div key={`section-${sIdx}`}>
               {/* Path heading — only when path changes */}
               {showPathHeading && (
-                <h2 className="text-lg font-semibold mb-4 mt-8 first:mt-0 text-primary">
+                <h2 className="text-lg font-semibold mb-4 mt-8 first:mt-0 text-indigo-600">
                   {section.path === "General" ? "General" : `${section.path} Path`}
                 </h2>
               )}
@@ -158,16 +158,16 @@ export default function ChecklistView({
               {/* Actor section with progress */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                     {section.actor}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-medium ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "text-green-600" : "text-muted-foreground"}`}>
+                    <span className={`text-xs font-medium ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "text-green-600" : "text-gray-500"}`}>
                       {sectionCompleted} of {sectionTotal}
                     </span>
                     <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "bg-green-500" : "bg-blue-400"}`}
+                        className={`h-full rounded-full transition-all duration-300 ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "bg-green-500" : "bg-indigo-500"}`}
                         style={{ width: `${sectionPct}%` }}
                       />
                     </div>

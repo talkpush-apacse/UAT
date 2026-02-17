@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import ChecklistEditor from "@/components/admin/checklist-editor"
 import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 
 export default async function ManageChecklistPage({
   params,
@@ -29,14 +30,13 @@ export default async function ManageChecklistPage({
 
   return (
     <div>
-      <div className="mb-6">
-        <Link
-          href={`/admin/projects/${params.slug}`}
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          &larr; Back to Project
-        </Link>
-      </div>
+      <Link
+        href={`/admin/projects/${params.slug}`}
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-6"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back to Project
+      </Link>
       <ChecklistEditor
         items={items || []}
         projectId={project.id}

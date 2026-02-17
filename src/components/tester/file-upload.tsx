@@ -3,6 +3,7 @@
 import { useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
+import { Paperclip } from "lucide-react"
 
 interface AttachmentData {
   id: string
@@ -138,10 +139,10 @@ export default function FileUpload({
               href={att.file_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs hover:bg-muted/80"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 rounded-lg border border-gray-100 text-xs hover:bg-gray-100 transition-colors"
             >
               {att.mime_type.startsWith("image/") ? "🖼" : "🎬"}
-              <span className="max-w-[120px] truncate">{att.file_name}</span>
+              <span className="max-w-[120px] truncate text-gray-700">{att.file_name}</span>
             </a>
           ))}
         </div>
@@ -160,13 +161,14 @@ export default function FileUpload({
           type="button"
           variant="outline"
           size="sm"
-          className="text-xs h-7"
+          className="text-xs h-7 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
         >
+          <Paperclip className="h-3 w-3 mr-1" />
           {uploading ? "Uploading..." : "Attach File"}
         </Button>
-        <span className="text-xs text-muted-foreground">Max 10MB</span>
+        <span className="text-xs text-gray-400">Max 10MB</span>
       </div>
 
       {error && <p className="text-xs text-red-600 mt-1">{error}</p>}

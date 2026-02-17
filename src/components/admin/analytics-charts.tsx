@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { Filter, BarChart3 } from "lucide-react"
 
 interface ChecklistItem {
   id: string
@@ -147,20 +148,26 @@ export default function AnalyticsCharts({
 
   if (checklistItems.length === 0) {
     return (
-      <p className="text-muted-foreground text-center py-12">
-        No checklist items to analyze. Upload a checklist first.
-      </p>
+      <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <BarChart3 className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-sm font-medium text-gray-500">No checklist items to analyze</p>
+        <p className="text-xs text-gray-400 mt-1">Upload a checklist first</p>
+      </div>
     )
   }
 
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <Card>
-        <CardContent className="py-4">
+      <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <CardContent className="py-4 px-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="h-4 w-4 text-indigo-600" />
+            <span className="text-sm font-medium text-gray-700">Filters</span>
+          </div>
           <div className="flex flex-wrap gap-4">
-            <div className="space-y-1">
-              <Label className="text-xs">Filter by Actor</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-500">Actor</Label>
               <Select value={filterActor} onValueChange={setFilterActor}>
                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -171,8 +178,8 @@ export default function AnalyticsCharts({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Filter by CRM Module</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-500">CRM Module</Label>
               <Select value={filterModule} onValueChange={setFilterModule}>
                 <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -184,7 +191,7 @@ export default function AnalyticsCharts({
               </Select>
             </div>
             <div className="flex items-end">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-500">
                 Showing {filteredItems.length} of {checklistItems.length} steps
                 {testers.length > 0 && ` across ${testers.length} tester${testers.length !== 1 ? "s" : ""}`}
               </p>
@@ -195,9 +202,9 @@ export default function AnalyticsCharts({
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Overall Donut */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Overall Status Breakdown</CardTitle>
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-gray-700">Overall Status Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -223,9 +230,9 @@ export default function AnalyticsCharts({
         </Card>
 
         {/* By Actor */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Results by Actor</CardTitle>
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-gray-700">Results by Actor</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -246,9 +253,9 @@ export default function AnalyticsCharts({
 
         {/* By CRM Module */}
         {byModuleData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Results by CRM Module</CardTitle>
+          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-gray-700">Results by CRM Module</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -270,9 +277,9 @@ export default function AnalyticsCharts({
 
         {/* Per-tester Completion */}
         {perTesterData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Per-Tester Completion</CardTitle>
+          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-gray-700">Per-Tester Completion</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -282,7 +289,7 @@ export default function AnalyticsCharts({
                   <YAxis dataKey="name" type="category" width={100} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completed" fill="#22c55e" stackId="a" name="Completed" />
+                  <Bar dataKey="completed" fill="#6366f1" stackId="a" name="Completed" />
                   <Bar dataKey="remaining" fill="#d1d5db" stackId="a" name="Remaining" />
                 </BarChart>
               </ResponsiveContainer>
