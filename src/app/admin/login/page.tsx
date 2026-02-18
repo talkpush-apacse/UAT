@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50/50 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-700 flex items-center justify-center mx-auto mb-4">
             <LayoutDashboard className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">UAT Admin</h1>

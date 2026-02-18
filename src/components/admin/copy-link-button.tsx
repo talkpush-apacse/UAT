@@ -19,7 +19,7 @@ export default function CopyLinkButton({ slug }: { slug: string }) {
       variant="outline"
       size="sm"
       onClick={handleCopy}
-      className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 transition-colors"
+      className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 transition-colors"
     >
       {copied ? (
         <>

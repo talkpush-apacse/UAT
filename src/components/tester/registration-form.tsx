@@ -73,8 +73,8 @@ export default function RegistrationForm({
     <div className="space-y-6">
       {/* Branding header */}
       <div className="text-center">
-        <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-3">
-          <ClipboardCheck className="h-6 w-6 text-indigo-600" />
+        <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+          <ClipboardCheck className="h-6 w-6 text-emerald-700" />
         </div>
         {companyName && (
           <h2 className="text-lg font-semibold text-gray-900">{companyName}</h2>
@@ -87,7 +87,7 @@ export default function RegistrationForm({
         <input type="hidden" name="mobile" ref={mobileRef} />
 
         {state.returning && state.testerName && (
-          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-900">
             Welcome back, {state.testerName}! Redirecting to your checklist...
           </div>
         )}

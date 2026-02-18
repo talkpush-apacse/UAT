@@ -22,9 +22,9 @@ import {
 } from "lucide-react"
 
 const ACTOR_STYLES: Record<string, string> = {
-  Candidate: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  Candidate: "bg-emerald-50 text-emerald-800 border-emerald-200",
   Talkpush: "bg-purple-50 text-purple-700 border-purple-200",
-  Recruiter: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Recruiter: "bg-teal-50 text-teal-700 border-teal-200",
 }
 
 const PATH_STYLES: Record<string, string> = {
@@ -139,7 +139,7 @@ export default async function ProjectDetailPage({
     <div>
       <Link
         href="/admin"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-700 transition-colors mb-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to Projects
@@ -181,8 +181,8 @@ export default async function ProjectDetailPage({
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 mb-8">
         {actionCards.map((card) => (
           <Link key={card.href} href={card.href}>
-            <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200 cursor-pointer p-5 text-center">
-              <card.icon className="h-5 w-5 text-gray-400 group-hover:text-indigo-600 mx-auto mb-2 transition-colors" />
+            <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-200 cursor-pointer p-5 text-center">
+              <card.icon className="h-5 w-5 text-gray-400 group-hover:text-emerald-700 mx-auto mb-2 transition-colors" />
               <p className="text-sm font-medium text-gray-700">{card.label}</p>
               <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
             </div>
@@ -192,7 +192,7 @@ export default async function ProjectDetailPage({
 
       <div className="flex gap-2 mb-8">
         <a href={`/admin/projects/${project.slug}/export`}>
-          <Button variant="outline" size="sm" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+          <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50">
             <Download className="h-3.5 w-3.5 mr-1.5" />
             Export Results (.xlsx)
           </Button>

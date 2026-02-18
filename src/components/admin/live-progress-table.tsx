@@ -106,7 +106,7 @@ export default function LiveProgressTable({
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Pass</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Fail</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">N/A</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Blocked</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Up For Review</th>
                 <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
@@ -148,7 +148,7 @@ export default function LiveProgressTable({
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <Link href={`/test/${slug}/checklist?tester=${tester.id}`} target="_blank">
-                          <Button variant="outline" size="sm" className="h-7 px-2 text-xs text-indigo-600 border-indigo-200 hover:bg-indigo-50">
+                          <Button variant="outline" size="sm" className="h-7 px-2 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50">
                             <ExternalLink className="h-3 w-3 mr-1" />
                             View
                           </Button>

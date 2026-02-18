@@ -29,7 +29,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
     <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
       <CardHeader className="px-5 py-4 bg-gray-50/50 rounded-t-xl border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <Pencil className="h-4 w-4 text-indigo-600" />
+          <Pencil className="h-4 w-4 text-emerald-700" />
           <CardTitle className="text-base font-semibold text-gray-900">Edit Project</CardTitle>
         </div>
       </CardHeader>

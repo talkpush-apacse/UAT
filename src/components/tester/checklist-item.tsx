@@ -38,7 +38,12 @@ interface AttachmentData {
 
 type SaveStatus = "idle" | "saving" | "saved" | "error"
 
-const STATUS_OPTIONS = ["Pass", "Fail", "N/A", "Blocked"] as const
+const STATUS_OPTIONS = [
+  { value: "Pass", label: "Pass" },
+  { value: "Fail", label: "Fail" },
+  { value: "N/A", label: "N/A" },
+  { value: "Blocked", label: "Up For Review" },
+] as const
 
 const STATUS_STYLES: Record<string, { active: string; inactive: string }> = {
   Pass: {
@@ -70,7 +75,7 @@ function isImageUrl(url: string): boolean {
 /** Get card styling based on completion status */
 function getCardStyles(status: string | null): string {
   if (!status) {
-    return "border-l-4 border-l-indigo-200 bg-white"
+    return "border-l-4 border-l-emerald-200 bg-white"
   }
   switch (status) {
     case "Pass":
@@ -82,7 +87,7 @@ function getCardStyles(status: string | null): string {
     case "Blocked":
       return "border-l-4 border-l-amber-500 bg-amber-50/50"
     default:
-      return "border-l-4 border-l-indigo-200 bg-white"
+      return "border-l-4 border-l-emerald-200 bg-white"
   }
 }
 
@@ -192,7 +197,7 @@ export default function ChecklistItem({
   const commentPrompt = status === "Fail"
     ? "Please describe the issue you encountered"
     : status === "Blocked"
-      ? "Please describe what is blocking this step"
+      ? "Please describe what needs to be reviewed in this step"
       : "Add a comment..."
 
   return (
@@ -204,11 +209,6 @@ export default function ChecklistItem({
             <span className="w-7 h-7 rounded-md bg-gray-100 text-xs font-semibold text-gray-600 flex items-center justify-center">
               {item.step_number}
             </span>
-            {viewSample && (
-              <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
-                Has Reference
-              </Badge>
-            )}
             {item.crm_module && (
               <Badge variant="outline" className="text-xs">{item.crm_module}</Badge>
             )}
@@ -241,10 +241,10 @@ export default function ChecklistItem({
 
         {/* === VISUAL REFERENCE (image preview) === */}
         {hasImageSample && (
-          <div className="mb-4 p-3 bg-indigo-50 border-2 border-indigo-300 rounded-lg">
+          <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-indigo-600" />
-              <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
+              <Eye className="h-4 w-4 text-emerald-700" />
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
                 Review this before testing
               </p>
             </div>
@@ -258,10 +258,10 @@ export default function ChecklistItem({
               <img
                 src={viewSample!}
                 alt={`Reference for Step ${item.step_number}`}
-                className="max-h-[280px] rounded-md border border-indigo-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer object-contain w-full"
+                className="max-h-[280px] rounded-md border border-emerald-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer object-contain w-full"
                 loading="lazy"
               />
-              <span className="text-xs text-indigo-600 mt-1.5 inline-block hover:underline font-medium">
+              <span className="text-xs text-emerald-700 mt-1.5 inline-block hover:underline font-medium">
                 Click to view full size
               </span>
             </a>
@@ -270,10 +270,10 @@ export default function ChecklistItem({
 
         {/* === NON-IMAGE REFERENCE LINK === */}
         {hasNonImageSample && (
-          <div className="mb-4 p-3 bg-indigo-50 border-2 border-indigo-300 rounded-lg">
+          <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-indigo-600" />
-              <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">
+              <Eye className="h-4 w-4 text-emerald-700" />
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
                 Review this before testing
               </p>
             </div>
@@ -281,7 +281,7 @@ export default function ChecklistItem({
               href={viewSample!}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-indigo-300 rounded-md text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-emerald-300 rounded-md text-sm font-medium text-emerald-800 hover:bg-emerald-100 transition-colors shadow-sm"
             >
               <ExternalLink className="h-4 w-4" />
               <span>View Guide/Sample</span>
@@ -291,13 +291,13 @@ export default function ChecklistItem({
 
         {/* === TALKPUSH LOGIN LINK === */}
         {talkpushLoginLink && (
-          <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
-            <p className="text-xs font-medium text-indigo-800 mb-1">Talkpush Login Link:</p>
+          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <p className="text-xs font-medium text-emerald-900 mb-1">Talkpush Login Link:</p>
             <a
               href={talkpushLoginLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-indigo-600 hover:underline break-all"
+              className="text-sm text-emerald-700 hover:underline break-all"
             >
               {talkpushLoginLink}
             </a>
@@ -306,21 +306,21 @@ export default function ChecklistItem({
 
         {/* === STATUS BUTTONS === */}
         <div className="flex gap-2 mb-4">
-          {STATUS_OPTIONS.map((opt) => {
-            const isActive = status === opt
-            const styles = STATUS_STYLES[opt]
+          {STATUS_OPTIONS.map(({ value, label }) => {
+            const isActive = status === value
+            const styles = STATUS_STYLES[value]
             return (
               <button
-                key={opt}
+                key={value}
                 type="button"
-                onClick={() => handleStatusChange(opt)}
+                onClick={() => handleStatusChange(value)}
                 className={`
                   px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
                   min-h-[44px] flex-1
                   ${isActive ? styles.active : styles.inactive}
                 `}
               >
-                {opt}
+                {label}
               </button>
             )
           })}
@@ -331,7 +331,7 @@ export default function ChecklistItem({
           <button
             type="button"
             onClick={() => setShowComment(true)}
-            className="text-xs text-gray-400 hover:text-indigo-600 transition-colors"
+            className="text-xs text-gray-400 hover:text-emerald-700 transition-colors"
           >
             + Add comment
           </button>
@@ -356,7 +356,7 @@ export default function ChecklistItem({
           <button
             type="button"
             onClick={() => setShowComment(true)}
-            className="text-xs text-gray-400 hover:text-indigo-600 transition-colors"
+            className="text-xs text-gray-400 hover:text-emerald-700 transition-colors"
           >
             + Add comment
           </button>

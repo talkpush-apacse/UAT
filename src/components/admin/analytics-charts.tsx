@@ -162,7 +162,7 @@ export default function AnalyticsCharts({
       <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
         <CardContent className="py-4 px-5">
           <div className="flex items-center gap-2 mb-3">
-            <Filter className="h-4 w-4 text-indigo-600" />
+            <Filter className="h-4 w-4 text-emerald-700" />
             <span className="text-sm font-medium text-gray-700">Filters</span>
           </div>
           <div className="flex flex-wrap gap-4">
@@ -245,7 +245,7 @@ export default function AnalyticsCharts({
                 <Bar dataKey="Pass" fill={STATUS_COLORS.Pass} stackId="a" />
                 <Bar dataKey="Fail" fill={STATUS_COLORS.Fail} stackId="a" />
                 <Bar dataKey="N/A" fill={STATUS_COLORS["N/A"]} stackId="a" />
-                <Bar dataKey="Blocked" fill={STATUS_COLORS.Blocked} stackId="a" />
+                <Bar dataKey="Blocked" fill={STATUS_COLORS.Blocked} stackId="a" name="Up For Review" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -268,7 +268,7 @@ export default function AnalyticsCharts({
                   <Bar dataKey="Pass" fill={STATUS_COLORS.Pass} stackId="a" />
                   <Bar dataKey="Fail" fill={STATUS_COLORS.Fail} stackId="a" />
                   <Bar dataKey="N/A" fill={STATUS_COLORS["N/A"]} stackId="a" />
-                  <Bar dataKey="Blocked" fill={STATUS_COLORS.Blocked} stackId="a" />
+                  <Bar dataKey="Blocked" fill={STATUS_COLORS.Blocked} stackId="a" name="Up For Review" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -289,7 +289,7 @@ export default function AnalyticsCharts({
                   <YAxis dataKey="name" type="category" width={100} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="completed" fill="#6366f1" stackId="a" name="Completed" />
+                  <Bar dataKey="completed" fill="#003d1c" stackId="a" name="Completed" />
                   <Bar dataKey="remaining" fill="#d1d5db" stackId="a" name="Remaining" />
                 </BarChart>
               </ResponsiveContainer>

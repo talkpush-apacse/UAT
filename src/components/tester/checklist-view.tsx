@@ -131,44 +131,44 @@ export default function ChecklistView({
     setResponses((prev) => ({ ...prev, [itemId]: response }))
   }
 
-  // Track which path headings we've already rendered so we only show them once
-  let lastRenderedPath: string | null = null
-
   return (
     <div className="max-w-3xl mx-auto px-4 pb-12">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pt-4 pb-3 border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h1 className="font-semibold text-lg text-gray-900">{project.company_name}</h1>
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pt-5 pb-4 px-1 sm:px-0 border-b border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div className="min-w-0">
+            <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
             <p className="text-sm text-gray-500">Hi {tester.name}</p>
           </div>
-          <div className="text-right">
-            <p className="text-sm font-medium text-indigo-600">{completedCount} / {totalCount}</p>
+          <div className="text-right flex-shrink-0 ml-4">
+            <p className="text-sm sm:text-base font-semibold text-emerald-700">{completedCount} / {totalCount}</p>
             <p className="text-xs text-gray-400">{progressPct}% complete</p>
           </div>
         </div>
-        <Progress value={progressPct} className="h-2" />
+        <div className="flex items-center gap-3">
+          <Progress value={progressPct} className="h-2.5 flex-1" />
+          <span className="text-xs font-medium text-gray-500 flex-shrink-0 w-10 text-right">{progressPct}%</span>
+        </div>
       </div>
 
       {/* Before You Begin — collapsible guide */}
       <div className="mt-4">
-        <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 shadow-sm overflow-hidden">
           {/* Header — always visible */}
           <button
             onClick={toggleGuide}
             className="w-full flex items-center justify-between px-4 py-3 text-left"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-4 h-4 text-indigo-600" />
+              <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-4 h-4 text-emerald-700" />
               </div>
-              <span className="text-sm font-medium text-indigo-700">Before You Begin</span>
+              <span className="text-sm font-medium text-emerald-800">Before You Begin</span>
             </div>
             {isGuideOpen ? (
-              <ChevronUp className="w-4 h-4 text-indigo-400" />
+              <ChevronUp className="w-4 h-4 text-emerald-400" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-indigo-400" />
+              <ChevronDown className="w-4 h-4 text-emerald-400" />
             )}
           </button>
 
@@ -184,27 +184,27 @@ export default function ChecklistView({
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">How to use this checklist</p>
                 <ul className="space-y-1.5 text-sm text-gray-600">
                   <li className="flex items-start gap-2">
-                    <span className="text-indigo-400 mt-0.5">&#8226;</span>
+                    <span className="text-emerald-400 mt-0.5">&#8226;</span>
                     Follow each step in order from top to bottom
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-indigo-400 mt-0.5">&#8226;</span>
+                    <span className="text-emerald-400 mt-0.5">&#8226;</span>
                     Mark each step as <span className="font-medium text-green-600">Pass</span>, <span className="font-medium text-red-500">Fail</span>, or <span className="font-medium text-gray-500">Skip</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-indigo-400 mt-0.5">&#8226;</span>
+                    <span className="text-emerald-400 mt-0.5">&#8226;</span>
                     Add comments or attach screenshots when something fails
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-indigo-400 mt-0.5">&#8226;</span>
+                    <span className="text-emerald-400 mt-0.5">&#8226;</span>
                     Your progress is saved automatically
                   </li>
                 </ul>
               </div>
 
               {/* Troubleshooting */}
-              <div className="border-t border-indigo-100 pt-3">
-                <p className="text-xs font-medium text-indigo-500 uppercase tracking-wide mb-2">Troubleshooting</p>
+              <div className="border-t border-emerald-100 pt-3">
+                <p className="text-xs font-medium text-emerald-600 uppercase tracking-wide mb-2">Troubleshooting</p>
                 <div className="space-y-2">
                   <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
                     <Search className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
@@ -234,19 +234,8 @@ export default function ChecklistView({
           const sectionTotal = section.items.length
           const sectionPct = sectionTotal > 0 ? Math.round((sectionCompleted / sectionTotal) * 100) : 0
 
-          // Show a path heading when the path changes
-          const showPathHeading = section.path !== lastRenderedPath
-          lastRenderedPath = section.path
-
           return (
             <div key={`section-${sIdx}`}>
-              {/* Path heading — only when path changes */}
-              {showPathHeading && (
-                <h2 className="text-lg font-semibold mb-4 mt-8 first:mt-0 text-indigo-600">
-                  {section.path === "General" ? "General" : `${section.path} Path`}
-                </h2>
-              )}
-
               {/* Actor section with progress */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
@@ -259,7 +248,7 @@ export default function ChecklistView({
                     </span>
                     <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "bg-green-500" : "bg-indigo-500"}`}
+                        className={`h-full rounded-full transition-all duration-300 ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "bg-green-500" : "bg-emerald-600"}`}
                         style={{ width: `${sectionPct}%` }}
                       />
                     </div>

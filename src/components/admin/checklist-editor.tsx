@@ -75,9 +75,9 @@ interface ChecklistItem {
 }
 
 const ACTOR_STYLES: Record<string, string> = {
-  Candidate: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  Candidate: "bg-emerald-50 text-emerald-800 border-emerald-200",
   Talkpush: "bg-purple-50 text-purple-700 border-purple-200",
-  Recruiter: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Recruiter: "bg-teal-50 text-teal-700 border-teal-200",
 }
 
 const PATH_STYLES: Record<string, string> = {
@@ -150,7 +150,7 @@ function SortableStepCard({
   if (editing) {
     return (
       <div ref={setNodeRef} style={style}>
-        <div className="bg-white rounded-xl border-2 border-indigo-200 shadow-md transition-all duration-200">
+        <div className="bg-white rounded-xl border-2 border-emerald-200 shadow-md transition-all duration-200">
           <div className="flex items-center justify-between px-5 py-3 bg-gray-50 rounded-t-xl border-b border-gray-100">
             <span className="text-sm font-semibold text-gray-700">
               Editing Step {item.step_number}
@@ -271,7 +271,7 @@ function SortableStepCard({
               <Button
                 size="sm"
                 onClick={handleSave}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white"
               >
                 Save Changes
               </Button>
@@ -346,7 +346,7 @@ function SortableStepCard({
                     href={item.view_sample}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 hover:underline"
+                    className="inline-flex items-center gap-1 text-xs text-emerald-700 hover:text-emerald-800 hover:underline"
                   >
                     <LinkIcon className="h-3 w-3" />
                     Reference
@@ -361,7 +361,7 @@ function SortableStepCard({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50"
+              className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50"
               onClick={() => setEditing(true)}
               title="Edit step"
             >
@@ -466,11 +466,11 @@ function AddStepForm({
   }
 
   return (
-    <div className="bg-white rounded-xl border-2 border-dashed border-indigo-300 shadow-sm transition-all duration-200">
-      <div className="flex items-center justify-between px-5 py-3 bg-indigo-50 rounded-t-xl border-b border-indigo-100">
+    <div className="bg-white rounded-xl border-2 border-dashed border-emerald-300 shadow-sm transition-all duration-200">
+      <div className="flex items-center justify-between px-5 py-3 bg-emerald-50 rounded-t-xl border-b border-emerald-100">
         <div className="flex items-center gap-2">
-          <Plus className="h-4 w-4 text-indigo-600" />
-          <span className="text-sm font-semibold text-indigo-700">
+          <Plus className="h-4 w-4 text-emerald-700" />
+          <span className="text-sm font-semibold text-emerald-800">
             Add New Step
           </span>
         </div>
@@ -591,7 +591,7 @@ function AddStepForm({
           <Button
             size="sm"
             onClick={handleAdd}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="bg-emerald-700 hover:bg-emerald-800 text-white"
           >
             <Plus className="h-4 w-4 mr-1" />
             Add Step
@@ -682,7 +682,7 @@ export default function ChecklistEditor({
         </div>
         <Button
           onClick={() => setAdding(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          className="bg-emerald-700 hover:bg-emerald-800 text-white"
           disabled={adding}
         >
           <Plus className="h-4 w-4 mr-1.5" />
@@ -704,7 +704,7 @@ export default function ChecklistEditor({
             variant="outline"
             size="sm"
             onClick={() => setAdding(true)}
-            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+            className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
           >
             <Plus className="h-4 w-4 mr-1" />
             Add your first step
