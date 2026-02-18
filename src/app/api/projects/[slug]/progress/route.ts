@@ -29,6 +29,7 @@ export async function GET(
       .from("testers")
       .select("id, name, email, mobile")
       .eq("project_id", project.id)
+      .order("created_at", { ascending: true })
 
     if (testersError) {
       console.error("Progress API - testers lookup error:", testersError.message)

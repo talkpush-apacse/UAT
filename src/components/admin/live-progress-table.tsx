@@ -17,7 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteTester } from "@/lib/actions/testers"
-import { Users, ExternalLink, Trash2 } from "lucide-react"
+import { Users, ExternalLink, Trash2, RefreshCw, AlertTriangle } from "lucide-react"
 
 export interface TesterProgress {
   id: string
@@ -43,33 +43,66 @@ export default function LiveProgressTable({
 }) {
   const [testers, setTesters] = useState<TesterProgress[]>(initialTesters || [])
   const [loading, setLoading] = useState(!initialTesters || initialTesters.length === 0)
-  const testersRef = useRef(testers)
-  testersRef.current = testers
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(
+    initialTesters && initialTesters.length > 0 ? new Date() : null
+  )
+  const [fetchError, setFetchError] = useState(false)
+  const [secondsSince, setSecondsSince] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchProgress = useCallback(async () => {
     try {
       const res = await fetch(`/api/projects/${slug}/progress`, { cache: "no-store" })
       if (res.ok) {
         const data = await res.json()
-        const newTesters = data.testers || []
-        if (newTesters.length > 0 || testersRef.current.length === 0) {
-          setTesters(newTesters)
-        }
+        const newTesters: TesterProgress[] = data.testers || []
+        setTesters(prev => {
+          // Never silently drop testers — only replace if we got at least as many
+          // as we currently have (a tester can only disappear via explicit delete,
+          // which removes them from state directly via handleDelete).
+          if (newTesters.length >= prev.length) return newTesters
+          // If we got fewer than expected (transient DB issue / race condition),
+          // keep all existing testers but update progress stats for any that returned.
+          const updatedMap = new Map(newTesters.map(t => [t.id, t]))
+          return prev.map(t => updatedMap.get(t.id) ?? t)
+        })
+        setLastUpdated(new Date())
+        setSecondsSince(0)
+        setFetchError(false)
+      } else {
+        setFetchError(true)
       }
     } catch {
-      // Silently ignore fetch errors during polling — keep existing data
+      // Network error — keep existing data, show warning
+      setFetchError(true)
     } finally {
       setLoading(false)
     }
   }, [slug])
 
+  // Start polling on mount; re-start if fetchProgress changes
   useEffect(() => {
     if (!initialTesters || initialTesters.length === 0) {
       fetchProgress()
     }
-    const interval = setInterval(fetchProgress, 5000)
-    return () => clearInterval(interval)
+    intervalRef.current = setInterval(fetchProgress, 5000)
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
   }, [fetchProgress, initialTesters])
+
+  // Tick "seconds since last update" every second
+  useEffect(() => {
+    const tick = setInterval(() => setSecondsSince(s => s + 1), 1000)
+    return () => clearInterval(tick)
+  }, [])
+
+  // Manual refresh: fire immediately and reset the 5-second interval
+  const handleRefresh = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    fetchProgress()
+    intervalRef.current = setInterval(fetchProgress, 5000)
+  }, [fetchProgress])
 
   const handleDelete = async (testerId: string) => {
     const result = await deleteTester(slug, testerId)
@@ -79,7 +112,13 @@ export default function LiveProgressTable({
   }
 
   if (loading) {
-    return <p className="text-sm text-gray-500">Loading tester progress...</p>
+    return (
+      <div className="space-y-3">
+        {[1, 2].map(i => (
+          <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+        ))}
+      </div>
+    )
   }
 
   if (testers.length === 0) {
@@ -94,7 +133,34 @@ export default function LiveProgressTable({
 
   return (
     <div className="space-y-1">
-      <p className="text-xs text-gray-400 mb-3">Auto-refreshes every 5 seconds</p>
+      {/* Header row: tester count + status + refresh button */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">
+            {testers.length} Tester{testers.length !== 1 ? "s" : ""}
+          </span>
+          {fetchError ? (
+            <span className="text-xs text-amber-600 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              Unable to refresh — showing last known data
+            </span>
+          ) : lastUpdated ? (
+            <span className="text-xs text-gray-400">
+              Updated {secondsSince < 5 ? "just now" : `${secondsSince}s ago`}
+            </span>
+          ) : null}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          className="h-7 text-xs gap-1 text-gray-600 hover:text-emerald-700 hover:border-emerald-300"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Refresh
+        </Button>
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
