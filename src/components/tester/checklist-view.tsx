@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, ChevronDown, ChevronUp, Search, Mail } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 
 interface ChecklistItemData {
@@ -209,7 +209,13 @@ export default function ChecklistView({
                   <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
                     <Search className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-gray-600">
-                      If unable to search, make sure to set your filter to <span className="font-medium text-gray-800">&quot;All Campaigns&quot;</span> and <span className="font-medium text-gray-800">&quot;All Folders&quot;</span> on the top section.
+                      If unable to search profile in Talkpush, make sure to set your filter to <span className="font-medium text-gray-800">&quot;All Campaigns&quot;</span> and <span className="font-medium text-gray-800">&quot;All Folders&quot;</span> on the top section.
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
+                    <LogIn className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-gray-600">
+                      If unable to login, please check you have activated your account through an invitation email from Talkpush.
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
