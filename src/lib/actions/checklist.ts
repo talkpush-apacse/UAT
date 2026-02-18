@@ -322,3 +322,106 @@ export async function reorderChecklistItems(
     return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  duplicateChecklistItem                                             */
+/* ------------------------------------------------------------------ */
+
+export async function duplicateChecklistItem(
+  slug: string,
+  itemId: string
+): Promise<{ error?: string; item?: { id: string; project_id: string; step_number: number; path: string | null; actor: string; action: string; view_sample: string | null; crm_module: string | null; tip: string | null; sort_order: number } }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    const supabase = createAdminClient()
+
+    // Fetch the source item
+    const { data: source } = await supabase
+      .from('checklist_items')
+      .select('*')
+      .eq('id', itemId)
+      .single()
+
+    if (!source) return { error: 'Step not found' }
+
+    // Get current max sort_order for this project
+    const { data: maxRow } = await supabase
+      .from('checklist_items')
+      .select('sort_order')
+      .eq('project_id', source.project_id)
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .single()
+
+    const newSortOrder = (maxRow?.sort_order ?? 0) + 1
+
+    // Insert copy at end
+    const { data: newItem, error } = await supabase
+      .from('checklist_items')
+      .insert({
+        project_id: source.project_id,
+        step_number: newSortOrder,
+        path: source.path,
+        actor: source.actor,
+        action: source.action,
+        view_sample: source.view_sample,
+        crm_module: source.crm_module,
+        tip: source.tip,
+        sort_order: newSortOrder,
+      })
+      .select()
+      .single()
+
+    if (error) return { error: error.message }
+
+    await renumberSteps(source.project_id, supabase)
+    revalidatePath(`/admin/projects/${slug}`)
+    return { item: newItem ?? undefined }
+  } catch (err) {
+    console.error('duplicateChecklistItem error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  bulkDeleteChecklistItems                                           */
+/* ------------------------------------------------------------------ */
+
+export async function bulkDeleteChecklistItems(
+  slug: string,
+  itemIds: string[]
+): Promise<{ error?: string }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    if (itemIds.length === 0) return { error: 'No items selected' }
+
+    const supabase = createAdminClient()
+
+    // Look up project_id from first item
+    const { data: first } = await supabase
+      .from('checklist_items')
+      .select('project_id')
+      .eq('id', itemIds[0])
+      .single()
+
+    if (!first) return { error: 'Items not found' }
+
+    const { error } = await supabase
+      .from('checklist_items')
+      .delete()
+      .in('id', itemIds)
+
+    if (error) return { error: error.message }
+
+    await renumberSteps(first.project_id, supabase)
+    revalidatePath(`/admin/projects/${slug}`)
+    return {}
+  } catch (err) {
+    console.error('bulkDeleteChecklistItems error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}

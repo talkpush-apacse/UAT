@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Lightbulb, Eye, ExternalLink } from "lucide-react"
 import FileUpload from "./file-upload"
+import ReactMarkdown from "react-markdown"
 
 interface ChecklistItemData {
   id: string
@@ -70,6 +71,17 @@ function isImageUrl(url: string): boolean {
   if (/\/(image|img|photo|screenshot)\//i.test(url)) return true
   if (/supabase.*\/storage\/.*\.(png|jpe?g|gif|webp)/i.test(url)) return true
   return false
+}
+
+/** Check if a URL is a Descript share link */
+function isDescriptUrl(url: string): boolean {
+  return /^https:\/\/share\.descript\.com\/view\/[a-zA-Z0-9_-]+/.test(url)
+}
+
+/** Extract Google Drive file ID from a Drive share URL */
+function extractGoogleDriveFileId(url: string): string | null {
+  const match = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/)
+  return match ? match[1] : null
 }
 
 /** Get card styling based on completion status */
@@ -192,7 +204,12 @@ export default function ChecklistItem({
 
   const viewSample = item.view_sample?.trim() || null
   const hasImageSample = viewSample && isImageUrl(viewSample)
+  const isDescriptSample = viewSample ? isDescriptUrl(viewSample) : false
+  const driveFileId = viewSample ? extractGoogleDriveFileId(viewSample) : null
+  const isGoogleDriveSample = !!driveFileId
   const hasNonImageSample = viewSample && !isImageUrl(viewSample)
+  // Plain link only for URLs that aren't image, Descript, or Google Drive
+  const hasPlainLinkSample = hasNonImageSample && !isDescriptSample && !isGoogleDriveSample
 
   const commentPrompt = status === "Fail"
     ? "Please describe the issue you encountered"
@@ -227,15 +244,22 @@ export default function ChecklistItem({
         </div>
 
         {/* === INSTRUCTION ZONE === */}
-        <p className="text-base leading-relaxed mb-4 text-gray-800">{item.action}</p>
+        <div className="prose prose-sm prose-gray max-w-none mb-4 text-base leading-relaxed text-gray-800
+          prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
+          prose-strong:text-gray-900 prose-a:text-emerald-700 prose-a:no-underline hover:prose-a:underline">
+          <ReactMarkdown>{item.action}</ReactMarkdown>
+        </div>
 
         {/* === TIP CALLOUT === */}
         {item.tip && (
           <div className="mb-4 flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
             <Lightbulb className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-            <p className="text-sm text-amber-800 leading-relaxed">
-              <span className="font-semibold">Tip:</span> {item.tip}
-            </p>
+            <div className="text-sm text-amber-800 leading-relaxed prose prose-sm max-w-none
+              prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900
+              prose-a:text-amber-700">
+              <span className="font-semibold">Tip: </span>
+              <ReactMarkdown>{item.tip}</ReactMarkdown>
+            </div>
           </div>
         )}
 
@@ -268,8 +292,67 @@ export default function ChecklistItem({
           </div>
         )}
 
-        {/* === NON-IMAGE REFERENCE LINK === */}
-        {hasNonImageSample && (
+        {/* === DESCRIPT EMBED === */}
+        {isDescriptSample && (
+          <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Eye className="h-4 w-4 text-emerald-700" />
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+                Review this before testing
+              </p>
+            </div>
+            <div className="rounded-md overflow-hidden border border-emerald-200 shadow-sm">
+              <iframe
+                src={viewSample!}
+                className="w-full"
+                style={{ height: "320px", border: "none" }}
+                allowFullScreen
+                title={`Guide for Step ${item.step_number}`}
+              />
+            </div>
+            <a
+              href={viewSample!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-emerald-700 mt-1.5 inline-block hover:underline font-medium"
+            >
+              Open in new tab
+            </a>
+          </div>
+        )}
+
+        {/* === GOOGLE DRIVE EMBED === */}
+        {isGoogleDriveSample && (
+          <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Eye className="h-4 w-4 text-emerald-700" />
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+                Review this before testing
+              </p>
+            </div>
+            <div className="rounded-md overflow-hidden border border-emerald-200 shadow-sm">
+              <iframe
+                src={`https://drive.google.com/file/d/${driveFileId}/preview`}
+                className="w-full"
+                style={{ height: "320px", border: "none" }}
+                allow="autoplay"
+                allowFullScreen
+                title={`Guide for Step ${item.step_number}`}
+              />
+            </div>
+            <a
+              href={viewSample!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-emerald-700 mt-1.5 inline-block hover:underline font-medium"
+            >
+              Open in new tab
+            </a>
+          </div>
+        )}
+
+        {/* === PLAIN LINK (fallback for other non-image URLs) === */}
+        {hasPlainLinkSample && (
           <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
               <Eye className="h-4 w-4 text-emerald-700" />

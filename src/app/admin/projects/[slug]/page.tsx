@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator"
 import LiveProgressTable from "@/components/admin/live-progress-table"
 import type { TesterProgress } from "@/components/admin/live-progress-table"
 import CopyLinkButton from "@/components/admin/copy-link-button"
+import DeleteProjectButton from "@/components/admin/delete-project-button"
+import DuplicateProjectButton from "@/components/admin/duplicate-project-button"
 import {
   ArrowLeft,
   Pencil,
@@ -161,6 +163,8 @@ export default async function ProjectDetailPage({
               Edit Project
             </Button>
           </Link>
+          <DuplicateProjectButton projectId={project.id} slug={project.slug} />
+          <DeleteProjectButton projectId={project.id} companyName={project.company_name} />
         </div>
       </div>
 
