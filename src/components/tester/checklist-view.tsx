@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
+import { BookOpen, ChevronDown, ChevronUp, Search, Mail } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 
 interface ChecklistItemData {
@@ -109,6 +110,23 @@ export default function ChecklistView({
     return talkpushItem?.id || null
   }, [checklistItems])
 
+  // "Before You Begin" guide — collapsed state persisted per project
+  const guideStorageKey = `uat-guide-collapsed-${project.id}`
+  const [isGuideOpen, setIsGuideOpen] = useState(true)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(guideStorageKey)
+    if (stored === "true") setIsGuideOpen(false)
+  }, [guideStorageKey])
+
+  const toggleGuide = () => {
+    setIsGuideOpen((prev) => {
+      const next = !prev
+      localStorage.setItem(guideStorageKey, next ? "false" : "true")
+      return next
+    })
+  }
+
   const handleResponseUpdate = (itemId: string, response: ResponseData) => {
     setResponses((prev) => ({ ...prev, [itemId]: response }))
   }
@@ -131,6 +149,80 @@ export default function ChecklistView({
           </div>
         </div>
         <Progress value={progressPct} className="h-2" />
+      </div>
+
+      {/* Before You Begin — collapsible guide */}
+      <div className="mt-4">
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 shadow-sm overflow-hidden">
+          {/* Header — always visible */}
+          <button
+            onClick={toggleGuide}
+            className="w-full flex items-center justify-between px-4 py-3 text-left"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-4 h-4 text-indigo-600" />
+              </div>
+              <span className="text-sm font-medium text-indigo-700">Before You Begin</span>
+            </div>
+            {isGuideOpen ? (
+              <ChevronUp className="w-4 h-4 text-indigo-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-indigo-400" />
+            )}
+          </button>
+
+          {/* Collapsible body */}
+          <div
+            className={`transition-all duration-300 ease-in-out ${
+              isGuideOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+            } overflow-hidden`}
+          >
+            <div className="px-4 pb-4 space-y-4">
+              {/* Usage instructions */}
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">How to use this checklist</p>
+                <ul className="space-y-1.5 text-sm text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-400 mt-0.5">&#8226;</span>
+                    Follow each step in order from top to bottom
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-400 mt-0.5">&#8226;</span>
+                    Mark each step as <span className="font-medium text-green-600">Pass</span>, <span className="font-medium text-red-500">Fail</span>, or <span className="font-medium text-gray-500">Skip</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-400 mt-0.5">&#8226;</span>
+                    Add comments or attach screenshots when something fails
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-400 mt-0.5">&#8226;</span>
+                    Your progress is saved automatically
+                  </li>
+                </ul>
+              </div>
+
+              {/* Troubleshooting */}
+              <div className="border-t border-indigo-100 pt-3">
+                <p className="text-xs font-medium text-indigo-500 uppercase tracking-wide mb-2">Troubleshooting</p>
+                <div className="space-y-2">
+                  <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
+                    <Search className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-gray-600">
+                      If unable to search, make sure to set your filter to <span className="font-medium text-gray-800">&quot;All Campaigns&quot;</span> and <span className="font-medium text-gray-800">&quot;All Folders&quot;</span> on the top section.
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
+                    <Mail className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-gray-600">
+                      If the email is not yet received, wait 2-3 minutes, refresh and check your Spam folder too.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Checklist — rendered in original file order */}
