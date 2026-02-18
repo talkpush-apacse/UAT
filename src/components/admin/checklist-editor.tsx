@@ -85,6 +85,11 @@ const PATH_STYLES: Record<string, string> = {
   "Non-Happy": "bg-orange-50 text-orange-700 border-orange-200",
 }
 
+/** Renumber items client-side: step_number = position (1-indexed) */
+function renumberItems(items: ChecklistItem[]): ChecklistItem[] {
+  return items.map((item, idx) => ({ ...item, step_number: idx + 1 }))
+}
+
 /* ------------------------------------------------------------------ */
 /*  SortableStepCard                                                   */
 /* ------------------------------------------------------------------ */
@@ -120,7 +125,6 @@ function SortableStepCard({
   const handleSave = async () => {
     const result = await updateChecklistItem(slug, {
       id: item.id,
-      stepNumber: editData.step_number,
       path: editData.path as "Happy" | "Non-Happy" | null,
       actor: editData.actor as "Candidate" | "Talkpush" | "Recruiter",
       action: editData.action,
@@ -162,18 +166,8 @@ function SortableStepCard({
           </div>
 
           <div className="p-5 space-y-4">
-            {/* Row 1: Step # | Path | Actor */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-gray-500">Step #</Label>
-                <Input
-                  type="number"
-                  value={editData.step_number}
-                  onChange={(e) =>
-                    setEditData({ ...editData, step_number: parseInt(e.target.value) || 0 })
-                  }
-                />
-              </div>
+            {/* Row 1: Path | Actor */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs text-gray-500">Path</Label>
                 <Select
@@ -390,7 +384,7 @@ function SortableStepCard({
                   <AlertDialogTitle>Delete Step</AlertDialogTitle>
                   <AlertDialogDescription>
                     This will delete step #{item.step_number} and any associated
-                    responses.
+                    responses. Remaining steps will be renumbered automatically.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -416,23 +410,17 @@ function SortableStepCard({
 /* ------------------------------------------------------------------ */
 
 function AddStepForm({
-  items,
   projectId,
   slug,
   onAdd,
   onCancel,
 }: {
-  items: ChecklistItem[]
   projectId: string
   slug: string
   onAdd: (item: ChecklistItem) => void
   onCancel: () => void
 }) {
   const [newItem, setNewItem] = useState({
-    stepNumber:
-      items.length > 0
-        ? Math.max(...items.map((i) => i.step_number)) + 1
-        : 1,
     path: null as string | null,
     actor: "Candidate",
     action: "",
@@ -449,7 +437,6 @@ function AddStepForm({
 
     const result = await addChecklistItem(slug, {
       projectId,
-      stepNumber: newItem.stepNumber,
       path: newItem.path as "Happy" | "Non-Happy" | null,
       actor: newItem.actor as "Candidate" | "Talkpush" | "Recruiter",
       action: newItem.action,
@@ -464,14 +451,14 @@ function AddStepForm({
       const added: ChecklistItem = {
         id: result.id!,
         project_id: projectId,
-        step_number: newItem.stepNumber,
+        step_number: 0, // Will be set by renumberItems in parent
         path: newItem.path,
         actor: newItem.actor,
         action: newItem.action,
         view_sample: newItem.viewSample || null,
         crm_module: newItem.crmModule || null,
         tip: newItem.tip || null,
-        sort_order: items.length + 1,
+        sort_order: 0, // Will be set by server
       }
       onAdd(added)
       toast.success("Step added")
@@ -498,18 +485,8 @@ function AddStepForm({
       </div>
 
       <div className="p-5 space-y-4">
-        {/* Row 1: Step # | Path | Actor */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-gray-500">Step #</Label>
-            <Input
-              type="number"
-              value={newItem.stepNumber}
-              onChange={(e) =>
-                setNewItem({ ...newItem, stepNumber: parseInt(e.target.value) || 0 })
-              }
-            />
-          </div>
+        {/* Row 1: Path | Actor */}
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label className="text-xs text-gray-500">Path</Label>
             <Select
@@ -656,7 +633,8 @@ export default function ChecklistEditor({
     const newIndex = items.findIndex((i) => i.id === over.id)
     const reordered = arrayMove(items, oldIndex, newIndex)
 
-    setItems(reordered)
+    // Renumber step_numbers client-side for instant feedback
+    setItems(renumberItems(reordered))
 
     const result = await reorderChecklistItems(slug, {
       projectId,
@@ -677,7 +655,8 @@ export default function ChecklistEditor({
     if (result.error) {
       toast.error(result.error)
     } else {
-      setItems((prev) => prev.filter((i) => i.id !== itemId))
+      // Remove the item and renumber remaining steps
+      setItems((prev) => renumberItems(prev.filter((i) => i.id !== itemId)))
       toast.success("Step deleted")
     }
   }
@@ -762,11 +741,11 @@ export default function ChecklistEditor({
       {/* Add form */}
       {adding && (
         <AddStepForm
-          items={items}
           projectId={projectId}
           slug={slug}
           onAdd={(added) => {
-            setItems((prev) => [...prev, added])
+            // Append and renumber
+            setItems((prev) => renumberItems([...prev, added]))
             setAdding(false)
           }}
           onCancel={() => setAdding(false)}

@@ -10,6 +10,7 @@ import {
   reorderChecklistSchema,
 } from '@/lib/schemas/checklist'
 import type { Database } from '@/lib/types/database'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 type ChecklistItemUpdate = Database['public']['Tables']['checklist_items']['Update']
 
@@ -19,6 +20,51 @@ export interface ChecklistActionState {
   success?: boolean
   itemCount?: number
 }
+
+/* ------------------------------------------------------------------ */
+/*  renumberSteps — keeps step_number = 1,2,3,...,N in sort_order      */
+/* ------------------------------------------------------------------ */
+
+async function renumberSteps(
+  projectId: string,
+  supabase: SupabaseClient<Database>
+) {
+  const { data: items } = await supabase
+    .from('checklist_items')
+    .select('id, step_number')
+    .eq('project_id', projectId)
+    .order('sort_order')
+
+  if (!items || items.length === 0) return
+
+  // Skip if already sequential
+  const needsRenumber = items.some((item, idx) => item.step_number !== idx + 1)
+  if (!needsRenumber) return
+
+  // Pass 1: Set to negative values to avoid UNIQUE constraint collisions
+  await Promise.all(
+    items.map((item, idx) =>
+      supabase
+        .from('checklist_items')
+        .update({ step_number: -(idx + 1) })
+        .eq('id', item.id)
+    )
+  )
+
+  // Pass 2: Set to correct positive values
+  await Promise.all(
+    items.map((item, idx) =>
+      supabase
+        .from('checklist_items')
+        .update({ step_number: idx + 1 })
+        .eq('id', item.id)
+    )
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  importChecklist                                                    */
+/* ------------------------------------------------------------------ */
 
 export async function importChecklist(
   projectId: string,
@@ -89,6 +135,10 @@ export async function importChecklist(
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  updateChecklistItem                                                */
+/* ------------------------------------------------------------------ */
+
 export async function updateChecklistItem(
   slug: string,
   data: unknown
@@ -127,6 +177,10 @@ export async function updateChecklistItem(
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  addChecklistItem                                                   */
+/* ------------------------------------------------------------------ */
+
 export async function addChecklistItem(
   slug: string,
   data: unknown
@@ -142,22 +196,24 @@ export async function addChecklistItem(
 
     const supabase = createAdminClient()
 
-    // Get max sort_order for this project
+    // Get max sort_order and step_number for this project
     const { data: maxItem } = await supabase
       .from('checklist_items')
-      .select('sort_order')
+      .select('sort_order, step_number')
       .eq('project_id', parsed.data.projectId)
       .order('sort_order', { ascending: false })
       .limit(1)
       .single()
 
     const sortOrder = (maxItem?.sort_order || 0) + 1
+    // Use provided stepNumber or auto-calculate (will be corrected by renumber)
+    const stepNumber = parsed.data.stepNumber ?? (maxItem?.step_number || 0) + 1
 
     const { data: newItem, error } = await supabase
       .from('checklist_items')
       .insert({
         project_id: parsed.data.projectId,
-        step_number: parsed.data.stepNumber,
+        step_number: stepNumber,
         path: parsed.data.path,
         actor: parsed.data.actor,
         action: parsed.data.action,
@@ -171,6 +227,9 @@ export async function addChecklistItem(
 
     if (error) return { error: error.message }
 
+    // Renumber all steps to ensure sequential step_numbers
+    await renumberSteps(parsed.data.projectId, supabase)
+
     revalidatePath(`/admin/projects/${slug}`)
     return { id: newItem?.id }
   } catch (err) {
@@ -178,6 +237,10 @@ export async function addChecklistItem(
     return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  deleteChecklistItem                                                */
+/* ------------------------------------------------------------------ */
 
 export async function deleteChecklistItem(
   slug: string,
@@ -188,12 +251,27 @@ export async function deleteChecklistItem(
     if (!isAdmin) return { error: 'Unauthorized' }
 
     const supabase = createAdminClient()
+
+    // Look up project_id before deleting so we can renumber
+    const { data: item } = await supabase
+      .from('checklist_items')
+      .select('project_id')
+      .eq('id', itemId)
+      .single()
+
+    const projectId = item?.project_id
+
     const { error } = await supabase
       .from('checklist_items')
       .delete()
       .eq('id', itemId)
 
     if (error) return { error: error.message }
+
+    // Renumber remaining steps
+    if (projectId) {
+      await renumberSteps(projectId, supabase)
+    }
 
     revalidatePath(`/admin/projects/${slug}`)
     return {}
@@ -202,6 +280,10 @@ export async function deleteChecklistItem(
     return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  reorderChecklistItems                                              */
+/* ------------------------------------------------------------------ */
 
 export async function reorderChecklistItems(
   slug: string,
@@ -229,6 +311,9 @@ export async function reorderChecklistItems(
     const results = await Promise.all(updates)
     const firstError = results.find((r) => r.error)
     if (firstError?.error) return { error: firstError.error.message }
+
+    // Renumber step_numbers to match new sort_order
+    await renumberSteps(parsed.data.projectId, supabase)
 
     revalidatePath(`/admin/projects/${slug}`)
     return {}

@@ -13,7 +13,7 @@ export const updateChecklistItemSchema = z.object({
 
 export const addChecklistItemSchema = z.object({
   projectId: z.string().uuid(),
-  stepNumber: z.number().int().positive(),
+  stepNumber: z.number().int().positive().optional(),
   path: z.enum(['Happy', 'Non-Happy']).nullable(),
   actor: z.enum(['Candidate', 'Talkpush', 'Recruiter']),
   action: z.string().min(1, 'Action is required').max(2000),
