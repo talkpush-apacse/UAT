@@ -1,0 +1,2 @@
+ALTER TABLE testers
+ADD COLUMN IF NOT EXISTS test_completed TEXT;
