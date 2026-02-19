@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import RegistrationForm from "@/components/tester/registration-form"
+import { ClipboardList } from "lucide-react"
 
 export default async function TesterRegistrationPage({
   params,
@@ -19,27 +19,48 @@ export default async function TesterRegistrationPage({
   if (!project) notFound()
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md rounded-xl border-gray-100 shadow-md">
-        <CardHeader className="pb-2">
-          {project.test_scenario && (
-            <p className="text-sm text-gray-500 text-center">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-gray-50 flex flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md space-y-5">
+
+        {/* Talkpush Logo */}
+        <div className="flex justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://assets-global.website-files.com/5e6c01bb5212506d6c119069/5e6c01bb52125004cd119121_Talkpush%20-%20Logo%20-%20Color.svg"
+            alt="Talkpush"
+            className="h-9 w-auto"
+          />
+        </div>
+
+        {/* Test Scenario Card */}
+        {project.test_scenario && (
+          <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm px-5 py-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ClipboardList className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+                Test Scenario
+              </p>
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">
               {project.test_scenario}
             </p>
-          )}
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-500 mb-6 text-center">
-            Please enter your details to start the checklist. If you have already registered,
-            enter the same email or mobile to resume.
-          </p>
+          </div>
+        )}
+
+        {/* Registration Form Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-md px-6 py-6">
           <RegistrationForm
             projectId={project.id}
             slug={project.slug}
             companyName={project.company_name}
           />
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400">
+          Powered by Talkpush UAT
+        </p>
+      </div>
     </div>
   )
 }
