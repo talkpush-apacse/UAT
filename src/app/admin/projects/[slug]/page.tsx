@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import LiveProgressTable from "@/components/admin/live-progress-table"
 import type { TesterProgress } from "@/components/admin/live-progress-table"
 import CopyLinkButton from "@/components/admin/copy-link-button"
+import CopyAnalyticsLinkButton from "@/components/admin/copy-analytics-link-button"
 import DeleteProjectButton from "@/components/admin/delete-project-button"
 import DuplicateProjectButton from "@/components/admin/duplicate-project-button"
 import {
@@ -164,6 +165,7 @@ export default async function ProjectDetailPage({
         </div>
         <div className="flex flex-wrap gap-2">
           <CopyLinkButton slug={project.slug} />
+          <CopyAnalyticsLinkButton slug={project.slug} />
           <Link href={`/admin/projects/${project.slug}/edit`}>
             <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-50">
               <Pencil className="h-3.5 w-3.5 mr-1.5" />
