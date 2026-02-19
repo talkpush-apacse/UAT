@@ -41,6 +41,8 @@ import {
 } from "lucide-react"
 import MDEditor from "@uiw/react-md-editor"
 import ReactMarkdown from "react-markdown"
+import rehypeRaw from "rehype-raw"
+import RichActionEditor from "./RichActionEditor"
 import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES } from "./types"
 
 /* ------------------------------------------------------------------ */
@@ -166,13 +168,12 @@ export function SortableStepCard({
             </div>
 
             {/* Row 2: Action */}
-            <div className="space-y-1.5" data-color-mode="light">
+            <div className="space-y-1.5">
               <Label className="text-xs text-gray-500">Action</Label>
-              <MDEditor
+              <RichActionEditor
                 value={editData.action}
-                onChange={(val) => setEditData({ ...editData, action: val || "" })}
+                onChange={(val) => setEditData({ ...editData, action: val })}
                 height={120}
-                preview="edit"
               />
             </div>
 
@@ -298,7 +299,7 @@ export function SortableStepCard({
             </div>
 
             <div className="prose prose-sm prose-gray max-w-none text-sm text-gray-800 leading-relaxed prose-p:my-0.5 prose-ul:my-0.5 prose-ol:my-0.5 prose-li:my-0">
-              <ReactMarkdown>{item.action}</ReactMarkdown>
+              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{item.action}</ReactMarkdown>
             </div>
 
             {/* Indicator icons */}

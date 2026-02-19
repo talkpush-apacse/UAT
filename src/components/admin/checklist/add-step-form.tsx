@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import MDEditor from "@uiw/react-md-editor"
+import RichActionEditor from "./RichActionEditor"
 import {
   Select,
   SelectContent,
@@ -137,13 +138,12 @@ export function AddStepForm({
         </div>
 
         {/* Row 2: Action */}
-        <div className="space-y-1.5" data-color-mode="light">
+        <div className="space-y-1.5">
           <Label className="text-xs text-gray-500">Action</Label>
-          <MDEditor
+          <RichActionEditor
             value={newItem.action}
-            onChange={(val) => setNewItem({ ...newItem, action: val || "" })}
+            onChange={(val) => setNewItem({ ...newItem, action: val })}
             height={120}
-            preview="edit"
           />
         </div>
 

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Lightbulb, Eye, ExternalLink, ShieldCheck } from "lucide-react"
 import FileUpload from "./file-upload"
 import ReactMarkdown from "react-markdown"
+import rehypeRaw from "rehype-raw"
 import { saveAdminReview } from "@/lib/actions/admin-reviews"
 
 interface ChecklistItemData {
@@ -276,7 +277,7 @@ export default function ChecklistItem({
         <div className="prose prose-sm prose-gray max-w-none mb-4 text-base leading-relaxed text-gray-800
           prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
           prose-strong:text-gray-900 prose-a:text-emerald-700 prose-a:no-underline hover:prose-a:underline">
-          <ReactMarkdown>{item.action}</ReactMarkdown>
+          <ReactMarkdown rehypePlugins={[rehypeRaw]}>{item.action}</ReactMarkdown>
         </div>
 
         {/* === TIP CALLOUT === */}
@@ -287,7 +288,7 @@ export default function ChecklistItem({
               prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900
               prose-a:text-amber-700">
               <span className="font-semibold">Tip: </span>
-              <ReactMarkdown>{item.tip}</ReactMarkdown>
+              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{item.tip}</ReactMarkdown>
             </div>
           </div>
         )}
