@@ -205,6 +205,7 @@ export type Database = {
           tester_id: string
           behavior_type: string | null
           resolution_status: string
+          notes: string | null
           created_at: string
           updated_at: string
         }
@@ -214,6 +215,7 @@ export type Database = {
           tester_id: string
           behavior_type?: string | null
           resolution_status?: string
+          notes?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -223,6 +225,7 @@ export type Database = {
           tester_id?: string
           behavior_type?: string | null
           resolution_status?: string
+          notes?: string | null
           created_at?: string
           updated_at?: string
         }

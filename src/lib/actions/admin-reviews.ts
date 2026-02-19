@@ -8,6 +8,7 @@ export async function saveAdminReview(data: {
   testerId: string
   behaviorType: string | null
   resolutionStatus: string
+  notes: string | null
 }): Promise<{ error?: string }> {
   const isAdmin = await verifyAdminSession()
   if (!isAdmin) return { error: 'Unauthorized' }
@@ -21,6 +22,7 @@ export async function saveAdminReview(data: {
         tester_id: data.testerId,
         behavior_type: data.behaviorType,
         resolution_status: data.resolutionStatus,
+        notes: data.notes,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'checklist_item_id,tester_id' }

@@ -51,6 +51,7 @@ interface AdminReview {
   checklist_item_id: string
   behavior_type: string | null
   resolution_status: string
+  notes: string | null
 }
 
 /** Build sequential sections based on the order items appear in the file.

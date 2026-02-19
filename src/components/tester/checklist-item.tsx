@@ -124,7 +124,7 @@ export default function ChecklistItem({
   onResponseUpdate: (itemId: string, response: ResponseData) => void
   talkpushLoginLink?: string | null
   isAdmin?: boolean
-  adminReview?: { behavior_type: string | null; resolution_status: string } | null
+  adminReview?: { behavior_type: string | null; resolution_status: string; notes: string | null } | null
 }) {
   const [status, setStatus] = useState<string | null>(response?.status || null)
   const [comment, setComment] = useState(response?.comment || "")
@@ -139,9 +139,11 @@ export default function ChecklistItem({
   const [resolutionStatus, setResolutionStatus] = useState<string>(
     adminReview?.resolution_status ?? "Not Yet Started"
   )
+  const [reviewNotes, setReviewNotes] = useState<string>(adminReview?.notes ?? "")
   const [reviewSaveStatus, setReviewSaveStatus] = useState<ReviewSaveStatus>("idle")
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const reviewDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const supabaseRef = useRef(createClient())
 
   const save = useCallback(
@@ -214,10 +216,11 @@ export default function ChecklistItem({
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
+      if (reviewDebounceRef.current) clearTimeout(reviewDebounceRef.current)
     }
   }, [])
 
-  // Admin review handler — saves immediately (button clicks, no debounce needed)
+  // Admin review handler — saves immediately on button clicks (no debounce needed)
   const handleReviewChange = async (newBehavior: string | null, newStatus: string) => {
     setBehaviorType(newBehavior)
     setResolutionStatus(newStatus)
@@ -227,9 +230,29 @@ export default function ChecklistItem({
       testerId,
       behaviorType: newBehavior,
       resolutionStatus: newStatus,
+      notes: reviewNotes || null,
     })
     setReviewSaveStatus(result.error ? "error" : "saved")
     setTimeout(() => setReviewSaveStatus("idle"), 2000)
+  }
+
+  // Admin notes handler — debounced 500ms (text field)
+  const handleReviewNotesChange = (value: string) => {
+    setReviewNotes(value)
+    if (reviewDebounceRef.current) clearTimeout(reviewDebounceRef.current)
+    reviewDebounceRef.current = setTimeout(() => {
+      setReviewSaveStatus("saving")
+      saveAdminReview({
+        checklistItemId: item.id,
+        testerId,
+        behaviorType,
+        resolutionStatus,
+        notes: value || null,
+      }).then((result) => {
+        setReviewSaveStatus(result.error ? "error" : "saved")
+        setTimeout(() => setReviewSaveStatus("idle"), 2000)
+      })
+    }, 500)
   }
 
   const viewSample = item.view_sample?.trim() || null
@@ -563,6 +586,21 @@ export default function ChecklistItem({
                   )
                 })}
               </div>
+            </div>
+
+            {/* Findings / Comments */}
+            <div>
+              <p className="text-xs text-violet-600 font-medium mb-1.5">Findings / Comments</p>
+              <textarea
+                value={reviewNotes}
+                onChange={(e) => handleReviewNotesChange(e.target.value)}
+                placeholder="Add findings, reproduction steps, or notes..."
+                rows={3}
+                className="w-full text-sm rounded-lg border border-violet-200 bg-white px-3 py-2
+                  placeholder:text-gray-400 text-gray-800 resize-none
+                  focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200
+                  transition-colors"
+              />
             </div>
           </div>
         )}

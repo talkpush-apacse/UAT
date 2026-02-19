@@ -75,13 +75,14 @@ export default async function ChecklistPage({
     checklist_item_id: string
     behavior_type: string | null
     resolution_status: string
+    notes: string | null
   }> = []
 
   if (isAdmin) {
     const adminSupabase = createAdminClient()
     const { data } = await adminSupabase
       .from("admin_reviews")
-      .select("checklist_item_id, behavior_type, resolution_status")
+      .select("checklist_item_id, behavior_type, resolution_status, notes")
       .eq("tester_id", tester.id)
 
     adminReviews = data || []
