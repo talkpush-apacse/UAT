@@ -24,9 +24,9 @@ import {
 } from "lucide-react"
 
 const ACTOR_STYLES: Record<string, string> = {
-  Candidate: "bg-emerald-50 text-emerald-800 border-emerald-200",
-  Talkpush: "bg-purple-50 text-purple-700 border-purple-200",
-  Recruiter: "bg-teal-50 text-teal-700 border-teal-200",
+  Candidate: "bg-sky-50 text-sky-800 border-sky-200",
+  Talkpush: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
 }
 
 const PATH_STYLES: Record<string, string> = {
@@ -151,7 +151,7 @@ export default async function ProjectDetailPage({
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-700 transition-colors mb-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Back to Projects
+        Back to UAT Checklists
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">

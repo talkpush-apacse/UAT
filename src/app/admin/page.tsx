@@ -41,15 +41,15 @@ export default async function AdminDashboard() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Projects</h1>
+          <h1 className="text-xl font-semibold text-gray-900">UAT Checklists</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {projectsWithCounts.length} {projectsWithCounts.length === 1 ? "project" : "projects"}
+            {projectsWithCounts.length} {projectsWithCounts.length === 1 ? "checklist" : "checklists"}
           </p>
         </div>
         <Link href="/admin/projects/new">
           <Button>
             <Plus className="h-4 w-4 mr-1.5" />
-            New Project
+            New UAT Checklist
           </Button>
         </Link>
       </div>
@@ -58,11 +58,11 @@ export default async function AdminDashboard() {
         <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
           <FolderOpen className="h-10 w-10 text-gray-300 mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-500">No projects yet</p>
-          <p className="text-xs text-gray-400 mt-1 mb-4">Create your first project to get started</p>
+          <p className="text-xs text-gray-400 mt-1 mb-4">Create your first UAT checklist to get started</p>
           <Link href="/admin/projects/new">
             <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50">
               <Plus className="h-4 w-4 mr-1" />
-              Create Project
+              Create UAT Checklist
             </Button>
           </Link>
         </div>

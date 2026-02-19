@@ -12,9 +12,9 @@ export interface ChecklistItem {
 }
 
 export const ACTOR_STYLES: Record<string, string> = {
-  Candidate: "bg-emerald-50 text-emerald-800 border-emerald-200",
-  Talkpush: "bg-purple-50 text-purple-700 border-purple-200",
-  Recruiter: "bg-teal-50 text-teal-700 border-teal-200",
+  Candidate: "bg-sky-50 text-sky-800 border-sky-200",
+  Talkpush: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
 }
 
 export const PATH_STYLES: Record<string, string> = {
