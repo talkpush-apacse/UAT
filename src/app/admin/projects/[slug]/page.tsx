@@ -119,16 +119,16 @@ export default async function ProjectDetailPage({
 
   const actionCards = [
     {
-      href: `/admin/projects/${project.slug}/upload`,
-      icon: Upload,
-      label: "Upload Checklist",
-      sub: `${itemCount} steps`,
-    },
-    {
       href: `/admin/projects/${project.slug}/checklist`,
       icon: ListChecks,
       label: "Manage Steps",
-      sub: "Edit & Reorder",
+      sub: "Add/Edit/Reorder Steps",
+    },
+    {
+      href: `/admin/projects/${project.slug}/upload`,
+      icon: Upload,
+      label: "Upload UAT (User Acceptance Testing) Sheet",
+      sub: `${itemCount} steps`,
     },
     {
       href: `/admin/projects/${project.slug}/analytics`,
