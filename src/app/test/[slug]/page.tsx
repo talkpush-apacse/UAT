@@ -26,7 +26,7 @@ export default async function TesterRegistrationPage({
         <div className="flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://assets-global.website-files.com/5e6c01bb5212506d6c119069/5e6c01bb52125004cd119121_Talkpush%20-%20Logo%20-%20Color.svg"
+            src="/talkpush-logo.svg"
             alt="Talkpush"
             className="h-9 w-auto"
           />
