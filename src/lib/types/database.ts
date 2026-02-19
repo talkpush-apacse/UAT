@@ -198,6 +198,51 @@ export type Database = {
           },
         ]
       }
+      admin_reviews: {
+        Row: {
+          id: string
+          checklist_item_id: string
+          tester_id: string
+          behavior_type: string | null
+          resolution_status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          checklist_item_id: string
+          tester_id: string
+          behavior_type?: string | null
+          resolution_status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          checklist_item_id?: string
+          tester_id?: string
+          behavior_type?: string | null
+          resolution_status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_reviews_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_reviews_tester_id_fkey"
+            columns: ["tester_id"]
+            isOneToOne: false
+            referencedRelation: "testers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signoffs: {
         Row: {
           id: string

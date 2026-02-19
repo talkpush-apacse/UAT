@@ -5,9 +5,10 @@ import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Lightbulb, Eye, ExternalLink } from "lucide-react"
+import { Lightbulb, Eye, ExternalLink, ShieldCheck } from "lucide-react"
 import FileUpload from "./file-upload"
 import ReactMarkdown from "react-markdown"
+import { saveAdminReview } from "@/lib/actions/admin-reviews"
 
 interface ChecklistItemData {
   id: string
@@ -103,6 +104,8 @@ function getCardStyles(status: string | null): string {
   }
 }
 
+type ReviewSaveStatus = "idle" | "saving" | "saved" | "error"
+
 export default function ChecklistItem({
   item,
   testerId,
@@ -110,6 +113,8 @@ export default function ChecklistItem({
   attachments,
   onResponseUpdate,
   talkpushLoginLink,
+  isAdmin = false,
+  adminReview = null,
 }: {
   item: ChecklistItemData
   testerId: string
@@ -117,6 +122,8 @@ export default function ChecklistItem({
   attachments: AttachmentData[]
   onResponseUpdate: (itemId: string, response: ResponseData) => void
   talkpushLoginLink?: string | null
+  isAdmin?: boolean
+  adminReview?: { behavior_type: string | null; resolution_status: string } | null
 }) {
   const [status, setStatus] = useState<string | null>(response?.status || null)
   const [comment, setComment] = useState(response?.comment || "")
@@ -125,6 +132,13 @@ export default function ChecklistItem({
   const [showComment, setShowComment] = useState(
     !!response?.comment || status === "Fail" || status === "Blocked"
   )
+
+  // Admin review state — only used when isAdmin === true
+  const [behaviorType, setBehaviorType] = useState<string | null>(adminReview?.behavior_type ?? null)
+  const [resolutionStatus, setResolutionStatus] = useState<string>(
+    adminReview?.resolution_status ?? "Not Yet Started"
+  )
+  const [reviewSaveStatus, setReviewSaveStatus] = useState<ReviewSaveStatus>("idle")
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const supabaseRef = useRef(createClient())
@@ -201,6 +215,21 @@ export default function ChecklistItem({
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [])
+
+  // Admin review handler — saves immediately (button clicks, no debounce needed)
+  const handleReviewChange = async (newBehavior: string | null, newStatus: string) => {
+    setBehaviorType(newBehavior)
+    setResolutionStatus(newStatus)
+    setReviewSaveStatus("saving")
+    const result = await saveAdminReview({
+      checklistItemId: item.id,
+      testerId,
+      behaviorType: newBehavior,
+      resolutionStatus: newStatus,
+    })
+    setReviewSaveStatus(result.error ? "error" : "saved")
+    setTimeout(() => setReviewSaveStatus("idle"), 2000)
+  }
 
   const viewSample = item.view_sample?.trim() || null
   const hasImageSample = viewSample && isImageUrl(viewSample)
@@ -454,6 +483,86 @@ export default function ChecklistItem({
               projectId={item.id}
               existingAttachments={attachments}
             />
+          </div>
+        )}
+
+        {/* === ADMIN REVIEW PANEL === */}
+        {isAdmin && (
+          <div className="mt-4 pt-4 border-t border-violet-100 bg-violet-50/40 rounded-lg px-3 py-3 space-y-3">
+            {/* Header */}
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-violet-600" />
+              <span className="text-xs font-semibold text-violet-700 uppercase tracking-wide">
+                Admin Review
+              </span>
+              {reviewSaveStatus === "saving" && (
+                <span className="text-xs text-gray-400 animate-pulse ml-auto">Saving...</span>
+              )}
+              {reviewSaveStatus === "saved" && (
+                <span className="text-xs text-violet-600 ml-auto">Saved ✓</span>
+              )}
+              {reviewSaveStatus === "error" && (
+                <span className="text-xs text-red-500 ml-auto">Error saving</span>
+              )}
+            </div>
+
+            {/* Behavior Type */}
+            <div>
+              <p className="text-xs text-violet-600 font-medium mb-1.5">Behavior Type</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(["Expected Behavior", "Bug/Glitch", "Configuration Issue"] as const).map((opt) => {
+                  const isActive = behaviorType === opt
+                  const activeStyle =
+                    opt === "Expected Behavior"
+                      ? "bg-green-600 text-white border-green-600"
+                      : opt === "Bug/Glitch"
+                      ? "bg-red-600 text-white border-red-600"
+                      : "bg-orange-500 text-white border-orange-500"
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() =>
+                        handleReviewChange(opt === behaviorType ? null : opt, resolutionStatus)
+                      }
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
+                        isActive ? activeStyle : "border-violet-200 text-violet-700 hover:bg-violet-100"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Resolution Status */}
+            <div>
+              <p className="text-xs text-violet-600 font-medium mb-1.5">Resolution Status</p>
+              <div className="flex gap-1.5">
+                {(["Not Yet Started", "In Progress", "Done"] as const).map((opt) => {
+                  const isActive = resolutionStatus === opt
+                  const activeStyle =
+                    opt === "Done"
+                      ? "bg-green-600 text-white border-green-600"
+                      : opt === "In Progress"
+                      ? "bg-blue-500 text-white border-blue-500"
+                      : "bg-gray-500 text-white border-gray-500"
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => handleReviewChange(behaviorType, opt)}
+                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
+                        isActive ? activeStyle : "border-violet-200 text-violet-700 hover:bg-violet-100"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

@@ -47,6 +47,12 @@ interface Tester {
   name: string
 }
 
+interface AdminReview {
+  checklist_item_id: string
+  behavior_type: string | null
+  resolution_status: string
+}
+
 /** Build sequential sections based on the order items appear in the file.
  *  A new section starts whenever the path OR actor changes from the previous item. */
 interface Section {
@@ -79,12 +85,16 @@ export default function ChecklistView({
   checklistItems,
   responses: initialResponses,
   attachments: initialAttachments,
+  isAdmin = false,
+  adminReviews = [],
 }: {
   project: Project
   tester: Tester
   checklistItems: ChecklistItemData[]
   responses: ResponseData[]
   attachments: AttachmentData[]
+  isAdmin?: boolean
+  adminReviews?: AdminReview[]
 }) {
   const [responses, setResponses] = useState<Record<string, ResponseData>>(() => {
     const map: Record<string, ResponseData> = {}
@@ -93,6 +103,15 @@ export default function ChecklistView({
     })
     return map
   })
+
+  // Build a map of admin reviews keyed by checklist_item_id
+  const reviewMap = useMemo<Record<string, AdminReview>>(() => {
+    const map: Record<string, AdminReview> = {}
+    adminReviews.forEach((r) => {
+      map[r.checklist_item_id] = r
+    })
+    return map
+  }, [adminReviews])
 
   const completedCount = useMemo(() => {
     return Object.values(responses).filter((r) => r.status !== null).length
@@ -276,6 +295,8 @@ export default function ChecklistView({
                           ? project.talkpush_login_link
                           : null
                       }
+                      isAdmin={isAdmin}
+                      adminReview={reviewMap[item.id] || null}
                     />
                   ))}
                 </div>
