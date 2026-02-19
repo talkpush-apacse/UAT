@@ -319,11 +319,11 @@ export default function AnalyticsCharts({
       const html2canvas = (await import("html2canvas")).default
       const jsPDF = (await import("jspdf")).default
       const canvas = await html2canvas(reportRef.current, {
-        scale: 1.5,
+        scale: 1,
         useCORS: true,
         logging: false,
       })
-      const imgData = canvas.toDataURL("image/png")
+      const imgData = canvas.toDataURL("image/jpeg", 0.7)
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" })
       const pageWidth = pdf.internal.pageSize.getWidth()
       const pageHeight = pdf.internal.pageSize.getHeight()
@@ -331,12 +331,12 @@ export default function AnalyticsCharts({
       const imgHeight = (canvas.height * imgWidth) / canvas.width
       let heightLeft = imgHeight
       let position = 20
-      pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight)
+      pdf.addImage(imgData, "JPEG", 20, position, imgWidth, imgHeight)
       heightLeft -= pageHeight - 40
       while (heightLeft > 0) {
         position = heightLeft - imgHeight + 20
         pdf.addPage()
-        pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight)
+        pdf.addImage(imgData, "JPEG", 20, position, imgWidth, imgHeight)
         heightLeft -= pageHeight - 40
       }
       pdf.save("UAT-Analytics-Report.pdf")
@@ -780,6 +780,8 @@ export default function AnalyticsCharts({
           </Card>
         )}
 
+      </div>{/* end reportRef */}
+
         {/* ════════════════════════════════════════════════════ */}
         {/*  UAT Summary Report heading                         */}
         {/* ════════════════════════════════════════════════════ */}
@@ -904,7 +906,6 @@ export default function AnalyticsCharts({
           </CardContent>
         </Card>
 
-      </div>
     </div>
   )
 }
