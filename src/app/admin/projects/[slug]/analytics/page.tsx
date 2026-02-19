@@ -28,21 +28,44 @@ export default async function AnalyticsPage({
     .eq("project_id", project.id)
     .order("sort_order")
 
+  // Include email for the report sections
   const { data: testers } = await supabase
     .from("testers")
-    .select("id, name")
+    .select("id, name, email")
     .eq("project_id", project.id)
+    .order("created_at", { ascending: true })
 
   const testerIds = (testers || []).map((t) => t.id)
+  const itemIds = (checklistItems || []).map((ci) => ci.id)
+
   let responses: { tester_id: string; checklist_item_id: string; status: string | null }[] = []
 
-  if (testerIds.length > 0) {
+  if (testerIds.length > 0 && itemIds.length > 0) {
     const { data } = await supabase
       .from("responses")
       .select("tester_id, checklist_item_id, status")
       .in("tester_id", testerIds)
+      .in("checklist_item_id", itemIds) // scope to this project's items only
 
     responses = data || []
+  }
+
+  // Fetch admin reviews for all testers in this project
+  let adminReviews: {
+    checklist_item_id: string
+    tester_id: string
+    behavior_type: string | null
+    resolution_status: string
+    notes: string | null
+  }[] = []
+
+  if (testerIds.length > 0) {
+    const { data } = await supabase
+      .from("admin_reviews")
+      .select("checklist_item_id, tester_id, behavior_type, resolution_status, notes")
+      .in("tester_id", testerIds)
+
+    adminReviews = data || []
   }
 
   const crmModules = Array.from(
@@ -73,6 +96,7 @@ export default async function AnalyticsPage({
         checklistItems={checklistItems || []}
         testers={testers || []}
         responses={responses}
+        adminReviews={adminReviews}
         crmModules={crmModules}
         actors={actors}
       />
