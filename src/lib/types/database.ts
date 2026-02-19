@@ -91,6 +91,7 @@ export type Database = {
           email: string
           mobile: string
           created_at: string
+          test_completed: string | null
         }
         Insert: {
           id?: string
@@ -99,6 +100,7 @@ export type Database = {
           email: string
           mobile: string
           created_at?: string
+          test_completed?: string | null
         }
         Update: {
           id?: string
@@ -107,6 +109,7 @@ export type Database = {
           email?: string
           mobile?: string
           created_at?: string
+          test_completed?: string | null
         }
         Relationships: [
           {

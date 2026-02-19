@@ -21,7 +21,6 @@ import {
   FileCheck,
   Download,
   CheckCircle2,
-  GraduationCap,
 } from "lucide-react"
 
 const ACTOR_STYLES: Record<string, string> = {
@@ -142,12 +141,6 @@ export default async function ProjectDetailPage({
       icon: FileCheck,
       label: "Sign Off",
       sub: `${signoffs?.length || 0} sign-offs`,
-    },
-    {
-      href: `/admin/projects/${project.slug}/training-plan`,
-      icon: GraduationCap,
-      label: "Training Plan",
-      sub: "Generate & Export",
     },
   ]
 

@@ -92,6 +92,18 @@ export async function registerTester(
   }
 }
 
+export async function markTestComplete(
+  testerId: string
+): Promise<{ error?: string }> {
+  const supabase = createServerSupabaseClient()
+  const { error } = await supabase
+    .from('testers')
+    .update({ test_completed: 'Yes' })
+    .eq('id', testerId)
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function deleteTester(
   slug: string,
   testerId: string

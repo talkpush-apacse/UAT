@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2 } from "lucide-react"
 import ChecklistItem from "./checklist-item"
+import { markTestComplete } from "@/lib/actions/testers"
 
 interface ChecklistItemData {
   id: string
@@ -45,6 +46,7 @@ interface Project {
 interface Tester {
   id: string
   name: string
+  test_completed?: string | null
 }
 
 interface AdminReview {
@@ -88,6 +90,7 @@ export default function ChecklistView({
   attachments: initialAttachments,
   isAdmin = false,
   adminReviews = [],
+  testCompleted = null,
 }: {
   project: Project
   tester: Tester
@@ -96,6 +99,7 @@ export default function ChecklistView({
   attachments: AttachmentData[]
   isAdmin?: boolean
   adminReviews?: AdminReview[]
+  testCompleted?: string | null
 }) {
   const [responses, setResponses] = useState<Record<string, ResponseData>>(() => {
     const map: Record<string, ResponseData> = {}
@@ -104,6 +108,18 @@ export default function ChecklistView({
     })
     return map
   })
+
+  const [isTestComplete, setIsTestComplete] = useState(testCompleted === "Yes")
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false)
+
+  const handleMarkComplete = async () => {
+    setIsMarkingComplete(true)
+    const result = await markTestComplete(tester.id)
+    if (!result.error) {
+      setIsTestComplete(true)
+    }
+    setIsMarkingComplete(false)
+  }
 
   // Build a map of admin reviews keyed by checklist_item_id
   const reviewMap = useMemo<Record<string, AdminReview>>(() => {
@@ -252,7 +268,7 @@ export default function ChecklistView({
       </div>
 
       {/* Checklist — rendered in original file order */}
-      <div className="mt-6 space-y-6">
+      <div className="mt-6 space-y-6" id="checklist-sections">
         {sections.map((section, sIdx) => {
           const sectionCompleted = section.items.filter(
             (i) => responses[i.id]?.status !== null && responses[i.id]?.status !== undefined
@@ -305,6 +321,35 @@ export default function ChecklistView({
             </div>
           )
         })}
+
+        {/* Mark Test Complete — shown after the last step */}
+        {checklistItems.length > 0 && (
+          <div className="pt-4 pb-6 border-t border-gray-200 mt-2">
+            {isTestComplete ? (
+              <div className="flex items-center justify-center gap-2.5 rounded-xl bg-green-50 border border-green-200 py-5 px-6">
+                <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <span className="text-sm font-semibold text-green-700">Test Marked Complete</span>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={handleMarkComplete}
+                  disabled={isMarkingComplete}
+                  className="w-full rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white
+                             font-semibold py-4 px-6 text-sm transition-colors
+                             disabled:opacity-60 disabled:cursor-not-allowed
+                             flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <Flag className="h-4 w-4" />
+                  {isMarkingComplete ? "Saving…" : "Mark My Test as Complete"}
+                </button>
+                <p className="text-xs text-gray-400 text-center mt-2">
+                  Only mark complete when you have finished all test steps
+                </p>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

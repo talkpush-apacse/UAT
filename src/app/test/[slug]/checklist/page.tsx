@@ -28,7 +28,7 @@ export default async function ChecklistPage({
   // Verify tester exists and belongs to this project
   const { data: tester } = await supabase
     .from("testers")
-    .select("id, name, project_id")
+    .select("id, name, project_id, test_completed")
     .eq("id", searchParams.tester)
     .single()
 
@@ -98,6 +98,7 @@ export default async function ChecklistPage({
         attachments={attachments}
         isAdmin={isAdmin}
         adminReviews={adminReviews}
+        testCompleted={tester.test_completed ?? null}
       />
     </div>
   )
