@@ -20,6 +20,8 @@ import {
   AlertTriangle,
   BookCheck,
   Download,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
 
 /* ------------------------------------------------------------------ */
@@ -95,10 +97,6 @@ function stripMarkdown(text: string): string {
     .trim()
 }
 
-function truncate(text: string, max: number): string {
-  if (text.length <= max) return text
-  return text.slice(0, max) + "…"
-}
 
 /* ------------------------------------------------------------------ */
 /*  Main component                                                      */
@@ -120,7 +118,15 @@ export default function AnalyticsCharts({
 }) {
   const [filterScope, setFilterScope] = useState<"all" | "completed">("all")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
   const reportRef = useRef<HTMLDivElement>(null)
+
+  const toggleRow = (i: number) =>
+    setExpandedRows(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) { next.delete(i) } else { next.add(i) }
+      return next
+    })
 
   /* ---------- Completed tester IDs ---------- */
   const completedTesterIds = useMemo(() => {
@@ -383,6 +389,130 @@ export default function AnalyticsCharts({
         </button>
       </div>
 
+      {/* ════════════════════════════════════════════════════ */}
+      {/*  UAT Summary Report                                 */}
+      {/* ════════════════════════════════════════════════════ */}
+      <div className="flex items-center gap-3 pt-2">
+        <ClipboardList className="h-5 w-5 text-emerald-700" />
+        <h2 className="text-base font-semibold text-gray-900">UAT Summary Report</h2>
+        <div className="flex-1 h-px bg-gray-200" />
+      </div>
+
+      {/* Completion Overview */}
+      <div className="grid grid-cols-3 gap-4">
+        {/* Registered */}
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <CardContent className="pt-6 pb-5 flex flex-col items-center text-center">
+            <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+              <Users className="h-6 w-6 text-emerald-700" />
+            </div>
+            <p className="text-4xl font-bold text-emerald-700">{completionStats.registered}</p>
+            <p className="text-sm font-medium text-gray-700 mt-1">Registered</p>
+            <p className="text-xs text-gray-400 mt-0.5">Testers who signed up</p>
+          </CardContent>
+        </Card>
+
+        {/* Started */}
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <CardContent className="pt-6 pb-5 flex flex-col items-center text-center">
+            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+              <Play className="h-6 w-6 text-blue-600" />
+            </div>
+            <p className="text-4xl font-bold text-blue-600">{completionStats.started}</p>
+            <p className="text-sm font-medium text-gray-700 mt-1">Started</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {pct(completionStats.started, completionStats.registered)} of registered
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Completed */}
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <CardContent className="pt-6 pb-5 flex flex-col items-center text-center">
+            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            </div>
+            <p className="text-4xl font-bold text-green-600">{completionStats.completed}</p>
+            <p className="text-sm font-medium text-gray-700 mt-1">Completed</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {pct(completionStats.completed, completionStats.registered)} of registered
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Overall Status Breakdown */}
+      <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-gray-700">Overall Status Breakdown</CardTitle>
+            {/* Scope pill toggle */}
+            <div className="flex items-center rounded-full bg-gray-100 p-0.5 text-xs font-medium">
+              <button
+                onClick={() => setFilterScope("all")}
+                className={`px-3 py-1 rounded-full transition-all ${
+                  filterScope === "all"
+                    ? "bg-white text-gray-800 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                All Testers
+              </button>
+              <button
+                onClick={() => setFilterScope("completed")}
+                className={`px-3 py-1 rounded-full transition-all ${
+                  filterScope === "completed"
+                    ? "bg-white text-gray-800 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Completed Only
+              </button>
+            </div>
+          </div>
+          {filterScope === "completed" && completedTesterIds.size === 0 && (
+            <p className="text-xs text-amber-600 mt-1">No testers have completed the final step yet.</p>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <ResponsiveContainer width={300} height={280}>
+              <PieChart>
+                <Pie
+                  data={overallBreakdown}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={65}
+                  outerRadius={110}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, value }) => (value > 0 ? `${name}: ${value}` : "")}
+                  labelLine={false}
+                >
+                  {overallBreakdown.map((entry) => (
+                    <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            {/* Legend */}
+            <div className="flex flex-col gap-2.5 min-w-[160px]">
+              {overallBreakdown.map((entry) => (
+                <div key={entry.name} className="flex items-center gap-2.5">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: STATUS_COLORS[entry.name] }}
+                  />
+                  <span className="text-sm text-gray-700 flex-1">{entry.name}</span>
+                  <span className="text-sm font-semibold text-gray-900 tabular-nums">{entry.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div ref={reportRef} className="space-y-6">
 
         {/* ══════════════════════════════════════════════════════════════ */}
@@ -434,41 +564,6 @@ export default function AnalyticsCharts({
                 </div>
               </div>
 
-              {/* Divider */}
-              <div className="hidden sm:block w-px h-16 bg-gray-200" />
-
-              {/* Supporting stats */}
-              <div className="flex flex-wrap gap-4 flex-1">
-                {[
-                  {
-                    label: "Completed Testers",
-                    value: completedTesterIds.size,
-                    sub: `of ${testers.length} registered`,
-                    icon: <Users className="h-4 w-4 text-gray-500" />,
-                  },
-                  {
-                    label: "Steps Passed / N/A",
-                    value: readinessData.passing,
-                    sub: `of ${readinessData.total} responses`,
-                    icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
-                  },
-                  {
-                    label: "Open Issues",
-                    value: readinessData.openIssueCount,
-                    sub: "unresolved fail / blocked",
-                    icon: <AlertTriangle className="h-4 w-4 text-amber-500" />,
-                  },
-                ].map((s) => (
-                  <div key={s.label} className="flex items-center gap-3 bg-white/70 rounded-lg px-4 py-3 border border-white/80 min-w-[150px]">
-                    {s.icon}
-                    <div>
-                      <p className="text-xl font-bold text-gray-900 leading-none">{s.value}</p>
-                      <p className="text-xs font-medium text-gray-700 mt-0.5">{s.label}</p>
-                      <p className="text-xs text-gray-400">{s.sub}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -598,7 +693,9 @@ export default function AnalyticsCharts({
                     </tr>
                   </thead>
                   <tbody>
-                    {failedStepsRows.map((row, idx) => (
+                    {failedStepsRows.map((row, idx) => {
+                      const isExpanded = expandedRows.has(idx)
+                      return (
                       <tr
                         key={idx}
                         className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${
@@ -623,8 +720,21 @@ export default function AnalyticsCharts({
                         </td>
 
                         {/* Action */}
-                        <td className="px-4 py-3 text-gray-700 max-w-xs">
-                          <span title={row.action}>{truncate(row.action, 80)}</span>
+                        <td className="px-4 py-3 text-gray-700">
+                          <div className="flex items-start gap-1.5">
+                            <span className={isExpanded ? "whitespace-normal flex-1" : "line-clamp-1 flex-1 min-w-0"}>
+                              {row.action}
+                            </span>
+                            <button
+                              onClick={() => toggleRow(idx)}
+                              className="flex-shrink-0 text-gray-400 hover:text-gray-600 mt-0.5 transition-colors"
+                              aria-label={isExpanded ? "Collapse row" : "Expand row"}
+                            >
+                              {isExpanded
+                                ? <ChevronUp className="h-3.5 w-3.5" />
+                                : <ChevronDown className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
                         </td>
 
                         {/* Tester */}
@@ -671,9 +781,9 @@ export default function AnalyticsCharts({
                         </td>
 
                         {/* Comment (tester's comment) */}
-                        <td className="px-4 py-3 text-gray-600 text-xs max-w-xs">
+                        <td className="px-4 py-3 text-gray-600 text-xs">
                           {row.comment ? (
-                            <span title={row.comment}>{truncate(row.comment, 60)}</span>
+                            <span className={isExpanded ? "whitespace-normal" : "line-clamp-1"}>{row.comment}</span>
                           ) : (
                             <span className="text-gray-400">—</span>
                           )}
@@ -691,15 +801,15 @@ export default function AnalyticsCharts({
                         </td>
 
                         {/* Findings (admin notes) */}
-                        <td className="px-4 py-3 text-gray-600 text-xs max-w-xs">
+                        <td className="px-4 py-3 text-gray-600 text-xs">
                           {row.notes ? (
-                            <span title={row.notes}>{truncate(row.notes, 60)}</span>
+                            <span className={isExpanded ? "whitespace-normal" : "line-clamp-1"}>{row.notes}</span>
                           ) : (
                             <span className="text-gray-400">—</span>
                           )}
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>
@@ -781,130 +891,6 @@ export default function AnalyticsCharts({
         )}
 
       </div>{/* end reportRef */}
-
-        {/* ════════════════════════════════════════════════════ */}
-        {/*  UAT Summary Report heading                         */}
-        {/* ════════════════════════════════════════════════════ */}
-        <div className="flex items-center gap-3 pt-2">
-          <ClipboardList className="h-5 w-5 text-emerald-700" />
-          <h2 className="text-base font-semibold text-gray-900">UAT Summary Report</h2>
-          <div className="flex-1 h-px bg-gray-200" />
-        </div>
-
-        {/* ── Section 1: Completion Overview ── */}
-        <div className="grid grid-cols-3 gap-4">
-          {/* Registered */}
-          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
-            <CardContent className="pt-6 pb-5 flex flex-col items-center text-center">
-              <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-                <Users className="h-6 w-6 text-emerald-700" />
-              </div>
-              <p className="text-4xl font-bold text-emerald-700">{completionStats.registered}</p>
-              <p className="text-sm font-medium text-gray-700 mt-1">Registered</p>
-              <p className="text-xs text-gray-400 mt-0.5">Testers who signed up</p>
-            </CardContent>
-          </Card>
-
-          {/* Started */}
-          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
-            <CardContent className="pt-6 pb-5 flex flex-col items-center text-center">
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                <Play className="h-6 w-6 text-blue-600" />
-              </div>
-              <p className="text-4xl font-bold text-blue-600">{completionStats.started}</p>
-              <p className="text-sm font-medium text-gray-700 mt-1">Started</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {pct(completionStats.started, completionStats.registered)} of registered
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Completed */}
-          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
-            <CardContent className="pt-6 pb-5 flex flex-col items-center text-center">
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-              </div>
-              <p className="text-4xl font-bold text-green-600">{completionStats.completed}</p>
-              <p className="text-sm font-medium text-gray-700 mt-1">Completed</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {pct(completionStats.completed, completionStats.registered)} of registered
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ── Section 2: Overall Status Breakdown (full width, with scope toggle) ── */}
-        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-gray-700">Overall Status Breakdown</CardTitle>
-              {/* Scope pill toggle */}
-              <div className="flex items-center rounded-full bg-gray-100 p-0.5 text-xs font-medium">
-                <button
-                  onClick={() => setFilterScope("all")}
-                  className={`px-3 py-1 rounded-full transition-all ${
-                    filterScope === "all"
-                      ? "bg-white text-gray-800 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  All Testers
-                </button>
-                <button
-                  onClick={() => setFilterScope("completed")}
-                  className={`px-3 py-1 rounded-full transition-all ${
-                    filterScope === "completed"
-                      ? "bg-white text-gray-800 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  Completed Only
-                </button>
-              </div>
-            </div>
-            {filterScope === "completed" && completedTesterIds.size === 0 && (
-              <p className="text-xs text-amber-600 mt-1">No testers have completed the final step yet.</p>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              <ResponsiveContainer width={300} height={280}>
-                <PieChart>
-                  <Pie
-                    data={overallBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={65}
-                    outerRadius={110}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, value }) => (value > 0 ? `${name}: ${value}` : "")}
-                    labelLine={false}
-                  >
-                    {overallBreakdown.map((entry) => (
-                      <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              {/* Legend */}
-              <div className="flex flex-col gap-2.5 min-w-[160px]">
-                {overallBreakdown.map((entry) => (
-                  <div key={entry.name} className="flex items-center gap-2.5">
-                    <span
-                      className="inline-block h-3 w-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: STATUS_COLORS[entry.name] }}
-                    />
-                    <span className="text-sm text-gray-700 flex-1">{entry.name}</span>
-                    <span className="text-sm font-semibold text-gray-900 tabular-nums">{entry.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
     </div>
   )
