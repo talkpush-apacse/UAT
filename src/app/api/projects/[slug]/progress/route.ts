@@ -41,10 +41,40 @@ export async function GET(
       })
     }
 
+    // Fetch checklist item IDs scoped to this project so responses are
+    // counted only for items that belong here (not other projects the
+    // same tester may have participated in).
+    const { data: checklistItems } = await supabase
+      .from("checklist_items")
+      .select("id")
+      .eq("project_id", project.id)
+
+    const itemIds = (checklistItems || []).map((ci) => ci.id)
+
+    // If there are no checklist items, there can be no responses to count.
+    if (itemIds.length === 0) {
+      const emptyProgress = testers.map((tester) => ({
+        id: tester.id,
+        name: tester.name,
+        email: tester.email,
+        mobile: tester.mobile,
+        total: 0,
+        completed: 0,
+        pass: 0,
+        fail: 0,
+        na: 0,
+        blocked: 0,
+      }))
+      return NextResponse.json({ testers: emptyProgress }, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+      })
+    }
+
     const { data: responses } = await supabase
       .from("responses")
       .select("tester_id, status")
       .in("tester_id", testers.map((t) => t.id))
+      .in("checklist_item_id", itemIds)
 
     const testerProgress = testers.map((tester) => {
       const testerResponses = (responses || []).filter(

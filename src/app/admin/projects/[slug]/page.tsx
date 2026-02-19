@@ -21,6 +21,7 @@ import {
   FileCheck,
   Download,
   CheckCircle2,
+  GraduationCap,
 } from "lucide-react"
 
 const ACTOR_STYLES: Record<string, string> = {
@@ -80,10 +81,17 @@ export default async function ProjectDetailPage({
       .eq("project_id", project.id)
 
     if (testers && testers.length > 0) {
-      const { data: responses } = await supabase
-        .from("responses")
-        .select("tester_id, status")
-        .in("tester_id", testers.map((t) => t.id))
+      // Scope responses to only checklist items belonging to this project
+      // so that testers who participated in other projects aren't double-counted.
+      const itemIds = (checklistItems || []).map((ci: { id: string }) => ci.id)
+
+      const { data: responses } = itemIds.length > 0
+        ? await supabase
+            .from("responses")
+            .select("tester_id, status")
+            .in("tester_id", testers.map((t) => t.id))
+            .in("checklist_item_id", itemIds)
+        : { data: [] }
 
       initialTesters = testers.map((tester) => {
         const testerResponses = (responses || []).filter(
@@ -135,6 +143,12 @@ export default async function ProjectDetailPage({
       label: "Sign Off",
       sub: `${signoffs?.length || 0} sign-offs`,
     },
+    {
+      href: `/admin/projects/${project.slug}/training-plan`,
+      icon: GraduationCap,
+      label: "Training Plan",
+      sub: "Generate & Export",
+    },
   ]
 
   return (
@@ -182,7 +196,7 @@ export default async function ProjectDetailPage({
         </div>
       )}
 
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 mb-8">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8">
         {actionCards.map((card) => (
           <Link key={card.href} href={card.href}>
             <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-200 cursor-pointer p-5 text-center">
