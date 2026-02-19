@@ -30,10 +30,10 @@ export default async function AnalyticsPage({
     .eq("project_id", project.id)
     .order("sort_order")
 
-  // Include email for the report sections
+  // Include email + test_completed for the report sections
   const { data: testers } = await supabase
     .from("testers")
-    .select("id, name, email")
+    .select("id, name, email, test_completed")
     .eq("project_id", project.id)
     .order("created_at", { ascending: true })
 
