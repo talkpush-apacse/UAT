@@ -40,12 +40,12 @@ export default async function AnalyticsPage({
   const testerIds = (testers || []).map((t) => t.id)
   const itemIds = (checklistItems || []).map((ci) => ci.id)
 
-  let responses: { tester_id: string; checklist_item_id: string; status: string | null }[] = []
+  let responses: { tester_id: string; checklist_item_id: string; status: string | null; comment: string | null }[] = []
 
   if (testerIds.length > 0 && itemIds.length > 0) {
     const { data } = await supabase
       .from("responses")
-      .select("tester_id, checklist_item_id, status")
+      .select("tester_id, checklist_item_id, status, comment")
       .in("tester_id", testerIds)
       .in("checklist_item_id", itemIds) // scope to this project's items only
 
