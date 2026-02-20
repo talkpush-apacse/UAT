@@ -68,6 +68,14 @@ const STATUS_COLORS: Record<string, string> = {
   "Not Tested": "#d1d5db",
 }
 
+const FINDING_COLORS: Record<string, string> = {
+  "Expected Behavior": "#22c55e",
+  "Bug/Glitch": "#ef4444",
+  "Configuration Issue": "#f97316",
+  "For Retesting": "#3b82f6",
+  "Not Yet Reviewed": "#d1d5db",
+}
+
 const ACTOR_BADGE: Record<string, string> = {
   Candidate: "bg-sky-100 text-sky-800 border-sky-200",
   Recruiter: "bg-violet-100 text-violet-800 border-violet-200",
@@ -184,6 +192,43 @@ export default function AnalyticsCharts({
 
     return Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
   }, [checklistItems, responses, testers, filterScope, completedTesterIds])
+
+  /* ---------- Section 3: Talkpush Findings breakdown (non-Pass steps with admin review) ---------- */
+  const findingsBreakdown = useMemo(() => {
+    // Look at all non-Pass responses that have an admin review with a behavior_type set
+    const findingCounts: Record<string, number> = {
+      "Expected Behavior": 0,
+      "Bug/Glitch": 0,
+      "Configuration Issue": 0,
+      "For Retesting": 0,
+    }
+
+    // Count non-Pass responses with a Talkpush finding
+    let reviewedCount = 0
+    let unreviewedCount = 0
+
+    responses.forEach((r) => {
+      if (r.status === "Pass" || r.status === null) return
+      const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
+      if (review?.behavior_type && findingCounts[review.behavior_type] !== undefined) {
+        findingCounts[review.behavior_type]++
+        reviewedCount++
+      } else {
+        unreviewedCount++
+      }
+    })
+
+    // Only include categories that have values, plus always show "Not Yet Reviewed" if any
+    const entries = Object.entries(findingCounts)
+      .filter(([, value]) => value > 0)
+      .map(([name, value]) => ({ name, value }))
+
+    if (unreviewedCount > 0) {
+      entries.push({ name: "Not Yet Reviewed", value: unreviewedCount })
+    }
+
+    return { entries, reviewedCount, unreviewedCount, total: reviewedCount + unreviewedCount }
+  }, [responses, reviewMap])
 
   /* ---------- Client Report 1: Tester Participation ---------- */
   const testerParticipation = useMemo(() => {
@@ -470,6 +515,61 @@ export default function AnalyticsCharts({
           </div>
         </CardContent>
       </Card>
+
+      {/* Talkpush Findings Breakdown — non-Pass steps reviewed by Talkpush */}
+      {findingsBreakdown.total > 0 && (
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-gray-700">Talkpush Findings Breakdown</CardTitle>
+            <p className="text-xs text-gray-500">
+              Admin review findings for all non-Pass steps ({findingsBreakdown.total} total)
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center justify-center gap-6">
+              <ResponsiveContainer width={300} height={280}>
+                <PieChart>
+                  <Pie
+                    data={findingsBreakdown.entries}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={65}
+                    outerRadius={110}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {findingsBreakdown.entries.map((entry) => (
+                      <Cell key={entry.name} fill={FINDING_COLORS[entry.name] ?? "#94a3b8"} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Legend */}
+              <div className="flex flex-col gap-2.5 min-w-[200px]">
+                {findingsBreakdown.entries.map((entry) => {
+                  const pctLabel = findingsBreakdown.total === 0
+                    ? "0%"
+                    : `${Math.round((entry.value / findingsBreakdown.total) * 100)}%`
+                  return (
+                    <div key={entry.name} className="flex items-center gap-2.5">
+                      <span
+                        className="inline-block h-3 w-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: FINDING_COLORS[entry.name] ?? "#94a3b8" }}
+                      />
+                      <span className="text-sm text-gray-700 flex-1">{entry.name}</span>
+                      <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                        {entry.value}
+                        <span className="text-xs font-normal text-gray-400 ml-1">({pctLabel})</span>
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div ref={reportRef} className="space-y-6">
 
