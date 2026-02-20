@@ -16,21 +16,31 @@ export async function saveAdminReview(data: {
   if (!isAdmin) return { error: 'Unauthorized' }
 
   const supabase = createAdminClient()
+
+  const payload = {
+    checklist_item_id: data.checklistItemId,
+    tester_id: data.testerId,
+    behavior_type: data.behaviorType,
+    resolution_status: data.resolutionStatus,
+    notes: data.notes,
+    updated_at: new Date().toISOString(),
+  }
+
   const { error } = await supabase
     .from('admin_reviews')
-    .upsert(
-      {
-        checklist_item_id: data.checklistItemId,
-        tester_id: data.testerId,
-        behavior_type: data.behaviorType,
-        resolution_status: data.resolutionStatus,
-        notes: data.notes,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'checklist_item_id,tester_id' }
-    )
+    .upsert(payload, { onConflict: 'checklist_item_id,tester_id' })
 
-  if (error) return { error: error.message }
+  if (error) {
+    // Log full error context for debugging — hidden from user
+    console.error('saveAdminReview failed:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      payload,
+    })
+    return { error: error.message }
+  }
 
   // Revalidate the admin analytics page so the score reflects the new finding
   // immediately when the admin next loads the page.
