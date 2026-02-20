@@ -21,6 +21,16 @@ export interface ChecklistActionState {
   itemCount?: number
 }
 
+/** Minimal step shape used for the "Copy from Project" step-selection dialog */
+export interface StepPreview {
+  id: string
+  step_number: number
+  actor: string
+  action: string
+  path: string | null
+  crm_module: string | null
+}
+
 /* ------------------------------------------------------------------ */
 /*  renumberSteps — keeps step_number = 1,2,3,...,N in sort_order      */
 /* ------------------------------------------------------------------ */
@@ -433,17 +443,49 @@ export async function listProjectsForCopy(
 }
 
 /* ------------------------------------------------------------------ */
-/*  copyStepsFromProject — appends all steps from source project       */
+/*  getProjectStepsForCopy — fetches preview of steps in a project    */
+/* ------------------------------------------------------------------ */
+
+export async function getProjectStepsForCopy(
+  sourceProjectId: string
+): Promise<{ error?: string; steps?: StepPreview[] }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    const supabase = createAdminClient()
+
+    const { data, error } = await supabase
+      .from('checklist_items')
+      .select('id, step_number, actor, action, path, crm_module')
+      .eq('project_id', sourceProjectId)
+      .order('sort_order')
+
+    if (error) return { error: error.message }
+    return { steps: data || [] }
+  } catch (err) {
+    console.error('getProjectStepsForCopy error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  copyStepsFromProject — appends selected steps from source project  */
 /* ------------------------------------------------------------------ */
 
 export async function copyStepsFromProject(
   targetProjectId: string,
   targetSlug: string,
-  sourceProjectId: string
+  sourceProjectId: string,
+  selectedItemIds: string[]
 ): Promise<{ error?: string; addedCount?: number }> {
   try {
     const isAdmin = await verifyAdminSession()
     if (!isAdmin) return { error: 'Unauthorized' }
+
+    if (selectedItemIds.length === 0) {
+      return { error: 'No steps selected' }
+    }
 
     if (sourceProjectId === targetProjectId) {
       return { error: 'Source and target project must be different' }
@@ -451,16 +493,17 @@ export async function copyStepsFromProject(
 
     const supabase = createAdminClient()
 
-    // Fetch all steps from the source project ordered by sort_order
+    // Fetch only the selected steps from the source project, preserving sort_order
     const { data: sourceItems, error: fetchError } = await supabase
       .from('checklist_items')
       .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order')
       .eq('project_id', sourceProjectId)
+      .in('id', selectedItemIds)
       .order('sort_order')
 
     if (fetchError) return { error: fetchError.message }
     if (!sourceItems || sourceItems.length === 0) {
-      return { error: 'The selected project has no steps to copy' }
+      return { error: 'No steps were found for the selected IDs' }
     }
 
     // Find current max sort_order in the target project
@@ -497,7 +540,7 @@ export async function copyStepsFromProject(
     await renumberSteps(targetProjectId, supabase)
 
     revalidatePath(`/admin/projects/${targetSlug}/checklist`)
-    return { addedCount: sourceItems.length }
+    return { addedCount: rows.length }
   } catch (err) {
     console.error('copyStepsFromProject error:', err)
     return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }

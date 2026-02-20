@@ -47,6 +47,13 @@ const STATUS_OPTIONS = [
   { value: "Blocked", label: "Up For Review" },
 ] as const
 
+/** Color scheme for actor chips shown in the step card header */
+const ACTOR_CHIP_STYLES: Record<string, string> = {
+  Candidate: "bg-sky-50 text-sky-800 border-sky-200",
+  Talkpush: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
+}
+
 const STATUS_STYLES: Record<string, { active: string; inactive: string }> = {
   Pass: {
     active: "bg-green-600 text-white border-green-600",
@@ -276,28 +283,46 @@ export default function ChecklistItem({
       className={`${getCardStyles(status)} rounded-xl shadow-sm hover:shadow-md transition-all duration-200`}
     >
       <CardContent className="py-4">
-        {/* === HEADER LINE === */}
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2">
-            <span className="w-7 h-7 rounded-md bg-gray-100 text-xs font-semibold text-gray-600 flex items-center justify-center">
+        <div className="flex items-start gap-3">
+
+          {/* === LEFT: Large teal step number circle === */}
+          <div className="flex-shrink-0 pt-0.5">
+            <div
+              className={`w-10 h-10 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center shadow-sm select-none ${item.step_number >= 10 ? "text-sm" : "text-base"}`}
+            >
               {item.step_number}
-            </span>
-            {item.crm_module && (
-              <Badge variant="outline" className="text-xs">{item.crm_module}</Badge>
-            )}
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            {saveStatus === "saving" && (
-              <span className="text-xs text-gray-400 animate-pulse">Saving...</span>
-            )}
-            {saveStatus === "saved" && (
-              <span className="text-xs text-green-600">Saved</span>
-            )}
-            {saveStatus === "error" && (
-              <span className="text-xs text-red-600">Error — tap to retry</span>
-            )}
-          </div>
-        </div>
+
+          {/* === RIGHT: Everything else === */}
+          <div className="flex-1 min-w-0">
+
+            {/* Header row: actor chip + crm badge + save status */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span
+                  className={`text-xs font-medium px-2 py-0.5 rounded-full border leading-none ${ACTOR_CHIP_STYLES[item.actor] ?? "bg-gray-50 text-gray-600 border-gray-200"}`}
+                >
+                  {item.actor}
+                </span>
+                {item.crm_module && (
+                  <Badge variant="outline" className="text-xs text-gray-500 border-gray-200">
+                    {item.crm_module}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {saveStatus === "saving" && (
+                  <span className="text-xs text-gray-400 animate-pulse">Saving...</span>
+                )}
+                {saveStatus === "saved" && (
+                  <span className="text-xs text-green-600">Saved</span>
+                )}
+                {saveStatus === "error" && (
+                  <span className="text-xs text-red-600">Error — tap to retry</span>
+                )}
+              </div>
+            </div>
 
         {/* === INSTRUCTION ZONE — Issue #6: URLs auto-linked via prose-a styles === */}
         <div className="prose prose-sm prose-gray max-w-none mb-4 text-base leading-relaxed text-gray-800
@@ -529,6 +554,9 @@ export default function ChecklistItem({
             />
           </div>
         )}
+
+          </div>{/* end right column */}
+        </div>{/* end outer flex */}
       </CardContent>
     </Card>
   )
