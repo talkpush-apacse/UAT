@@ -5,7 +5,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import AnalyticsCharts from "@/components/admin/analytics-charts"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
 
 export default async function AnalyticsPage({
   params,
@@ -84,13 +83,15 @@ export default async function AnalyticsPage({
 
   return (
     <div>
-      <Link
-        href={`/admin/projects/${params.slug}`}
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-700 transition-colors mb-6"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Back to Project
-      </Link>
+      <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-6">
+        <Link href="/admin" className="hover:text-emerald-700 transition-colors">UAT Admin</Link>
+        <span>/</span>
+        <Link href={`/admin/projects/${params.slug}`} className="hover:text-emerald-700 transition-colors">
+          {project.company_name}
+        </Link>
+        <span>/</span>
+        <span className="text-gray-600 font-medium">Analytics</span>
+      </nav>
       <h1 className="text-xl font-semibold text-gray-900 mb-6">
         Analytics — {project.company_name}
       </h1>

@@ -162,12 +162,13 @@ export default function LiveProgressTable({
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="relative">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Tester</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
+                <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide w-48">Progress</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Pass</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Fail</th>
@@ -184,7 +185,7 @@ export default function LiveProgressTable({
                 return (
                   <tr key={tester.id} className="group border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-3 font-medium text-sm text-gray-800">{tester.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{tester.email}</td>
+                    <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-500">{tester.email}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Progress value={pct} className="h-2 flex-1" />
@@ -253,6 +254,8 @@ export default function LiveProgressTable({
               })}
             </tbody>
           </table>
+        </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent md:hidden" />
         </div>
       </div>
     </div>

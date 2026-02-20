@@ -486,8 +486,6 @@ export default function AnalyticsCharts({
                   outerRadius={110}
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ name, value }) => (value > 0 ? `${name}: ${value}` : "")}
-                  labelLine={false}
                 >
                   {overallBreakdown.map((entry) => (
                     <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />

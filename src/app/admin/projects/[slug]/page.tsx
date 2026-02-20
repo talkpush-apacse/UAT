@@ -158,12 +158,12 @@ export default async function ProjectDetailPage({
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{project.company_name}</h1>
-          <p className="text-xs text-gray-400 font-mono mt-0.5">/{project.slug}</p>
+          <p className="text-xs text-gray-400 font-mono mt-0.5">Tester URL: /test/{project.slug}</p>
           {project.test_scenario && (
             <p className="text-sm text-gray-600 mt-2 leading-relaxed">{project.test_scenario}</p>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:justify-end">
           <CopyLinkButton slug={project.slug} />
           <CopyAnalyticsLinkButton slug={project.slug} />
           <Link href={`/admin/projects/${project.slug}/edit`}>

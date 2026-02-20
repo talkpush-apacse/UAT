@@ -68,17 +68,22 @@ export default async function AdminDashboard() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projectsWithCounts.map((project) => (
+          {projectsWithCounts.map((project) => {
+            const status =
+              project.signoffCount > 0
+                ? { label: "Signed Off", color: "bg-green-50 text-green-700 border-green-200" }
+                : project.testerCount === 0
+                ? { label: "Not Started", color: "bg-gray-100 text-gray-500 border-gray-200" }
+                : { label: "In Progress", color: "bg-blue-50 text-blue-700 border-blue-200" }
+            return (
             <Link key={project.id} href={`/admin/projects/${project.slug}`}>
               <Card className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 cursor-pointer h-full">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-base font-semibold text-gray-900">{project.company_name}</CardTitle>
-                    {project.signoffCount > 0 && (
-                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                        Signed Off
-                      </Badge>
-                    )}
+                    <Badge variant="outline" className={`text-xs ${status.color}`}>
+                      {status.label}
+                    </Badge>
                   </div>
                   <p className="text-xs text-gray-400 font-mono">
                     /{project.slug}
@@ -102,7 +107,8 @@ export default async function AdminDashboard() {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

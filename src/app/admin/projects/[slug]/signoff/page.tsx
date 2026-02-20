@@ -29,14 +29,15 @@ export default async function SignoffPage({
 
   return (
     <div className="max-w-2xl">
-      <div className="mb-6">
-        <Link
-          href={`/admin/projects/${params.slug}`}
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          &larr; Back to Project
+      <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-6">
+        <Link href="/admin" className="hover:text-emerald-700 transition-colors">UAT Admin</Link>
+        <span>/</span>
+        <Link href={`/admin/projects/${params.slug}`} className="hover:text-emerald-700 transition-colors">
+          {project.company_name}
         </Link>
-      </div>
+        <span>/</span>
+        <span className="text-gray-600 font-medium">Sign Off</span>
+      </nav>
       <SignoffForm
         projectId={project.id}
         slug={project.slug}

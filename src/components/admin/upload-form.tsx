@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useFormState } from "react-dom"
 import { useRouter } from "next/navigation"
 import { importChecklist, type ChecklistActionState } from "@/lib/actions/checklist"
@@ -9,7 +9,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Upload, CheckCircle2 } from "lucide-react"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Upload, CheckCircle2, AlertTriangle } from "lucide-react"
 
 export default function UploadForm({
   projectId,
@@ -24,6 +36,7 @@ export default function UploadForm({
     {}
   )
   const router = useRouter()
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     if (state.success) {
@@ -47,7 +60,7 @@ export default function UploadForm({
         </p>
       </CardHeader>
       <CardContent className="p-5">
-        <form action={formAction} className="space-y-4">
+        <form ref={formRef} action={formAction} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="file" className="text-xs text-gray-500">Checklist File</Label>
             <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-emerald-300 hover:bg-emerald-50/50 transition-all duration-200">
@@ -63,9 +76,6 @@ export default function UploadForm({
                 className="max-w-xs mx-auto"
               />
             </div>
-            <p className="text-xs text-gray-400">
-              This will replace any existing checklist items for this project.
-            </p>
           </div>
           {state.error && (
             <p className="text-sm text-red-600">{state.error}</p>
@@ -86,10 +96,33 @@ export default function UploadForm({
               Successfully imported {state.itemCount} checklist items. Redirecting...
             </div>
           )}
+          <Alert variant="warning">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Heads up</AlertTitle>
+            <AlertDescription>
+              This will permanently replace all existing checklist steps for this project.
+            </AlertDescription>
+          </Alert>
           <Separator />
-          <Button type="submit">
-            Upload & Import
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button type="button">Upload &amp; Import</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Replace Checklist?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently replace all existing checklist steps. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => formRef.current?.requestSubmit()}>
+                  Yes, Replace
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </form>
       </CardContent>
     </Card>

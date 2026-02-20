@@ -26,6 +26,7 @@ const COUNTRY_CODES = [
   { code: "+852", country: "HK", label: "HK +852" },
   { code: "+81", country: "JP", label: "JP +81" },
   { code: "+82", country: "KR", label: "KR +82" },
+  { code: "+886", country: "TW", label: "TW +886" },
   { code: "+86", country: "CN", label: "CN +86" },
   { code: "+60", country: "MY", label: "MY +60" },
   { code: "+66", country: "TH", label: "TH +66" },

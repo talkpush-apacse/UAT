@@ -70,7 +70,7 @@ export default function SignoffForm({
             <input type="hidden" name="projectId" value={projectId} />
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="signoffName" className="text-xs text-gray-500">Name</Label>
+                <Label htmlFor="signoffName" className="text-xs text-gray-500">Name <span className="text-red-500">*</span></Label>
                 <Input
                   id="signoffName"
                   name="signoffName"
@@ -79,7 +79,7 @@ export default function SignoffForm({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="signoffDate" className="text-xs text-gray-500">Date</Label>
+                <Label htmlFor="signoffDate" className="text-xs text-gray-500">Date <span className="text-red-500">*</span></Label>
                 <Input
                   id="signoffDate"
                   name="signoffDate"
