@@ -16,9 +16,6 @@ import {
   CheckCircle2,
   Play,
   ClipboardList,
-  ShieldCheck,
-  AlertTriangle,
-  BookCheck,
   Download,
   ChevronDown,
   ChevronUp,
@@ -107,13 +104,11 @@ export default function AnalyticsCharts({
   testers,
   responses,
   adminReviews,
-  crmModules,
 }: {
   checklistItems: ChecklistItem[]
   testers: Tester[]
   responses: Response[]
   adminReviews: AdminReview[]
-  crmModules: string[]
 }) {
   const [filterScope, setFilterScope] = useState<"all" | "completed">("all")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -190,92 +185,7 @@ export default function AnalyticsCharts({
     return Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
   }, [checklistItems, responses, testers, filterScope, completedTesterIds])
 
-  /* ---------- Client Report 1: Readiness Score ---------- */
-  const readinessData = useMemo(() => {
-    /*
-     * ─── UAT READINESS SCORE — SCORING FORMULA ──────────────────────────────────
-     *
-     * Score = (positiveSteps / scoreableSteps) × 100
-     *
-     * EXCLUDED from scoring (not in denominator or numerator):
-     *   • Tester status "N/A" or "Blocked" — inconclusive / pending review
-     *   • Admin finding "For Retesting"    — step needs re-verification
-     *
-     * POSITIVE outcome (counts in numerator):
-     *   • Status "Pass"  + finding null or "Expected Behavior"
-     *   • Status "Fail"  + finding "Expected Behavior"
-     *     → Admin determined system was correct; tester made an error
-     *
-     * NEGATIVE outcome (in denominator, not in numerator):
-     *   • Status "Pass"  + finding "Bug/Glitch" or "Configuration Issue"
-     *     → Admin override: system has a real problem the tester missed
-     *   • Status "Fail"  + finding null, "Bug/Glitch", or "Configuration Issue"
-     *
-     * Admin finding takes precedence over tester status wherever they conflict.
-     * ────────────────────────────────────────────────────────────────────────────
-     */
-
-    // Only score testers who have reached the final checklist step.
-    const completedResponses = responses.filter((r) =>
-      completedTesterIds.has(r.tester_id)
-    )
-
-    // Remove excluded steps from scoring: N/A, Blocked, and For Retesting.
-    const scoreableResponses = completedResponses.filter((r) => {
-      if (r.status === "N/A" || r.status === "Blocked") return false
-      const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
-      if (review?.behavior_type === "For Retesting") return false
-      return true
-    })
-
-    // Determines whether a scoreable step counts as a positive outcome.
-    // Admin finding takes precedence over tester status when they conflict.
-    const isPositive = (r: Response): boolean => {
-      const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
-      const finding = review?.behavior_type ?? null
-
-      // Negative admin findings override any tester status.
-      if (finding === "Bug/Glitch" || finding === "Configuration Issue") return false
-
-      // Fail + Expected Behavior: admin says system was fine, tester was wrong → positive.
-      if (r.status === "Fail" && finding === "Expected Behavior") return true
-
-      // Fail with no finding or unhandled finding → negative.
-      if (r.status === "Fail") return false
-
-      // Pass with no negative finding (null or Expected Behavior) → positive.
-      return true
-    }
-
-    const total = scoreableResponses.length
-    const passing = scoreableResponses.filter(isPositive).length
-    const failing = total - passing
-
-    const score = total === 0 ? null : Math.round((passing / total) * 100)
-    const label =
-      score === null  ? "No Data"      :
-      score >= 90     ? "Ready"        :
-      score >= 70     ? "Needs Review" :
-                        "Not Ready"
-    const color =
-      score === null  ? "gray"  :
-      score >= 90     ? "green" :
-      score >= 70     ? "amber" :
-                        "red"
-
-    // openIssueCount is independent of the readiness score formula.
-    // Counts all Fail/Blocked responses (across ALL testers, not just completed)
-    // that an admin has not yet resolved — used for triage awareness.
-    const openIssueCount = responses.filter((r) => {
-      if (r.status !== "Fail" && r.status !== "Blocked") return false
-      const rev = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
-      return !rev || rev.resolution_status !== "resolved"
-    }).length
-
-    return { score, label, color, passing, failing, total, openIssueCount }
-  }, [responses, completedTesterIds, reviewMap])
-
-  /* ---------- Client Report 2: Tester Participation ---------- */
+  /* ---------- Client Report 1: Tester Participation ---------- */
   const testerParticipation = useMemo(() => {
     const total = checklistItems.length
     return testers.map((t) => {
@@ -300,7 +210,7 @@ export default function AnalyticsCharts({
     })
   }, [testers, responses, checklistItems])
 
-  /* ---------- Client Report 3: Fail/Blocked steps table ---------- */
+  /* ---------- Client Report 2: Fail/Blocked steps table ---------- */
   const failedStepsRows = useMemo(() => {
     const itemMap = new Map(checklistItems.map((i) => [i.id, i]))
     const testerMap = new Map(testers.map((t) => [t.id, t]))
@@ -344,32 +254,6 @@ export default function AnalyticsCharts({
 
     return rows
   }, [responses, reviewMap, checklistItems, testers])
-
-  /* ---------- Client Report 4: Module Coverage ---------- */
-  const moduleCoverage = useMemo(() => {
-    const modules = [
-      ...crmModules,
-      ...(checklistItems.some((i) => !i.crm_module) ? ["(No Module)"] : []),
-    ]
-    return modules.map((mod) => {
-      const modItems = checklistItems.filter((i) =>
-        mod === "(No Module)" ? !i.crm_module : i.crm_module === mod
-      )
-      const modItemIds = new Set(modItems.map((i) => i.id))
-      const modResponses = responses.filter((r) => modItemIds.has(r.checklist_item_id))
-      const pass = modResponses.filter((r) => r.status === "Pass" || r.status === "N/A").length
-      const issues = modResponses.filter((r) => r.status === "Fail" || r.status === "Blocked").length
-      const passRate = modResponses.length === 0 ? null : Math.round((pass / modResponses.length) * 100)
-      return {
-        module: mod,
-        stepCount: modItems.length,
-        responseCount: modResponses.length,
-        passRate,
-        issues,
-        allClear: issues === 0 && modResponses.length > 0,
-      }
-    })
-  }, [crmModules, checklistItems, responses])
 
   /* ---------- PDF Download ---------- */
   const handleDownloadPDF = async () => {
@@ -551,76 +435,43 @@ export default function AnalyticsCharts({
               </PieChart>
             </ResponsiveContainer>
             {/* Legend */}
-            <div className="flex flex-col gap-2.5 min-w-[160px]">
-              {overallBreakdown.map((entry) => (
-                <div key={entry.name} className="flex items-center gap-2.5">
-                  <span
-                    className="inline-block h-3 w-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: STATUS_COLORS[entry.name] }}
-                  />
-                  <span className="text-sm text-gray-700 flex-1">{entry.name}</span>
-                  <span className="text-sm font-semibold text-gray-900 tabular-nums">{entry.value}</span>
-                </div>
-              ))}
+            <div className="flex flex-col gap-2.5 min-w-[180px]">
+              {(() => {
+                const legendTotal = overallBreakdown.reduce((sum, e) => sum + e.value, 0)
+                const STATUS_DISPLAY: Record<string, string> = {
+                  Pass: "Pass",
+                  Fail: "Fail",
+                  "N/A": "N/A",
+                  Blocked: "Up For Review",
+                  "Not Tested": "Not Tested",
+                }
+                return overallBreakdown.map((entry) => {
+                  const pctLabel = legendTotal === 0
+                    ? "0%"
+                    : `${Math.round((entry.value / legendTotal) * 100)}%`
+                  return (
+                    <div key={entry.name} className="flex items-center gap-2.5">
+                      <span
+                        className="inline-block h-3 w-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: STATUS_COLORS[entry.name] }}
+                      />
+                      <span className="text-sm text-gray-700 flex-1">
+                        {STATUS_DISPLAY[entry.name] ?? entry.name}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                        {entry.value}
+                        <span className="text-xs font-normal text-gray-400 ml-1">({pctLabel})</span>
+                      </span>
+                    </div>
+                  )
+                })
+              })()}
             </div>
           </div>
         </CardContent>
       </Card>
 
       <div ref={reportRef} className="space-y-6">
-
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  CLIENT REPORT: UAT Readiness Score                           */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        <Card className={`rounded-xl border shadow-sm overflow-hidden ${
-          readinessData.color === "green" ? "bg-green-50 border-green-200" :
-          readinessData.color === "amber" ? "bg-amber-50 border-amber-200" :
-          readinessData.color === "red"   ? "bg-red-50 border-red-200" :
-          "bg-gray-50 border-gray-200"
-        }`}>
-          <CardContent className="py-6 px-6">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-              {/* Score circle */}
-              <div className="flex items-center gap-5 flex-shrink-0">
-                <div className={`h-20 w-20 rounded-full flex flex-col items-center justify-center border-4 ${
-                  readinessData.color === "green" ? "border-green-400 bg-green-100" :
-                  readinessData.color === "amber" ? "border-amber-400 bg-amber-100" :
-                  readinessData.color === "red"   ? "border-red-400 bg-red-100" :
-                  "border-gray-300 bg-gray-100"
-                }`}>
-                  {readinessData.score !== null ? (
-                    <>
-                      <span className={`text-2xl font-bold leading-none ${
-                        readinessData.color === "green" ? "text-green-700" :
-                        readinessData.color === "amber" ? "text-amber-700" :
-                        "text-red-700"
-                      }`}>{readinessData.score}%</span>
-                      <span className="text-xs text-gray-500 mt-0.5">Score</span>
-                    </>
-                  ) : (
-                    <span className="text-xs text-gray-400 text-center px-2">No Data</span>
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    {readinessData.color === "green" && <ShieldCheck className="h-5 w-5 text-green-600" />}
-                    {readinessData.color === "amber" && <AlertTriangle className="h-5 w-5 text-amber-600" />}
-                    {readinessData.color === "red"   && <AlertTriangle className="h-5 w-5 text-red-600" />}
-                    <span className={`text-lg font-bold ${
-                      readinessData.color === "green" ? "text-green-800" :
-                      readinessData.color === "amber" ? "text-amber-800" :
-                      readinessData.color === "red"   ? "text-red-800" :
-                      "text-gray-600"
-                    }`}>{readinessData.label}</span>
-                  </div>
-                  <p className="text-sm text-gray-600">UAT Readiness Score</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Based on completed testers only</p>
-                </div>
-              </div>
-
-            </div>
-          </CardContent>
-        </Card>
 
         {/* ══════════════════════════════════════════════════════════════ */}
         {/*  CLIENT REPORT: Tester Participation Summary                  */}
@@ -712,12 +563,12 @@ export default function AnalyticsCharts({
         </Card>
 
         {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  CLIENT REPORT: Failed & Up For Review Steps                  */}
+        {/*  CLIENT REPORT: Steps Requiring Attention                     */}
         {/* ══════════════════════════════════════════════════════════════ */}
         <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-gray-700">
-              Failed &amp; Up For Review Steps
+              Steps Requiring Attention
             </CardTitle>
             <p className="text-xs text-gray-500">
               All steps with a Fail or Up For Review (Blocked) response, with admin review remarks
@@ -735,13 +586,13 @@ export default function AnalyticsCharts({
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-14">Step</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-14">#</th>
                       <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-24">Actor</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Action</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Step</th>
                       <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-32">Tester</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-28">Status</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-28">Tester Status</th>
                       <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-36">Talkpush Finding</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Comment</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Talkpush Comment</th>
                       <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-28">Resolution</th>
                       <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Findings</th>
                     </tr>
@@ -874,79 +725,6 @@ export default function AnalyticsCharts({
             )}
           </CardContent>
         </Card>
-
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  CLIENT REPORT: Module Coverage Report                        */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {moduleCoverage.length > 0 && (
-          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <BookCheck className="h-4 w-4 text-emerald-700" />
-                <CardTitle className="text-sm font-semibold text-gray-700">Module Coverage Report</CardTitle>
-              </div>
-              <p className="text-xs text-gray-500">Pass rate and issue count per CRM module</p>
-            </CardHeader>
-            <CardContent className="px-0 pb-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Module</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-4 py-2.5 w-24">Steps</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-48">Pass Rate</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-4 py-2.5 w-24">Issues</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-28">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {moduleCoverage.map((m, idx) => (
-                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-800">{m.module}</td>
-                        <td className="px-4 py-3 text-center text-gray-600">{m.stepCount}</td>
-                        <td className="px-4 py-3">
-                          {m.passRate === null ? (
-                            <span className="text-xs text-gray-400">No responses yet</span>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden w-28">
-                                <div
-                                  className={`h-full rounded-full ${m.passRate >= 90 ? "bg-green-500" : m.passRate >= 70 ? "bg-amber-400" : "bg-red-400"}`}
-                                  style={{ width: `${m.passRate}%` }}
-                                />
-                              </div>
-                              <span className="text-xs font-semibold text-gray-700 tabular-nums w-10">{m.passRate}%</span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {m.issues > 0 ? (
-                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-red-100 text-xs font-bold text-red-700">{m.issues}</span>
-                          ) : (
-                            <span className="text-gray-400 text-xs">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {m.responseCount === 0 ? (
-                            <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Not Started</span>
-                          ) : m.allClear ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                              <CheckCircle2 className="h-3 w-3" /> All Clear
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-                              <AlertTriangle className="h-3 w-3" /> Has Issues
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
       </div>{/* end reportRef */}
 

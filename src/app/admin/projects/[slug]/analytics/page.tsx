@@ -70,14 +70,6 @@ export default async function AnalyticsPage({
     adminReviews = data || []
   }
 
-  const crmModules = Array.from(
-    new Set(
-      (checklistItems || [])
-        .map((item) => item.crm_module)
-        .filter((m): m is string => m !== null && m !== "")
-    )
-  ).sort()
-
   return (
     <div>
       <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-6">
@@ -97,7 +89,6 @@ export default async function AnalyticsPage({
         testers={testers || []}
         responses={responses}
         adminReviews={adminReviews}
-        crmModules={crmModules}
       />
     </div>
   )

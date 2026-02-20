@@ -70,14 +70,6 @@ export default async function PublicAnalyticsPage({
     adminReviews = data || []
   }
 
-  const crmModules = Array.from(
-    new Set(
-      (checklistItems || [])
-        .map((item) => item.crm_module)
-        .filter((m): m is string => m !== null && m !== "")
-    )
-  ).sort()
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-10">
@@ -90,7 +82,6 @@ export default async function PublicAnalyticsPage({
           testers={testers || []}
           responses={responses}
           adminReviews={adminReviews}
-          crmModules={crmModules}
         />
       </div>
     </div>
