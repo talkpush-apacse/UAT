@@ -187,12 +187,20 @@ export default function AnalyticsCharts({
 
   /* ---------- Client Report 1: Readiness Score ---------- */
   const readinessData = useMemo(() => {
+    // Build review map first so we can filter "For Retesting" from the score
+    const reviewMap = new Map(adminReviews.map((r) => [`${r.tester_id}::${r.checklist_item_id}`, r]))
+
     const completedResponses = responses.filter((r) => completedTesterIds.has(r.tester_id))
-    const total = completedResponses.length
-    const passing = completedResponses.filter(
+    // Exclude "For Retesting" steps — they are pending re-verification, not yet conclusive
+    const scoreableResponses = completedResponses.filter((r) => {
+      const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
+      return review?.behavior_type !== "For Retesting"
+    })
+    const total = scoreableResponses.length
+    const passing = scoreableResponses.filter(
       (r) => r.status === "Pass" || r.status === "N/A"
     ).length
-    const failing = completedResponses.filter(
+    const failing = scoreableResponses.filter(
       (r) => r.status === "Fail" || r.status === "Blocked"
     ).length
     const score = total === 0 ? null : Math.round((passing / total) * 100)
@@ -207,7 +215,6 @@ export default function AnalyticsCharts({
       score >= 70 ? "amber" :
       "red"
 
-    const reviewMap = new Map(adminReviews.map((r) => [`${r.tester_id}::${r.checklist_item_id}`, r]))
     const openIssueCount = responses.filter((r) => {
       if (r.status !== "Fail" && r.status !== "Blocked") return false
       const rev = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
@@ -762,12 +769,16 @@ export default function AnalyticsCharts({
                                     ? "#dcfce7"
                                     : row.behaviorType === "Bug/Glitch"
                                     ? "#fee2e2"
+                                    : row.behaviorType === "For Retesting"
+                                    ? "#dbeafe"
                                     : "#ffedd5",
                                 color:
                                   row.behaviorType === "Expected Behavior"
                                     ? "#166534"
                                     : row.behaviorType === "Bug/Glitch"
                                     ? "#991b1b"
+                                    : row.behaviorType === "For Retesting"
+                                    ? "#1e40af"
                                     : "#9a3412",
                               }}
                             >

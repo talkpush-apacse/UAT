@@ -534,13 +534,15 @@ export default function ChecklistItem({
             <div>
               <p className="text-xs text-violet-600 font-medium mb-1.5">Behavior Type</p>
               <div className="flex flex-wrap gap-1.5">
-                {(["Expected Behavior", "Bug/Glitch", "Configuration Issue"] as const).map((opt) => {
+                {(["Expected Behavior", "Bug/Glitch", "Configuration Issue", "For Retesting"] as const).map((opt) => {
                   const isActive = behaviorType === opt
                   const activeStyle =
                     opt === "Expected Behavior"
                       ? "bg-green-600 text-white border-green-600"
                       : opt === "Bug/Glitch"
                       ? "bg-red-600 text-white border-red-600"
+                      : opt === "For Retesting"
+                      ? "bg-blue-600 text-white border-blue-600"
                       : "bg-orange-500 text-white border-orange-500"
                   return (
                     <button
