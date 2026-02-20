@@ -81,21 +81,24 @@ export default function FileUpload({
         return
       }
 
-      const { signedUrl, token, path } = await res.json()
+      const { signedUrl, path } = await res.json()
 
-      // Upload file directly to Supabase Storage
-      const supabase = createClient()
-      const { error: uploadError } = await supabase.storage
-        .from("attachments")
-        .uploadToSignedUrl(path, token, file)
+      // Upload file directly via the signed URL (bypasses SDK bucket lookup
+      // which fails for anon clients on private buckets)
+      const uploadRes = await fetch(signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      })
 
-      if (uploadError) {
-        setError("Upload failed: " + uploadError.message)
+      if (!uploadRes.ok) {
+        setError("Upload failed: " + uploadRes.statusText)
         setUploading(false)
         return
       }
 
-      // Get public URL
+      // Build public URL (bucket is public — permanent accessible URL)
+      const supabase = createClient()
       const { data: urlData } = supabase.storage
         .from("attachments")
         .getPublicUrl(path)
