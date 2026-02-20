@@ -51,7 +51,7 @@ export default async function AnalyticsPage({
     responses = data || []
   }
 
-  // Fetch admin reviews for all testers in this project
+  // Fetch admin reviews for all testers in this project, scoped to this project's items
   let adminReviews: {
     checklist_item_id: string
     tester_id: string
@@ -60,11 +60,12 @@ export default async function AnalyticsPage({
     notes: string | null
   }[] = []
 
-  if (testerIds.length > 0) {
+  if (testerIds.length > 0 && itemIds.length > 0) {
     const { data } = await supabase
       .from("admin_reviews")
       .select("checklist_item_id, tester_id, behavior_type, resolution_status, notes")
       .in("tester_id", testerIds)
+      .in("checklist_item_id", itemIds) // scope to this project's items only
 
     adminReviews = data || []
   }
