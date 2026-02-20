@@ -35,5 +35,6 @@ export async function saveAdminReview(data: {
   // Revalidate the admin analytics page so the score reflects the new finding
   // immediately when the admin next loads the page.
   revalidatePath(`/admin/projects/${data.projectSlug}/analytics`)
+  revalidatePath(`/admin/projects/${data.projectSlug}/review`)
   return {}
 }

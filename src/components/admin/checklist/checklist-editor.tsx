@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   DndContext,
   closestCenter,
@@ -39,6 +40,7 @@ import { Plus, FileText, Trash2, CheckSquare } from "lucide-react"
 import { type ChecklistItem, renumberItems } from "./types"
 import { SortableStepCard } from "./step-card"
 import { AddStepForm } from "./add-step-form"
+import { CopyStepsDialog } from "./copy-steps-dialog"
 
 /* ------------------------------------------------------------------ */
 /*  ChecklistEditor (default export)                                   */
@@ -53,10 +55,16 @@ export default function ChecklistEditor({
   projectId: string
   slug: string
 }) {
+  const router = useRouter()
   const [items, setItems] = useState(initialItems)
   const [adding, setAdding] = useState(false)
   const [bulkMode, setBulkMode] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  // Keep local state in sync when the server component re-renders after router.refresh()
+  useEffect(() => {
+    setItems(initialItems)
+  }, [initialItems])
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -149,6 +157,11 @@ export default function ChecklistEditor({
     }
   }
 
+  // Called by CopyStepsDialog after a successful copy — refresh server data
+  const handleCopied = () => {
+    router.refresh()
+  }
+
   const selectedCount = selected.size
 
   return (
@@ -223,6 +236,12 @@ export default function ChecklistEditor({
                   Select
                 </Button>
               )}
+              <CopyStepsDialog
+                projectId={projectId}
+                slug={slug}
+                disabled={adding}
+                onCopied={handleCopied}
+              />
               <Button
                 onClick={() => setAdding(true)}
                 className="bg-emerald-700 hover:bg-emerald-800 text-white"
@@ -244,17 +263,24 @@ export default function ChecklistEditor({
             No checklist steps yet
           </p>
           <p className="text-xs text-gray-400 mt-1 mb-4">
-            Upload an XLSX file or add steps manually
+            Upload an XLSX file, copy from another project, or add steps manually
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setAdding(true)}
-            className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add your first step
-          </Button>
+          <div className="flex items-center justify-center gap-2">
+            <CopyStepsDialog
+              projectId={projectId}
+              slug={slug}
+              onCopied={handleCopied}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAdding(true)}
+              className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add your first step
+            </Button>
+          </div>
         </div>
       )}
 

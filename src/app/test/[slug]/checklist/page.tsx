@@ -1,7 +1,5 @@
 import { notFound, redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import ChecklistView from "@/components/tester/checklist-view"
 
 export default async function ChecklistPage({
@@ -69,25 +67,6 @@ export default async function ChecklistPage({
     attachments = data || []
   }
 
-  // Detect if the viewer is a logged-in admin; if so, fetch their reviews for this tester
-  const isAdmin = await verifyAdminSession()
-  let adminReviews: Array<{
-    checklist_item_id: string
-    behavior_type: string | null
-    resolution_status: string
-    notes: string | null
-  }> = []
-
-  if (isAdmin) {
-    const adminSupabase = createAdminClient()
-    const { data } = await adminSupabase
-      .from("admin_reviews")
-      .select("checklist_item_id, behavior_type, resolution_status, notes")
-      .eq("tester_id", tester.id)
-
-    adminReviews = data || []
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <ChecklistView
@@ -96,8 +75,6 @@ export default async function ChecklistPage({
         checklistItems={checklistItems || []}
         responses={responses || []}
         attachments={attachments}
-        isAdmin={isAdmin}
-        adminReviews={adminReviews}
         testCompleted={tester.test_completed ?? null}
       />
     </div>

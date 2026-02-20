@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useId } from "react"
 import { Progress } from "@/components/ui/progress"
 import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2 } from "lucide-react"
 import ChecklistItem from "./checklist-item"
@@ -49,23 +49,23 @@ interface Tester {
   test_completed?: string | null
 }
 
-interface AdminReview {
-  checklist_item_id: string
-  behavior_type: string | null
-  resolution_status: string
-  notes: string | null
-}
-
 /** Build sequential sections based on the order items appear in the file.
- *  A new section starts whenever the path OR actor changes from the previous item. */
+ *  A new section starts whenever the path OR actor changes from the previous item.
+ *
+ *  Issue #4 — disambiguate duplicate actor headings by appending an ordinal
+ *  suffix to any heading that has already appeared earlier in the list.
+ *  e.g. the second "Talkpush" section becomes "Talkpush (2)".
+ */
 interface Section {
   path: string
   actor: string
+  displayActor: string   // may differ from actor when disambiguated
   items: ChecklistItemData[]
 }
 
 function buildSections(items: ChecklistItemData[]): Section[] {
   const sections: Section[] = []
+  const actorOccurrences: Record<string, number> = {}
 
   items.forEach((item) => {
     const path = item.path || "General"
@@ -73,7 +73,11 @@ function buildSections(items: ChecklistItemData[]): Section[] {
     const last = sections[sections.length - 1]
 
     if (!last || last.path !== path || last.actor !== actor) {
-      sections.push({ path, actor, items: [item] })
+      // Count how many times this exact actor has appeared before
+      actorOccurrences[actor] = (actorOccurrences[actor] || 0) + 1
+      const occurrence = actorOccurrences[actor]
+      const displayActor = occurrence > 1 ? `${actor} (${occurrence})` : actor
+      sections.push({ path, actor, displayActor, items: [item] })
     } else {
       last.items.push(item)
     }
@@ -88,8 +92,6 @@ export default function ChecklistView({
   checklistItems,
   responses: initialResponses,
   attachments: initialAttachments,
-  isAdmin = false,
-  adminReviews = [],
   testCompleted = null,
 }: {
   project: Project
@@ -97,8 +99,6 @@ export default function ChecklistView({
   checklistItems: ChecklistItemData[]
   responses: ResponseData[]
   attachments: AttachmentData[]
-  isAdmin?: boolean
-  adminReviews?: AdminReview[]
   testCompleted?: string | null
 }) {
   const [responses, setResponses] = useState<Record<string, ResponseData>>(() => {
@@ -121,21 +121,15 @@ export default function ChecklistView({
     setIsMarkingComplete(false)
   }
 
-  // Build a map of admin reviews keyed by checklist_item_id
-  const reviewMap = useMemo<Record<string, AdminReview>>(() => {
-    const map: Record<string, AdminReview> = {}
-    adminReviews.forEach((r) => {
-      map[r.checklist_item_id] = r
-    })
-    return map
-  }, [adminReviews])
-
   const completedCount = useMemo(() => {
     return Object.values(responses).filter((r) => r.status !== null).length
   }, [responses])
 
   const totalCount = checklistItems.length
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+
+  // Issue #3 — CTA is only active when every step has a status
+  const allStepsCompleted = totalCount > 0 && completedCount === totalCount
 
   // Build sections in the original file order
   const sections = useMemo(() => buildSections(checklistItems), [checklistItems])
@@ -149,6 +143,9 @@ export default function ChecklistView({
   // "Before You Begin" guide — collapsed state persisted per project
   const guideStorageKey = `uat-guide-collapsed-${project.id}`
   const [isGuideOpen, setIsGuideOpen] = useState(true)
+
+  // Issue #8 — stable IDs for aria-controls
+  const guideBodyId = useId()
 
   useEffect(() => {
     const stored = localStorage.getItem(guideStorageKey)
@@ -169,30 +166,38 @@ export default function ChecklistView({
 
   return (
     <div className="max-w-3xl mx-auto px-4 pb-12">
-      {/* Sticky Header */}
+      {/* Sticky Header — Issue #9 (already sticky); Issue #5: removed "X% complete" text and standalone "X%" label */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pt-5 pb-4 px-4 sm:px-6 -mx-4 border-b border-gray-200 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="min-w-0">
             <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
             <p className="text-sm text-gray-500">Hi {tester.name}</p>
           </div>
-          <div className="text-right flex-shrink-0 ml-4">
-            <p className="text-sm sm:text-base font-semibold text-emerald-700">{completedCount} / {totalCount}</p>
-            <p className="text-xs text-gray-400">{progressPct}% complete</p>
-          </div>
+          {/* Issue #5: keep fraction counter only; removed "X% complete" text */}
+          <p className="text-sm sm:text-base font-semibold text-emerald-700 flex-shrink-0 ml-4">
+            {completedCount} / {totalCount}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Progress value={progressPct} className="h-2.5 flex-1" />
-          <span className="text-xs font-medium text-gray-500 flex-shrink-0 w-10 text-right">{progressPct}%</span>
-        </div>
+        {/* Issue #7: ARIA attributes on progress bar; Issue #5: removed standalone "X%" label */}
+        <Progress
+          value={progressPct}
+          className="h-2.5"
+          aria-label="Test completion progress"
+          aria-valuenow={completedCount}
+          aria-valuemin={0}
+          aria-valuemax={totalCount}
+        />
       </div>
 
       {/* Before You Begin — collapsible guide */}
       <div className="mt-4">
         <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 shadow-sm overflow-hidden">
-          {/* Header — always visible */}
+          {/* Issue #8: aria-expanded, aria-label, aria-controls on toggle button */}
           <button
             onClick={toggleGuide}
+            aria-expanded={isGuideOpen}
+            aria-controls={guideBodyId}
+            aria-label={isGuideOpen ? "Collapse instructions" : "Expand instructions"}
             className="w-full flex items-center justify-between px-4 py-3 text-left"
           >
             <div className="flex items-center gap-2.5">
@@ -210,6 +215,7 @@ export default function ChecklistView({
 
           {/* Collapsible body */}
           <div
+            id={guideBodyId}
             className={`transition-all duration-300 ease-in-out ${
               isGuideOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
             } overflow-hidden`}
@@ -278,11 +284,11 @@ export default function ChecklistView({
 
           return (
             <div key={`section-${sIdx}`}>
-              {/* Actor section with progress */}
+              {/* Actor section with progress — Issue #4: uses displayActor (disambiguated) */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                    {section.actor}
+                    {section.displayActor}
                   </h3>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-medium ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "text-green-600" : "text-gray-500"}`}>
@@ -312,9 +318,6 @@ export default function ChecklistView({
                           ? project.talkpush_login_link
                           : null
                       }
-                      isAdmin={isAdmin}
-                      adminReview={reviewMap[item.id] || null}
-                      projectSlug={project.slug}
                     />
                   ))}
                 </div>
@@ -323,7 +326,7 @@ export default function ChecklistView({
           )
         })}
 
-        {/* Mark Test Complete — shown after the last step */}
+        {/* Mark Test Complete — Issue #3: disabled until all steps have a status */}
         {checklistItems.length > 0 && (
           <div className="pt-4 pb-6 border-t border-gray-200 mt-2">
             {isTestComplete ? (
@@ -335,17 +338,26 @@ export default function ChecklistView({
               <>
                 <button
                   onClick={handleMarkComplete}
-                  disabled={isMarkingComplete}
-                  className="w-full rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white
-                             font-semibold py-4 px-6 text-sm transition-colors
-                             disabled:opacity-60 disabled:cursor-not-allowed
-                             flex items-center justify-center gap-2 shadow-sm"
+                  disabled={!allStepsCompleted || isMarkingComplete}
+                  aria-disabled={!allStepsCompleted || isMarkingComplete}
+                  className={`w-full rounded-xl font-semibold py-4 px-6 text-sm transition-colors
+                    flex items-center justify-center gap-2 shadow-sm
+                    ${
+                      allStepsCompleted && !isMarkingComplete
+                        ? "bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white cursor-pointer"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    }
+                  `}
                 >
                   <Flag className="h-4 w-4" />
                   {isMarkingComplete ? "Saving…" : "Mark My Test as Complete"}
                 </button>
+                {/* Issue #3: dynamic helper text */}
                 <p className="text-xs text-gray-400 text-center mt-2">
-                  Only mark complete when you have finished all test steps
+                  {allStepsCompleted
+                    ? "All steps completed — ready to mark as complete"
+                    : `${completedCount} of ${totalCount} steps completed — finish all steps before marking complete`
+                  }
                 </p>
               </>
             )}

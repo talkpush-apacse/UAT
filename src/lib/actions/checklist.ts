@@ -386,6 +386,125 @@ export async function duplicateChecklistItem(
 }
 
 /* ------------------------------------------------------------------ */
+/*  listProjectsForCopy — returns all projects except the current one  */
+/* ------------------------------------------------------------------ */
+
+export async function listProjectsForCopy(
+  currentProjectId: string
+): Promise<{ error?: string; projects?: { id: string; slug: string; company_name: string; itemCount: number }[] }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    const supabase = createAdminClient()
+
+    const { data: projects, error } = await supabase
+      .from('projects')
+      .select('id, slug, company_name')
+      .neq('id', currentProjectId)
+      .order('company_name')
+
+    if (error) return { error: error.message }
+    if (!projects || projects.length === 0) return { projects: [] }
+
+    // Fetch item counts for each project in one query
+    const { data: counts } = await supabase
+      .from('checklist_items')
+      .select('project_id')
+      .in('project_id', projects.map((p) => p.id))
+
+    const countMap: Record<string, number> = {}
+    ;(counts || []).forEach((row) => {
+      countMap[row.project_id] = (countMap[row.project_id] || 0) + 1
+    })
+
+    return {
+      projects: projects.map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        company_name: p.company_name,
+        itemCount: countMap[p.id] || 0,
+      })),
+    }
+  } catch (err) {
+    console.error('listProjectsForCopy error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  copyStepsFromProject — appends all steps from source project       */
+/* ------------------------------------------------------------------ */
+
+export async function copyStepsFromProject(
+  targetProjectId: string,
+  targetSlug: string,
+  sourceProjectId: string
+): Promise<{ error?: string; addedCount?: number }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    if (sourceProjectId === targetProjectId) {
+      return { error: 'Source and target project must be different' }
+    }
+
+    const supabase = createAdminClient()
+
+    // Fetch all steps from the source project ordered by sort_order
+    const { data: sourceItems, error: fetchError } = await supabase
+      .from('checklist_items')
+      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order')
+      .eq('project_id', sourceProjectId)
+      .order('sort_order')
+
+    if (fetchError) return { error: fetchError.message }
+    if (!sourceItems || sourceItems.length === 0) {
+      return { error: 'The selected project has no steps to copy' }
+    }
+
+    // Find current max sort_order in the target project
+    const { data: maxRow } = await supabase
+      .from('checklist_items')
+      .select('sort_order')
+      .eq('project_id', targetProjectId)
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .single()
+
+    const baseOrder = maxRow?.sort_order ?? 0
+
+    // Build insert rows — step_number will be fixed by renumberSteps below
+    const rows = sourceItems.map((item, idx) => ({
+      project_id: targetProjectId,
+      step_number: baseOrder + idx + 1,   // temporary; corrected by renumberSteps
+      path: item.path,
+      actor: item.actor,
+      action: item.action,
+      view_sample: item.view_sample,
+      crm_module: item.crm_module,
+      tip: item.tip,
+      sort_order: baseOrder + idx + 1,
+    }))
+
+    const { error: insertError } = await supabase
+      .from('checklist_items')
+      .insert(rows)
+
+    if (insertError) return { error: insertError.message }
+
+    // Renumber all steps sequentially
+    await renumberSteps(targetProjectId, supabase)
+
+    revalidatePath(`/admin/projects/${targetSlug}/checklist`)
+    return { addedCount: sourceItems.length }
+  } catch (err) {
+    console.error('copyStepsFromProject error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  bulkDeleteChecklistItems                                           */
 /* ------------------------------------------------------------------ */
 

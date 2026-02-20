@@ -5,11 +5,10 @@ import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Lightbulb, Eye, ExternalLink, ShieldCheck } from "lucide-react"
+import { Lightbulb, Eye, ExternalLink } from "lucide-react"
 import FileUpload from "./file-upload"
 import ReactMarkdown from "react-markdown"
 import rehypeRaw from "rehype-raw"
-import { saveAdminReview } from "@/lib/actions/admin-reviews"
 
 interface ChecklistItemData {
   id: string
@@ -67,6 +66,26 @@ const STATUS_STYLES: Record<string, { active: string; inactive: string }> = {
   },
 }
 
+/**
+ * Returns true only when the string is a non-empty http/https URL with no
+ * placeholder brackets (e.g. "[Add screenshot: ...]") and no embedded newlines.
+ */
+function isValidGuideUrl(url: string | null | undefined): boolean {
+  if (!url || url.trim() === "") return false
+  const trimmed = url.trim()
+  // Reject placeholder text starting with "["
+  if (trimmed.startsWith("[")) return false
+  // Reject strings containing newline characters
+  if (/[\r\n]/.test(trimmed)) return false
+  // Must be a valid http or https URL
+  try {
+    const parsed = new URL(trimmed)
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
 /** Check if a URL points to an image file */
 function isImageUrl(url: string): boolean {
   if (/\.(png|jpe?g|gif|webp|svg|bmp)(\?.*)?$/i.test(url)) return true
@@ -105,7 +124,33 @@ function getCardStyles(status: string | null): string {
   }
 }
 
-type ReviewSaveStatus = "idle" | "saving" | "saved" | "error"
+/**
+ * Splits `text` into alternating plain-text and URL segments and returns
+ * them as React-renderable nodes. Detected http/https URLs become <a> tags.
+ */
+function AutoLink({ text }: { text: string }) {
+  const URL_PATTERN = /(https?:\/\/[^\s<>"]+)/g
+  const parts = text.split(URL_PATTERN)
+  return (
+    <>
+      {parts.map((part, i) =>
+        URL_PATTERN.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-700 underline underline-offset-2 hover:text-emerald-900 break-all"
+          >
+            {part}
+          </a>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  )
+}
 
 export default function ChecklistItem({
   item,
@@ -114,9 +159,6 @@ export default function ChecklistItem({
   attachments,
   onResponseUpdate,
   talkpushLoginLink,
-  isAdmin = false,
-  adminReview = null,
-  projectSlug,
 }: {
   item: ChecklistItemData
   testerId: string
@@ -124,9 +166,6 @@ export default function ChecklistItem({
   attachments: AttachmentData[]
   onResponseUpdate: (itemId: string, response: ResponseData) => void
   talkpushLoginLink?: string | null
-  isAdmin?: boolean
-  adminReview?: { behavior_type: string | null; resolution_status: string; notes: string | null } | null
-  projectSlug: string
 }) {
   const [status, setStatus] = useState<string | null>(response?.status || null)
   const [comment, setComment] = useState(response?.comment || "")
@@ -136,16 +175,7 @@ export default function ChecklistItem({
     !!response?.comment || status === "Fail" || status === "Blocked"
   )
 
-  // Admin review state — only used when isAdmin === true
-  const [behaviorType, setBehaviorType] = useState<string | null>(adminReview?.behavior_type ?? null)
-  const [resolutionStatus, setResolutionStatus] = useState<string>(
-    adminReview?.resolution_status ?? "Not Yet Started"
-  )
-  const [reviewNotes, setReviewNotes] = useState<string>(adminReview?.notes ?? "")
-  const [reviewSaveStatus, setReviewSaveStatus] = useState<ReviewSaveStatus>("idle")
-
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
-  const reviewDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const supabaseRef = useRef(createClient())
 
   const save = useCallback(
@@ -218,48 +248,13 @@ export default function ChecklistItem({
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
-      if (reviewDebounceRef.current) clearTimeout(reviewDebounceRef.current)
     }
   }, [])
 
-  // Admin review handler — saves immediately on button clicks (no debounce needed)
-  const handleReviewChange = async (newBehavior: string | null, newStatus: string) => {
-    setBehaviorType(newBehavior)
-    setResolutionStatus(newStatus)
-    setReviewSaveStatus("saving")
-    const result = await saveAdminReview({
-      checklistItemId: item.id,
-      testerId,
-      behaviorType: newBehavior,
-      resolutionStatus: newStatus,
-      notes: reviewNotes || null,
-      projectSlug,
-    })
-    setReviewSaveStatus(result.error ? "error" : "saved")
-    setTimeout(() => setReviewSaveStatus("idle"), 2000)
-  }
+  // Validate the guide URL before deciding which embed variant to show — #1
+  const rawSample = item.view_sample?.trim() || null
+  const viewSample = isValidGuideUrl(rawSample) ? rawSample : null
 
-  // Admin notes handler — debounced 500ms (text field)
-  const handleReviewNotesChange = (value: string) => {
-    setReviewNotes(value)
-    if (reviewDebounceRef.current) clearTimeout(reviewDebounceRef.current)
-    reviewDebounceRef.current = setTimeout(() => {
-      setReviewSaveStatus("saving")
-      saveAdminReview({
-        checklistItemId: item.id,
-        testerId,
-        behaviorType,
-        resolutionStatus,
-        notes: value || null,
-        projectSlug,
-      }).then((result) => {
-        setReviewSaveStatus(result.error ? "error" : "saved")
-        setTimeout(() => setReviewSaveStatus("idle"), 2000)
-      })
-    }, 500)
-  }
-
-  const viewSample = item.view_sample?.trim() || null
   const hasImageSample = viewSample && isImageUrl(viewSample)
   const isDescriptSample = viewSample ? isDescriptUrl(viewSample) : false
   const driveFileId = viewSample ? extractGoogleDriveFileId(viewSample) : null
@@ -275,7 +270,11 @@ export default function ChecklistItem({
       : "Add a comment..."
 
   return (
-    <Card className={`${getCardStyles(status)} rounded-xl shadow-sm hover:shadow-md transition-all duration-200`}>
+    // Issue #10 — step ID anchor for deep-linking
+    <Card
+      id={`step-${item.step_number}`}
+      className={`${getCardStyles(status)} rounded-xl shadow-sm hover:shadow-md transition-all duration-200`}
+    >
       <CardContent className="py-4">
         {/* === HEADER LINE === */}
         <div className="flex items-center justify-between gap-2 mb-2">
@@ -300,11 +299,27 @@ export default function ChecklistItem({
           </div>
         </div>
 
-        {/* === INSTRUCTION ZONE === */}
+        {/* === INSTRUCTION ZONE — Issue #6: URLs auto-linked via prose-a styles === */}
         <div className="prose prose-sm prose-gray max-w-none mb-4 text-base leading-relaxed text-gray-800
           prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
           prose-strong:text-gray-900 prose-a:text-emerald-700 prose-a:no-underline hover:prose-a:underline">
-          <ReactMarkdown rehypePlugins={[rehypeRaw]}>{item.action}</ReactMarkdown>
+          <ReactMarkdown
+            rehypePlugins={[rehypeRaw]}
+            components={{
+              // Override plain-text <p> nodes to auto-linkify bare URLs — #6
+              p: ({ children }) => (
+                <p>
+                  {typeof children === "string" ? (
+                    <AutoLink text={children} />
+                  ) : (
+                    children
+                  )}
+                </p>
+              ),
+            }}
+          >
+            {item.action}
+          </ReactMarkdown>
         </div>
 
         {/* === TIP CALLOUT === */}
@@ -320,7 +335,7 @@ export default function ChecklistItem({
           </div>
         )}
 
-        {/* === VISUAL REFERENCE (image preview) === */}
+        {/* === VISUAL REFERENCE (image preview) — Issue #1: only rendered when viewSample is valid === */}
         {hasImageSample && (
           <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
@@ -349,7 +364,7 @@ export default function ChecklistItem({
           </div>
         )}
 
-        {/* === DESCRIPT EMBED === */}
+        {/* === DESCRIPT EMBED — Issue #1: only rendered when viewSample is valid === */}
         {isDescriptSample && (
           <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
@@ -378,7 +393,7 @@ export default function ChecklistItem({
           </div>
         )}
 
-        {/* === GOOGLE DRIVE EMBED === */}
+        {/* === GOOGLE DRIVE EMBED — Issue #1: only rendered when viewSample is valid === */}
         {isGoogleDriveSample && (
           <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
@@ -408,7 +423,7 @@ export default function ChecklistItem({
           </div>
         )}
 
-        {/* === PLAIN LINK (fallback for other non-image URLs) === */}
+        {/* === PLAIN LINK (fallback for other non-image URLs) — Issue #1: only rendered when viewSample is valid === */}
         {hasPlainLinkSample && (
           <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
@@ -444,7 +459,7 @@ export default function ChecklistItem({
           </div>
         )}
 
-        {/* === STATUS BUTTONS === */}
+        {/* === STATUS BUTTONS — Issue #2: active style applied via STATUS_STYLES[value].active === */}
         <div className="flex gap-2 mb-4">
           {STATUS_OPTIONS.map(({ value, label }) => {
             const isActive = status === value
@@ -454,6 +469,7 @@ export default function ChecklistItem({
                 key={value}
                 type="button"
                 onClick={() => handleStatusChange(value)}
+                aria-pressed={isActive}
                 className={`
                   px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
                   min-h-[44px] flex-1
@@ -511,103 +527,6 @@ export default function ChecklistItem({
               projectId={item.id}
               existingAttachments={attachments}
             />
-          </div>
-        )}
-
-        {/* === ADMIN REVIEW PANEL === */}
-        {isAdmin && (
-          <div className="mt-4 pt-4 border-t border-violet-100 bg-violet-50/40 rounded-lg px-3 py-3 space-y-3">
-            {/* Header */}
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-violet-600" />
-              <span className="text-xs font-semibold text-violet-700 uppercase tracking-wide">
-                Admin Review
-              </span>
-              {reviewSaveStatus === "saving" && (
-                <span className="text-xs text-gray-400 animate-pulse ml-auto">Saving...</span>
-              )}
-              {reviewSaveStatus === "saved" && (
-                <span className="text-xs text-violet-600 ml-auto">Saved ✓</span>
-              )}
-              {reviewSaveStatus === "error" && (
-                <span className="text-xs text-red-500 ml-auto">Error saving</span>
-              )}
-            </div>
-
-            {/* Behavior Type */}
-            <div>
-              <p className="text-xs text-violet-600 font-medium mb-1.5">Behavior Type</p>
-              <div className="flex flex-wrap gap-1.5">
-                {(["Expected Behavior", "Bug/Glitch", "Configuration Issue", "For Retesting"] as const).map((opt) => {
-                  const isActive = behaviorType === opt
-                  const activeStyle =
-                    opt === "Expected Behavior"
-                      ? "bg-green-600 text-white border-green-600"
-                      : opt === "Bug/Glitch"
-                      ? "bg-red-600 text-white border-red-600"
-                      : opt === "For Retesting"
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-orange-500 text-white border-orange-500"
-                  return (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() =>
-                        handleReviewChange(opt === behaviorType ? null : opt, resolutionStatus)
-                      }
-                      className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
-                        isActive ? activeStyle : "border-violet-200 text-violet-700 hover:bg-violet-100"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Resolution Status */}
-            <div>
-              <p className="text-xs text-violet-600 font-medium mb-1.5">Resolution Status</p>
-              <div className="flex gap-1.5">
-                {(["Not Yet Started", "In Progress", "Done"] as const).map((opt) => {
-                  const isActive = resolutionStatus === opt
-                  const activeStyle =
-                    opt === "Done"
-                      ? "bg-green-600 text-white border-green-600"
-                      : opt === "In Progress"
-                      ? "bg-blue-500 text-white border-blue-500"
-                      : "bg-gray-500 text-white border-gray-500"
-                  return (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => handleReviewChange(behaviorType, opt)}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
-                        isActive ? activeStyle : "border-violet-200 text-violet-700 hover:bg-violet-100"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Findings / Comments */}
-            <div>
-              <p className="text-xs text-violet-600 font-medium mb-1.5">Findings / Comments</p>
-              <textarea
-                value={reviewNotes}
-                onChange={(e) => handleReviewNotesChange(e.target.value)}
-                placeholder="Add findings, reproduction steps, or notes..."
-                rows={3}
-                className="w-full text-sm rounded-lg border border-violet-200 bg-white px-3 py-2
-                  placeholder:text-gray-400 text-gray-800 resize-none
-                  focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200
-                  transition-colors"
-              />
-            </div>
           </div>
         )}
       </CardContent>

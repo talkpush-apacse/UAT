@@ -22,6 +22,7 @@ import {
   FileCheck,
   Download,
   CheckCircle2,
+  ClipboardCheck,
 } from "lucide-react"
 
 const ACTOR_STYLES: Record<string, string> = {
@@ -128,8 +129,14 @@ export default async function ProjectDetailPage({
     {
       href: `/admin/projects/${project.slug}/upload`,
       icon: Upload,
-      label: "Upload UAT (User Acceptance Testing) Sheet",
+      label: "Upload UAT Sheet",
       sub: `${itemCount} steps`,
+    },
+    {
+      href: `/admin/projects/${project.slug}/review`,
+      icon: ClipboardCheck,
+      label: "Review",
+      sub: "Triage findings",
     },
     {
       href: `/admin/projects/${project.slug}/analytics`,
