@@ -187,34 +187,85 @@ export default function AnalyticsCharts({
 
   /* ---------- Client Report 1: Readiness Score ---------- */
   const readinessData = useMemo(() => {
-    // Build review map first so we can filter "For Retesting" from the score
-    const reviewMap = new Map(adminReviews.map((r) => [`${r.tester_id}::${r.checklist_item_id}`, r]))
+    /*
+     * ─── UAT READINESS SCORE — SCORING FORMULA ──────────────────────────────────
+     *
+     * Score = (positiveSteps / scoreableSteps) × 100
+     *
+     * EXCLUDED from scoring (not in denominator or numerator):
+     *   • Tester status "N/A" or "Blocked" — inconclusive / pending review
+     *   • Admin finding "For Retesting"    — step needs re-verification
+     *
+     * POSITIVE outcome (counts in numerator):
+     *   • Status "Pass"  + finding null or "Expected Behavior"
+     *   • Status "Fail"  + finding "Expected Behavior"
+     *     → Admin determined system was correct; tester made an error
+     *
+     * NEGATIVE outcome (in denominator, not in numerator):
+     *   • Status "Pass"  + finding "Bug/Glitch" or "Configuration Issue"
+     *     → Admin override: system has a real problem the tester missed
+     *   • Status "Fail"  + finding null, "Bug/Glitch", or "Configuration Issue"
+     *
+     * Admin finding takes precedence over tester status wherever they conflict.
+     * ────────────────────────────────────────────────────────────────────────────
+     */
 
-    const completedResponses = responses.filter((r) => completedTesterIds.has(r.tester_id))
-    // Exclude "For Retesting" steps — they are pending re-verification, not yet conclusive
+    // Build a lookup keyed by "tester_id::checklist_item_id" for O(1) access.
+    const reviewMap = new Map(
+      adminReviews.map((r) => [`${r.tester_id}::${r.checklist_item_id}`, r])
+    )
+
+    // Only score testers who have reached the final checklist step.
+    const completedResponses = responses.filter((r) =>
+      completedTesterIds.has(r.tester_id)
+    )
+
+    // Remove excluded steps from scoring: N/A, Blocked, and For Retesting.
     const scoreableResponses = completedResponses.filter((r) => {
+      if (r.status === "N/A" || r.status === "Blocked") return false
       const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
-      return review?.behavior_type !== "For Retesting"
+      if (review?.behavior_type === "For Retesting") return false
+      return true
     })
+
+    // Determines whether a scoreable step counts as a positive outcome.
+    // Admin finding takes precedence over tester status when they conflict.
+    const isPositive = (r: Response): boolean => {
+      const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
+      const finding = review?.behavior_type ?? null
+
+      // Negative admin findings override any tester status.
+      if (finding === "Bug/Glitch" || finding === "Configuration Issue") return false
+
+      // Fail + Expected Behavior: admin says system was fine, tester was wrong → positive.
+      if (r.status === "Fail" && finding === "Expected Behavior") return true
+
+      // Fail with no finding or unhandled finding → negative.
+      if (r.status === "Fail") return false
+
+      // Pass with no negative finding (null or Expected Behavior) → positive.
+      return true
+    }
+
     const total = scoreableResponses.length
-    const passing = scoreableResponses.filter(
-      (r) => r.status === "Pass" || r.status === "N/A"
-    ).length
-    const failing = scoreableResponses.filter(
-      (r) => r.status === "Fail" || r.status === "Blocked"
-    ).length
+    const passing = scoreableResponses.filter(isPositive).length
+    const failing = total - passing
+
     const score = total === 0 ? null : Math.round((passing / total) * 100)
     const label =
-      score === null ? "No Data" :
-      score >= 90 ? "Ready" :
-      score >= 70 ? "Needs Review" :
-      "Not Ready"
+      score === null  ? "No Data"      :
+      score >= 90     ? "Ready"        :
+      score >= 70     ? "Needs Review" :
+                        "Not Ready"
     const color =
-      score === null ? "gray" :
-      score >= 90 ? "green" :
-      score >= 70 ? "amber" :
-      "red"
+      score === null  ? "gray"  :
+      score >= 90     ? "green" :
+      score >= 70     ? "amber" :
+                        "red"
 
+    // openIssueCount is independent of the readiness score formula.
+    // Counts all Fail/Blocked responses (across ALL testers, not just completed)
+    // that an admin has not yet resolved — used for triage awareness.
     const openIssueCount = responses.filter((r) => {
       if (r.status !== "Fail" && r.status !== "Blocked") return false
       const rev = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)

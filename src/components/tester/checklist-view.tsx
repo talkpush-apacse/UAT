@@ -314,6 +314,7 @@ export default function ChecklistView({
                       }
                       isAdmin={isAdmin}
                       adminReview={reviewMap[item.id] || null}
+                      projectSlug={project.slug}
                     />
                   ))}
                 </div>

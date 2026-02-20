@@ -116,6 +116,7 @@ export default function ChecklistItem({
   talkpushLoginLink,
   isAdmin = false,
   adminReview = null,
+  projectSlug,
 }: {
   item: ChecklistItemData
   testerId: string
@@ -125,6 +126,7 @@ export default function ChecklistItem({
   talkpushLoginLink?: string | null
   isAdmin?: boolean
   adminReview?: { behavior_type: string | null; resolution_status: string; notes: string | null } | null
+  projectSlug: string
 }) {
   const [status, setStatus] = useState<string | null>(response?.status || null)
   const [comment, setComment] = useState(response?.comment || "")
@@ -231,6 +233,7 @@ export default function ChecklistItem({
       behaviorType: newBehavior,
       resolutionStatus: newStatus,
       notes: reviewNotes || null,
+      projectSlug,
     })
     setReviewSaveStatus(result.error ? "error" : "saved")
     setTimeout(() => setReviewSaveStatus("idle"), 2000)
@@ -248,6 +251,7 @@ export default function ChecklistItem({
         behaviorType,
         resolutionStatus,
         notes: value || null,
+        projectSlug,
       }).then((result) => {
         setReviewSaveStatus(result.error ? "error" : "saved")
         setTimeout(() => setReviewSaveStatus("idle"), 2000)

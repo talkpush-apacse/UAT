@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { verifyAdminSession } from '@/lib/utils/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -9,6 +10,7 @@ export async function saveAdminReview(data: {
   behaviorType: string | null
   resolutionStatus: string
   notes: string | null
+  projectSlug: string
 }): Promise<{ error?: string }> {
   const isAdmin = await verifyAdminSession()
   if (!isAdmin) return { error: 'Unauthorized' }
@@ -29,5 +31,9 @@ export async function saveAdminReview(data: {
     )
 
   if (error) return { error: error.message }
+
+  // Revalidate the admin analytics page so the score reflects the new finding
+  // immediately when the admin next loads the page.
+  revalidatePath(`/admin/projects/${data.projectSlug}/analytics`)
   return {}
 }
