@@ -340,7 +340,7 @@ export async function duplicateChecklistItem(
     // Fetch the source item
     const { data: source } = await supabase
       .from('checklist_items')
-      .select('*')
+      .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample')
       .eq('id', itemId)
       .single()
 

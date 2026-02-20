@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'crypto'
+
 export async function generateShareToken(slug: string): Promise<string> {
   const secret = process.env.ADMIN_SESSION_SECRET!
   const encoder = new TextEncoder()
@@ -14,5 +16,8 @@ export async function generateShareToken(slug: string): Promise<string> {
 
 export async function verifyShareToken(slug: string, token: string): Promise<boolean> {
   const expected = await generateShareToken(slug)
-  return expected === token
+  const a = Buffer.from(expected)
+  const b = Buffer.from(token)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
 }

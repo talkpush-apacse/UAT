@@ -78,10 +78,6 @@ export default async function PublicAnalyticsPage({
     )
   ).sort()
 
-  const actors = Array.from(
-    new Set((checklistItems || []).map((item) => item.actor))
-  ).sort()
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-10">
@@ -95,7 +91,6 @@ export default async function PublicAnalyticsPage({
           responses={responses}
           adminReviews={adminReviews}
           crmModules={crmModules}
-          actors={actors}
         />
       </div>
     </div>

@@ -114,7 +114,6 @@ export default function AnalyticsCharts({
   responses: Response[]
   adminReviews: AdminReview[]
   crmModules: string[]
-  actors: string[]
 }) {
   const [filterScope, setFilterScope] = useState<"all" | "completed">("all")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -143,6 +142,12 @@ export default function AnalyticsCharts({
     })
     return completedSet
   }, [checklistItems, responses])
+
+  /* ---------- Admin review lookup (shared across memos) ---------- */
+  const reviewMap = useMemo(
+    () => new Map(adminReviews.map((r) => [`${r.tester_id}::${r.checklist_item_id}`, r])),
+    [adminReviews]
+  )
 
   /* ---------- Section 1: Completion funnel ---------- */
   const completionStats = useMemo(() => {
@@ -210,11 +215,6 @@ export default function AnalyticsCharts({
      * ────────────────────────────────────────────────────────────────────────────
      */
 
-    // Build a lookup keyed by "tester_id::checklist_item_id" for O(1) access.
-    const reviewMap = new Map(
-      adminReviews.map((r) => [`${r.tester_id}::${r.checklist_item_id}`, r])
-    )
-
     // Only score testers who have reached the final checklist step.
     const completedResponses = responses.filter((r) =>
       completedTesterIds.has(r.tester_id)
@@ -273,7 +273,7 @@ export default function AnalyticsCharts({
     }).length
 
     return { score, label, color, passing, failing, total, openIssueCount }
-  }, [responses, completedTesterIds, adminReviews])
+  }, [responses, completedTesterIds, reviewMap])
 
   /* ---------- Client Report 2: Tester Participation ---------- */
   const testerParticipation = useMemo(() => {
@@ -302,10 +302,6 @@ export default function AnalyticsCharts({
 
   /* ---------- Client Report 3: Fail/Blocked steps table ---------- */
   const failedStepsRows = useMemo(() => {
-    const reviewMap = new Map(
-      adminReviews.map((r) => [`${r.tester_id}::${r.checklist_item_id}`, r])
-    )
-
     const itemMap = new Map(checklistItems.map((i) => [i.id, i]))
     const testerMap = new Map(testers.map((t) => [t.id, t]))
 
@@ -347,7 +343,7 @@ export default function AnalyticsCharts({
     )
 
     return rows
-  }, [responses, adminReviews, checklistItems, testers])
+  }, [responses, reviewMap, checklistItems, testers])
 
   /* ---------- Client Report 4: Module Coverage ---------- */
   const moduleCoverage = useMemo(() => {
@@ -405,7 +401,9 @@ export default function AnalyticsCharts({
       }
       pdf.save("UAT-Analytics-Report.pdf")
     } catch (err) {
-      console.error("PDF generation failed", err)
+      // PDF generation failed — surface the error in the console for debugging
+      // without exposing raw error objects to the user.
+      console.error("PDF generation failed:", err instanceof Error ? err.message : String(err))
     } finally {
       setIsGenerating(false)
     }

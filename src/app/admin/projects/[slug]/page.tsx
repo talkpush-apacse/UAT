@@ -47,7 +47,7 @@ export default async function ProjectDetailPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("*")
+    .select("id, slug, company_name, test_scenario, talkpush_login_link, created_at")
     .eq("slug", params.slug)
     .single()
 
@@ -62,14 +62,14 @@ export default async function ProjectDetailPage({
   try {
     const checklistResult = await supabase
       .from("checklist_items")
-      .select("*")
+      .select("id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample")
       .eq("project_id", project.id)
       .order("sort_order")
     checklistItems = checklistResult.data
 
     const signoffResult = await supabase
       .from("signoffs")
-      .select("*")
+      .select("id, project_id, signoff_name, signoff_date, created_at")
       .eq("project_id", project.id)
       .order("signoff_date", { ascending: false })
     signoffs = signoffResult.data

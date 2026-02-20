@@ -77,10 +77,6 @@ export default async function AnalyticsPage({
     )
   ).sort()
 
-  const actors = Array.from(
-    new Set((checklistItems || []).map((item) => item.actor))
-  ).sort()
-
   return (
     <div>
       <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-6">
@@ -101,7 +97,6 @@ export default async function AnalyticsPage({
         responses={responses}
         adminReviews={adminReviews}
         crmModules={crmModules}
-        actors={actors}
       />
     </div>
   )

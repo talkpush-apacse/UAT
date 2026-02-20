@@ -137,7 +137,7 @@ export async function duplicateProject(
   // Fetch original project
   const { data: original } = await supabase
     .from('projects')
-    .select('*')
+    .select('id, slug, company_name, test_scenario, talkpush_login_link')
     .eq('id', projectId)
     .single()
 
@@ -174,7 +174,7 @@ export async function duplicateProject(
   // Fetch and copy all checklist items
   const { data: items } = await supabase
     .from('checklist_items')
-    .select('*')
+    .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample')
     .eq('project_id', projectId)
     .order('sort_order')
 

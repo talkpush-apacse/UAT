@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers'
+import { timingSafeEqual } from 'crypto'
+import { SESSION_DURATION_MS } from './session-constants'
 
 const COOKIE_NAME = 'admin_session'
-const SESSION_DURATION_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 async function sign(payload: string): Promise<string> {
   const secret = process.env.ADMIN_SESSION_SECRET!
@@ -19,11 +20,17 @@ async function sign(payload: string): Promise<string> {
 
 async function verify(payload: string, signature: string): Promise<boolean> {
   const expected = await sign(payload)
-  return expected === signature
+  const a = Buffer.from(expected)
+  const b = Buffer.from(signature)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
 }
 
 export function verifyAdminPassword(password: string): boolean {
-  return password === process.env.ADMIN_PASSWORD
+  const expected = Buffer.from(process.env.ADMIN_PASSWORD ?? '')
+  const provided = Buffer.from(password)
+  if (expected.length !== provided.length) return false
+  return timingSafeEqual(expected, provided)
 }
 
 export async function createAdminSession(): Promise<void> {

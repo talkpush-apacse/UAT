@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { notFound, redirect } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
@@ -23,7 +25,7 @@ export default async function SignoffPage({
 
   const { data: signoffs } = await supabase
     .from("signoffs")
-    .select("*")
+    .select("id, project_id, signoff_name, signoff_date, created_at")
     .eq("project_id", project.id)
     .order("signoff_date", { ascending: false })
 

@@ -17,7 +17,7 @@ export default async function AdminDashboard() {
 
   const { data: projects } = await supabase
     .from("projects")
-    .select("*")
+    .select("id, slug, company_name, test_scenario, created_at")
     .order("created_at", { ascending: false })
 
   // Get tester counts per project

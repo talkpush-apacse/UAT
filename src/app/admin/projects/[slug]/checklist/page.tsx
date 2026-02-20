@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { notFound, redirect } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
@@ -24,7 +26,7 @@ export default async function ManageChecklistPage({
 
   const { data: items } = await supabase
     .from("checklist_items")
-    .select("*")
+    .select("id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample")
     .eq("project_id", project.id)
     .order("sort_order")
 

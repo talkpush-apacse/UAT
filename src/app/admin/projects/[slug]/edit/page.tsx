@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { notFound, redirect } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
@@ -15,7 +17,7 @@ export default async function EditProjectPage({
   const supabase = createAdminClient()
   const { data: project } = await supabase
     .from("projects")
-    .select("*")
+    .select("id, slug, company_name, test_scenario, talkpush_login_link")
     .eq("slug", params.slug)
     .single()
 

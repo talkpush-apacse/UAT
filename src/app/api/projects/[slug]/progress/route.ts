@@ -18,7 +18,7 @@ export async function GET(
 
     if (projectError) {
       console.error("Progress API - project lookup error:", projectError.message, "slug:", params.slug)
-      return NextResponse.json({ error: "Project not found", debug: projectError.message }, { status: 404 })
+      return NextResponse.json({ error: "Project not found" }, { status: 404 })
     }
 
     if (!project) {
@@ -44,10 +44,15 @@ export async function GET(
     // Fetch checklist item IDs scoped to this project so responses are
     // counted only for items that belong here (not other projects the
     // same tester may have participated in).
-    const { data: checklistItems } = await supabase
+    const { data: checklistItems, error: checklistError } = await supabase
       .from("checklist_items")
       .select("id")
       .eq("project_id", project.id)
+
+    if (checklistError) {
+      console.error("Progress API - checklist lookup error:", checklistError.message)
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    }
 
     const itemIds = (checklistItems || []).map((ci) => ci.id)
 
@@ -70,11 +75,16 @@ export async function GET(
       })
     }
 
-    const { data: responses } = await supabase
+    const { data: responses, error: responsesError } = await supabase
       .from("responses")
       .select("tester_id, status")
       .in("tester_id", testers.map((t) => t.id))
       .in("checklist_item_id", itemIds)
+
+    if (responsesError) {
+      console.error("Progress API - responses lookup error:", responsesError.message)
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    }
 
     const testerProgress = testers.map((tester) => {
       const testerResponses = (responses || []).filter(
@@ -99,6 +109,6 @@ export async function GET(
     })
   } catch (err) {
     console.error("Progress API - unexpected error:", err)
-    return NextResponse.json({ error: "Internal server error", debug: String(err) }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

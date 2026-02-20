@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { SESSION_DURATION_MS } from '@/lib/utils/session-constants'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -23,9 +24,9 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
 
-    // Check expiry (24 hours)
+    // Check expiry
     const timestamp = parseInt(parts[0], 10)
-    if (isNaN(timestamp) || Date.now() - timestamp > 24 * 60 * 60 * 1000) {
+    if (isNaN(timestamp) || Date.now() - timestamp > SESSION_DURATION_MS) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
 
