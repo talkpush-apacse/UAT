@@ -159,7 +159,7 @@ export default function RegistrationForm({
         )}
 
         <Button type="submit" className="w-full h-10">
-          Start Checklist
+          Start Testing
         </Button>
       </form>
     </div>
