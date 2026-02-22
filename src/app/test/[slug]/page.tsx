@@ -19,7 +19,7 @@ export default async function TesterRegistrationPage({
   if (!project) notFound()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-gray-50 flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-gray-50 flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-md space-y-5">
 
         {/* Talkpush Logo */}
@@ -47,6 +47,12 @@ export default async function TesterRegistrationPage({
           </div>
         )}
 
+        {project.test_scenario && (
+          <p className="text-sm text-gray-500 text-center">
+            Please fill in your details below to begin the checklist.
+          </p>
+        )}
+
         {/* Registration Form Card */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-md px-6 py-6">
           <RegistrationForm
@@ -57,7 +63,7 @@ export default async function TesterRegistrationPage({
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400">
+        <p className="text-center text-xs text-gray-500">
           Powered by Talkpush UAT
         </p>
       </div>

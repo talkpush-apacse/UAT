@@ -80,7 +80,12 @@ export default async function AdminDashboard() {
               <Card className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 cursor-pointer h-full">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-base font-semibold text-gray-900">{project.company_name}</CardTitle>
+                    <CardTitle
+                      className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug"
+                      title={project.company_name}
+                    >
+                      {project.company_name}
+                    </CardTitle>
                     <Badge variant="outline" className={`text-xs ${status.color}`}>
                       {status.label}
                     </Badge>

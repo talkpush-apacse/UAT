@@ -165,22 +165,41 @@ export default async function ProjectDetailPage({
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{project.company_name}</h1>
-          <p className="text-xs text-gray-400 font-mono mt-0.5">Tester URL: /test/{project.slug}</p>
+          <p className="text-xs text-gray-400 font-mono mt-0.5">
+            Tester URL:{" "}
+            <a
+              href={`/test/${project.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 underline hover:text-emerald-900"
+            >
+              /test/{project.slug}
+            </a>
+          </p>
           {project.test_scenario && (
             <p className="text-sm text-gray-600 mt-2 leading-relaxed">{project.test_scenario}</p>
           )}
         </div>
-        <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:justify-end">
-          <CopyLinkButton slug={project.slug} />
-          <CopyAnalyticsLinkButton slug={project.slug} />
-          <Link href={`/admin/projects/${project.slug}/edit`}>
-            <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-50">
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit Project
-            </Button>
-          </Link>
-          <DuplicateProjectButton projectId={project.id} slug={project.slug} />
-          <DeleteProjectButton projectId={project.id} companyName={project.company_name} />
+        <div className="flex flex-col gap-2 sm:items-end">
+          {/* Row 1 — Primary */}
+          <div className="flex flex-wrap gap-2">
+            <CopyLinkButton slug={project.slug} />
+            <CopyAnalyticsLinkButton slug={project.slug} />
+          </div>
+          {/* Row 2 — Secondary */}
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/admin/projects/${project.slug}/edit`}>
+              <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-50">
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Edit Project
+              </Button>
+            </Link>
+            <DuplicateProjectButton projectId={project.id} slug={project.slug} />
+          </div>
+          {/* Row 3 — Destructive */}
+          <div className="border-t border-gray-100 pt-2 w-full flex justify-end">
+            <DeleteProjectButton projectId={project.id} companyName={project.company_name} />
+          </div>
         </div>
       </div>
 
@@ -201,7 +220,7 @@ export default async function ProjectDetailPage({
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8">
         {actionCards.map((card) => (
           <Link key={card.href} href={card.href}>
-            <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-200 cursor-pointer p-5 text-center">
+            <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 hover:bg-gray-50 transition-all duration-200 cursor-pointer p-5 text-center">
               <card.icon className="h-5 w-5 text-gray-400 group-hover:text-emerald-700 mx-auto mb-2 transition-colors" />
               <p className="text-sm font-medium text-gray-700">{card.label}</p>
               <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
