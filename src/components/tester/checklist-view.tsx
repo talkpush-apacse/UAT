@@ -231,7 +231,7 @@ export default function ChecklistView({
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-400 mt-0.5">&#8226;</span>
-                    Mark each step as <span className="font-medium text-green-600">Pass</span>, <span className="font-medium text-red-500">Fail</span>, or <span className="font-medium text-gray-500">Skip</span>
+                    Mark each step as <span className="font-medium text-green-600">Pass</span>, <span className="font-medium text-red-500">Fail</span>, <span className="font-medium text-gray-500">N/A</span>, or <span className="font-medium text-amber-600">Up For Review</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-400 mt-0.5">&#8226;</span>
