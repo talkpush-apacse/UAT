@@ -19,17 +19,9 @@ import {
   Download,
   ChevronDown,
   ChevronUp,
-  Mail,
+  Copy,
+  Check,
 } from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -137,12 +129,8 @@ export default function AnalyticsCharts({
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
   const reportRef = useRef<HTMLDivElement>(null)
 
-  // Email summary state (admin-only)
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false)
-  const [recipientEmail, setRecipientEmail] = useState("")
-  const [isSending, setIsSending] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-  const [emailError, setEmailError] = useState<string | null>(null)
+  // Copy for AI state (admin-only)
+  const [copied, setCopied] = useState(false)
 
   const toggleRow = (i: number) =>
     setExpandedRows(prev => {
@@ -359,61 +347,71 @@ export default function AnalyticsCharts({
     }
   }
 
-  /* ---------- Email Summary ---------- */
-  const handleSendEmail = async () => {
-    if (!recipientEmail) return
-    setIsSending(true)
-    setEmailError(null)
+  /* ---------- Copy for AI ---------- */
+  const handleCopyForAI = async () => {
+    const passCount = overallBreakdown.find((b) => b.name === "Pass")?.value ?? 0
+    const failCount = overallBreakdown.find((b) => b.name === "Fail")?.value ?? 0
+    const blockedCount = overallBreakdown.find((b) => b.name === "Blocked")?.value ?? 0
+    const naCount = overallBreakdown.find((b) => b.name === "N/A")?.value ?? 0
+    const notTestedCount = overallBreakdown.find((b) => b.name === "Not Tested")?.value ?? 0
+    const totalSteps = checklistItems.length
+    const passRate =
+      totalSteps === 0
+        ? "N/A"
+        : `${Math.round((passCount / (totalSteps * Math.max(completionStats.registered, 1))) * 100)}%`
+    const date = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
 
-    // Build summary from already-computed memos
-    const statusCounts = overallBreakdown.reduce<Record<string, number>>((acc, item) => {
-      acc[item.name] = item.value
-      return acc
-    }, {})
+    const stepsSection =
+      failedStepsRows.length === 0
+        ? "None — all steps passed cleanly."
+        : failedStepsRows
+            .map(
+              (s) =>
+                `Step ${s.stepNumber} | ${s.actor} | ${s.action}\n  Tester: ${s.testerName} | Status: ${s.status} | Finding: ${s.behaviorType ?? "Not yet reviewed"} | Resolution: ${s.resolutionStatus}`
+            )
+            .join("\n\n")
 
-    const summary = {
-      totalTesters: completionStats.registered,
-      completedTesters: completionStats.completed,
-      totalSteps: checklistItems.length,
-      passCount: statusCounts["Pass"] ?? 0,
-      failCount: statusCounts["Fail"] ?? 0,
-      blockedCount: statusCounts["Blocked"] ?? 0,
-      naCount: statusCounts["N/A"] ?? 0,
-      notTestedCount: statusCounts["Not Tested"] ?? 0,
-      failedSteps: failedStepsRows.map((r) => ({
-        stepNumber: r.stepNumber,
-        actor: r.actor,
-        action: r.action,
-        testerName: r.testerName,
-        status: r.status,
-        behaviorType: r.behaviorType,
-        resolutionStatus: r.resolutionStatus,
-        // comment intentionally omitted — not rendered in the email template
-      })),
-    }
+    const text = `You are a Solutions Engineer summarizing UAT (User Acceptance Testing) results for a client. Using the data below, write a professional client-facing email.
 
-    try {
-      const res = await fetch("/api/analytics-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientEmail, projectName, summary }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setEmailError((data as { error?: string }).error ?? "Failed to send. Please try again.")
-      } else {
-        setEmailSent(true)
-        setTimeout(() => {
-          setEmailDialogOpen(false)
-          setEmailSent(false)
-          setRecipientEmail("")
-        }, 2000)
-      }
-    } catch {
-      setEmailError("Network error. Please try again.")
-    } finally {
-      setIsSending(false)
-    }
+Guidelines:
+- Address the email to the client stakeholders
+- Summarize the overall UAT status and key metrics
+- If there are failed or blocked steps, mention the count and any key patterns
+- Keep the tone professional, clear, and constructive
+- Keep it concise (3–4 short paragraphs)
+- End with clear next steps
+
+---
+
+PROJECT: ${projectName}
+DATE: ${date}
+
+TESTER PARTICIPATION
+- Registered: ${completionStats.registered}
+- Started: ${completionStats.started}
+- Completed: ${completionStats.completed}
+
+STEP RESULTS
+- Pass: ${passCount}
+- Fail: ${failCount}
+- Blocked: ${blockedCount}
+- N/A: ${naCount}
+- Not Tested: ${notTestedCount}
+- Total Steps: ${totalSteps}
+- Pass Rate: ${passRate}
+
+STEPS REQUIRING ATTENTION (${failedStepsRows.length} total)
+${stepsSection}
+
+---`
+
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   /* ---------------------------------------------------------------- */
@@ -444,11 +442,20 @@ export default function AnalyticsCharts({
       <div className="flex justify-end gap-2">
         {isAdmin && (
           <button
-            onClick={() => { setEmailError(null); setEmailSent(false); setEmailDialogOpen(true) }}
+            onClick={handleCopyForAI}
             className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors"
           >
-            <Mail className="h-4 w-4" />
-            Email Summary
+            {copied ? (
+              <>
+                <Check className="h-4 w-4 text-green-600" />
+                <span className="text-green-600">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4" />
+                Copy for AI
+              </>
+            )}
           </button>
         )}
         <button
@@ -460,58 +467,6 @@ export default function AnalyticsCharts({
           {isGenerating ? "Generating…" : "Download PDF"}
         </button>
       </div>
-
-      {/* Email Summary Dialog (admin-only) */}
-      <Dialog open={emailDialogOpen} onOpenChange={(open) => { if (!isSending) setEmailDialogOpen(open) }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Email Analytics Summary</DialogTitle>
-          </DialogHeader>
-          <div className="py-2 space-y-4">
-            <p className="text-sm text-gray-500">
-              Send a formatted analytics summary for <span className="font-medium text-gray-700">{projectName}</span> to any recipient.
-            </p>
-            <div className="space-y-1.5">
-              <Label htmlFor="recipient-email" className="text-sm font-medium text-gray-700">
-                Recipient Email
-              </Label>
-              <Input
-                id="recipient-email"
-                type="email"
-                placeholder="stakeholder@company.com"
-                value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && recipientEmail && !isSending && !emailSent) handleSendEmail() }}
-                disabled={isSending || emailSent}
-                className="border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none placeholder:text-gray-400"
-              />
-            </div>
-            {emailError && (
-              <p className="text-sm text-red-600">{emailError}</p>
-            )}
-            {emailSent && (
-              <p className="text-sm text-emerald-600 font-medium">✓ Email sent successfully!</p>
-            )}
-          </div>
-          <DialogFooter>
-            <button
-              onClick={() => setEmailDialogOpen(false)}
-              disabled={isSending}
-              className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSendEmail}
-              disabled={!recipientEmail || isSending || emailSent}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <Mail className="h-4 w-4" />
-              {isSending ? "Sending…" : emailSent ? "Sent!" : "Send Summary"}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* ════════════════════════════════════════════════════ */}
       {/*  UAT Summary Report                                 */}
