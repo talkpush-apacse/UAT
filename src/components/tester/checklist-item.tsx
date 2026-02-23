@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Lightbulb, Eye, ExternalLink } from "lucide-react"
 import FileUpload from "./file-upload"
 import ReactMarkdown from "react-markdown"
-import rehypeRaw from "rehype-raw"
+import rehypeSanitize from "rehype-sanitize"
 
 interface ChecklistItemData {
   id: string
@@ -285,12 +285,10 @@ export default function ChecklistItem({
       <CardContent className="py-4">
         <div className="flex items-start gap-3">
 
-          {/* === LEFT: Large teal step number circle === */}
+          {/* === LEFT: Teal "Step N" pill badge === */}
           <div className="flex-shrink-0 pt-0.5">
-            <div
-              className={`w-10 h-10 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center shadow-sm select-none ${item.step_number >= 10 ? "text-sm" : "text-base"}`}
-            >
-              {item.step_number}
+            <div className="rounded-full bg-teal-600 text-white text-xs font-bold px-3 py-1.5 shadow-sm select-none whitespace-nowrap">
+              Step {item.step_number}
             </div>
           </div>
 
@@ -329,7 +327,7 @@ export default function ChecklistItem({
           prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
           prose-strong:text-gray-900 prose-a:text-emerald-700 prose-a:no-underline hover:prose-a:underline">
           <ReactMarkdown
-            rehypePlugins={[rehypeRaw]}
+            rehypePlugins={[rehypeSanitize]}
             components={{
               // Override plain-text <p> nodes to auto-linkify bare URLs — #6
               p: ({ children }) => (
@@ -355,7 +353,7 @@ export default function ChecklistItem({
               prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900
               prose-a:text-amber-700">
               <span className="font-semibold">Tip: </span>
-              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{item.tip}</ReactMarkdown>
+              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{item.tip}</ReactMarkdown>
             </div>
           </div>
         )}
@@ -470,7 +468,7 @@ export default function ChecklistItem({
         )}
 
         {/* === TALKPUSH LOGIN LINK === */}
-        {talkpushLoginLink && (
+        {talkpushLoginLink && isValidGuideUrl(talkpushLoginLink) && (
           <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
             <p className="text-xs font-medium text-emerald-900 mb-1">Talkpush Login Link:</p>
             <a

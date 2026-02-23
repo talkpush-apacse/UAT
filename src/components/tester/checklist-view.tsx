@@ -49,42 +49,6 @@ interface Tester {
   test_completed?: string | null
 }
 
-/** Build sequential sections based on the order items appear in the file.
- *  A new section starts whenever the path OR actor changes from the previous item.
- *
- *  Issue #4 — disambiguate duplicate actor headings by appending an ordinal
- *  suffix to any heading that has already appeared earlier in the list.
- *  e.g. the second "Talkpush" section becomes "Talkpush (2)".
- */
-interface Section {
-  path: string
-  actor: string
-  displayActor: string   // may differ from actor when disambiguated
-  items: ChecklistItemData[]
-}
-
-function buildSections(items: ChecklistItemData[]): Section[] {
-  const sections: Section[] = []
-  const actorOccurrences: Record<string, number> = {}
-
-  items.forEach((item) => {
-    const path = item.path || "General"
-    const actor = item.actor
-    const last = sections[sections.length - 1]
-
-    if (!last || last.path !== path || last.actor !== actor) {
-      // Count how many times this exact actor has appeared before
-      actorOccurrences[actor] = (actorOccurrences[actor] || 0) + 1
-      const occurrence = actorOccurrences[actor]
-      const displayActor = occurrence > 1 ? `${actor} (${occurrence})` : actor
-      sections.push({ path, actor, displayActor, items: [item] })
-    } else {
-      last.items.push(item)
-    }
-  })
-
-  return sections
-}
 
 export default function ChecklistView({
   project,
@@ -130,9 +94,6 @@ export default function ChecklistView({
 
   // Issue #3 — CTA is only active when every step has a status
   const allStepsCompleted = totalCount > 0 && completedCount === totalCount
-
-  // Build sections in the original file order
-  const sections = useMemo(() => buildSections(checklistItems), [checklistItems])
 
   // Find the first Talkpush actor step to show the login link
   const firstTalkpushItemId = useMemo(() => {
@@ -273,58 +234,25 @@ export default function ChecklistView({
         </div>
       </div>
 
-      {/* Checklist — rendered in original file order */}
-      <div className="mt-6 space-y-6" id="checklist-sections">
-        {sections.map((section, sIdx) => {
-          const sectionCompleted = section.items.filter(
-            (i) => responses[i.id]?.status !== null && responses[i.id]?.status !== undefined
-          ).length
-          const sectionTotal = section.items.length
-          const sectionPct = sectionTotal > 0 ? Math.round((sectionCompleted / sectionTotal) * 100) : 0
-
-          return (
-            <div key={`section-${sIdx}`}>
-              {/* Actor section with progress — Issue #4: uses displayActor (disambiguated) */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                    {section.displayActor}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-medium ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "text-green-600" : "text-gray-500"}`}>
-                      {sectionCompleted} of {sectionTotal}
-                    </span>
-                    <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${sectionCompleted === sectionTotal && sectionTotal > 0 ? "bg-green-500" : "bg-emerald-600"}`}
-                        style={{ width: `${sectionPct}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {section.items.map((item) => (
-                    <ChecklistItem
-                      key={item.id}
-                      item={item}
-                      testerId={tester.id}
-                      response={responses[item.id] || null}
-                      attachments={initialAttachments.filter(
-                        (a) => responses[item.id] && a.response_id === responses[item.id].id
-                      )}
-                      onResponseUpdate={handleResponseUpdate}
-                      talkpushLoginLink={
-                        item.id === firstTalkpushItemId
-                          ? project.talkpush_login_link
-                          : null
-                      }
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )
-        })}
+      {/* Checklist — flat sequential list, no actor section grouping */}
+      <div className="mt-6 space-y-3" id="checklist-sections">
+        {checklistItems.map((item) => (
+          <ChecklistItem
+            key={item.id}
+            item={item}
+            testerId={tester.id}
+            response={responses[item.id] || null}
+            attachments={initialAttachments.filter(
+              (a) => responses[item.id] && a.response_id === responses[item.id].id
+            )}
+            onResponseUpdate={handleResponseUpdate}
+            talkpushLoginLink={
+              item.id === firstTalkpushItemId
+                ? project.talkpush_login_link
+                : null
+            }
+          />
+        ))}
 
         {/* Mark Test Complete — Issue #3: disabled until all steps have a status */}
         {checklistItems.length > 0 && (

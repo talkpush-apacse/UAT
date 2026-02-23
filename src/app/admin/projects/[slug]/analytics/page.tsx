@@ -89,6 +89,8 @@ export default async function AnalyticsPage({
         testers={testers || []}
         responses={responses}
         adminReviews={adminReviews}
+        isAdmin={true}
+        projectName={project.company_name}
       />
     </div>
   )
