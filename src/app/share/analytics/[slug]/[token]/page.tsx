@@ -62,11 +62,12 @@ export default async function PublicAnalyticsPage({
     notes: string | null
   }[] = []
 
-  if (testerIds.length > 0) {
+  if (testerIds.length > 0 && itemIds.length > 0) {
     const { data } = await supabase
       .from("admin_reviews")
       .select("checklist_item_id, tester_id, behavior_type, resolution_status, notes")
       .in("tester_id", testerIds)
+      .in("checklist_item_id", itemIds) // scope to this project's items only
     adminReviews = data || []
   }
 
@@ -83,6 +84,7 @@ export default async function PublicAnalyticsPage({
           responses={responses}
           adminReviews={adminReviews}
         />
+
       </div>
     </div>
   )

@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import ReviewPanel from "@/components/admin/review-panel"
+import PublishReviewButton from "@/components/admin/publish-review-button"
 
 export type ReviewStep = {
   checklistItemId: string
@@ -181,12 +182,17 @@ export default async function ReviewPage({
         </Link>
       </div>
 
-      <div className="mb-8">
-        <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">Admin Review</p>
-        <h1 className="text-2xl font-semibold text-gray-900 mt-1">{project.company_name}</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Non-pass steps and items flagged for retesting, grouped by tester.
-        </p>
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">Admin Review</p>
+          <h1 className="text-2xl font-semibold text-gray-900 mt-1">{project.company_name}</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Non-pass steps and items flagged for retesting, grouped by tester.
+          </p>
+        </div>
+        <div className="flex-shrink-0 pt-1">
+          <PublishReviewButton slug={project.slug} />
+        </div>
       </div>
 
       {testerSections.length === 0 ? (

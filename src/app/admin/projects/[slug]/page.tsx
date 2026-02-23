@@ -11,6 +11,7 @@ import LiveProgressTable from "@/components/admin/live-progress-table"
 import type { TesterProgress } from "@/components/admin/live-progress-table"
 import CopyLinkButton from "@/components/admin/copy-link-button"
 import CopyAnalyticsLinkButton from "@/components/admin/copy-analytics-link-button"
+import { generateShareToken } from "@/lib/utils/share-token"
 import DeleteProjectButton from "@/components/admin/delete-project-button"
 import DuplicateProjectButton from "@/components/admin/duplicate-project-button"
 import {
@@ -53,6 +54,8 @@ export default async function ProjectDetailPage({
     .single()
 
   if (!project) notFound()
+
+  const shareToken = await generateShareToken(project.slug)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let checklistItems: any[] | null = null
@@ -139,7 +142,7 @@ export default async function ProjectDetailPage({
       sub: "Triage findings",
     },
     {
-      href: `/admin/projects/${project.slug}/analytics`,
+      href: `/share/analytics/${project.slug}/${shareToken}`,
       icon: BarChart3,
       label: "Analytics",
       sub: "Charts & Filters",

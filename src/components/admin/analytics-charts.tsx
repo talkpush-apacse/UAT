@@ -19,8 +19,6 @@ import {
   Download,
   ChevronDown,
   ChevronUp,
-  Copy,
-  Check,
 } from "lucide-react"
 
 /* ------------------------------------------------------------------ */
@@ -114,23 +112,16 @@ export default function AnalyticsCharts({
   testers,
   responses,
   adminReviews,
-  isAdmin = false,
-  projectName = "",
 }: {
   checklistItems: ChecklistItem[]
   testers: Tester[]
   responses: Response[]
   adminReviews: AdminReview[]
-  isAdmin?: boolean
-  projectName?: string
 }) {
   const [filterScope, setFilterScope] = useState<"all" | "completed">("all")
   const [isGenerating, setIsGenerating] = useState(false)
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
   const reportRef = useRef<HTMLDivElement>(null)
-
-  // Copy for AI state (admin-only)
-  const [copied, setCopied] = useState(false)
 
   const toggleRow = (i: number) =>
     setExpandedRows(prev => {
@@ -347,73 +338,6 @@ export default function AnalyticsCharts({
     }
   }
 
-  /* ---------- Copy for AI ---------- */
-  const handleCopyForAI = async () => {
-    const passCount = overallBreakdown.find((b) => b.name === "Pass")?.value ?? 0
-    const failCount = overallBreakdown.find((b) => b.name === "Fail")?.value ?? 0
-    const blockedCount = overallBreakdown.find((b) => b.name === "Blocked")?.value ?? 0
-    const naCount = overallBreakdown.find((b) => b.name === "N/A")?.value ?? 0
-    const notTestedCount = overallBreakdown.find((b) => b.name === "Not Tested")?.value ?? 0
-    const totalSteps = checklistItems.length
-    const passRate =
-      totalSteps === 0
-        ? "N/A"
-        : `${Math.round((passCount / (totalSteps * Math.max(completionStats.registered, 1))) * 100)}%`
-    const date = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-
-    const stepsSection =
-      failedStepsRows.length === 0
-        ? "None — all steps passed cleanly."
-        : failedStepsRows
-            .map(
-              (s) =>
-                `Step ${s.stepNumber} | ${s.actor} | ${s.action}\n  Tester: ${s.testerName} | Status: ${s.status} | Finding: ${s.behaviorType ?? "Not yet reviewed"} | Resolution: ${s.resolutionStatus}`
-            )
-            .join("\n\n")
-
-    const text = `You are a Solutions Engineer summarizing UAT (User Acceptance Testing) results for a client. Using the data below, write a professional client-facing email.
-
-Guidelines:
-- Address the email to the client stakeholders
-- Summarize the overall UAT status and key metrics
-- If there are failed or blocked steps, mention the count and any key patterns
-- Keep the tone professional, clear, and constructive
-- Keep it concise (3–4 short paragraphs)
-- End with clear next steps
-
----
-
-PROJECT: ${projectName}
-DATE: ${date}
-
-TESTER PARTICIPATION
-- Registered: ${completionStats.registered}
-- Started: ${completionStats.started}
-- Completed: ${completionStats.completed}
-
-STEP RESULTS
-- Pass: ${passCount}
-- Fail: ${failCount}
-- Blocked: ${blockedCount}
-- N/A: ${naCount}
-- Not Tested: ${notTestedCount}
-- Total Steps: ${totalSteps}
-- Pass Rate: ${passRate}
-
-STEPS REQUIRING ATTENTION (${failedStepsRows.length} total)
-${stepsSection}
-
----`
-
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   /* ---------------------------------------------------------------- */
   /*  Empty state                                                       */
   /* ---------------------------------------------------------------- */
@@ -440,24 +364,6 @@ ${stepsSection}
 
       {/* Action buttons */}
       <div className="flex justify-end gap-2">
-        {isAdmin && (
-          <button
-            onClick={handleCopyForAI}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors"
-          >
-            {copied ? (
-              <>
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-green-600">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4" />
-                Copy for AI
-              </>
-            )}
-          </button>
-        )}
         <button
           onClick={handleDownloadPDF}
           disabled={isGenerating}
@@ -668,95 +574,6 @@ ${stepsSection}
       <div ref={reportRef} className="space-y-6">
 
         {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  CLIENT REPORT: Tester Participation Summary                  */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-emerald-700" />
-                <CardTitle className="text-sm font-semibold text-gray-700">Tester Participation Summary</CardTitle>
-              </div>
-              <span className="text-xs text-gray-500">
-                {testerParticipation.filter((t) => t.testCompleted).length} of {testerParticipation.length} marked complete
-              </span>
-            </div>
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
-            {testerParticipation.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">No testers registered yet</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Tester</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-36">Steps Done</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">Pass</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">Fail</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">N/A</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-24">Review</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-4 py-2.5 w-32">Completed</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {testerParticipation.map((t, idx) => (
-                      <tr
-                        key={idx}
-                        className={`border-b border-gray-50 transition-colors ${
-                          t.hasIssues ? "bg-red-50/20 hover:bg-red-50/40" : "hover:bg-gray-50/50"
-                        }`}
-                      >
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-gray-800">{t.name}</p>
-                          <p className="text-xs text-gray-400">{t.email}</p>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden w-20">
-                              <div
-                                className="h-full bg-emerald-500 rounded-full"
-                                style={{ width: t.total === 0 ? "0%" : `${Math.round((t.answered / t.total) * 100)}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-gray-600 tabular-nums whitespace-nowrap">
-                              {t.answered}/{t.total}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="text-sm font-semibold text-green-600">{t.pass}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className={`text-sm font-semibold ${t.fail > 0 ? "text-red-600" : "text-gray-400"}`}>{t.fail}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="text-sm font-semibold text-gray-500">{t.na}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className={`text-sm font-semibold ${t.blocked > 0 ? "text-amber-600" : "text-gray-400"}`}>{t.blocked}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {t.testCompleted ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
-                              <CheckCircle2 className="h-3 w-3" /> Done
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
-                              Pending
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* ══════════════════════════════════════════════════════════════ */}
         {/*  CLIENT REPORT: Steps Requiring Attention                     */}
         {/* ══════════════════════════════════════════════════════════════ */}
         <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
@@ -788,7 +605,7 @@ ${stepsSection}
                       <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-36">Talkpush Finding</th>
                       <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Tester Comments</th>
                       <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-28">Resolution</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Findings</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Talkpush Remarks</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -903,7 +720,7 @@ ${stepsSection}
                           </span>
                         </td>
 
-                        {/* Findings (admin notes) */}
+                        {/* Talkpush Remarks (admin notes) */}
                         <td className="px-4 py-3 text-gray-600 text-xs">
                           {row.notes ? (
                             <span className={isExpanded ? "whitespace-normal" : "line-clamp-1"}>{row.notes}</span>
@@ -913,6 +730,95 @@ ${stepsSection}
                         </td>
                       </tr>
                     )})}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/*  CLIENT REPORT: Tester Participation Summary                  */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-emerald-700" />
+                <CardTitle className="text-sm font-semibold text-gray-700">Tester Participation Summary</CardTitle>
+              </div>
+              <span className="text-xs text-gray-500">
+                {testerParticipation.filter((t) => t.testCompleted).length} of {testerParticipation.length} marked complete
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="px-0 pb-0">
+            {testerParticipation.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">No testers registered yet</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Tester</th>
+                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-36">Steps Done</th>
+                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">Pass</th>
+                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">Fail</th>
+                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">N/A</th>
+                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-24">Review</th>
+                      <th className="text-center text-xs font-semibold text-gray-500 px-4 py-2.5 w-32">Completed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {testerParticipation.map((t, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b border-gray-50 transition-colors ${
+                          t.hasIssues ? "bg-red-50/20 hover:bg-red-50/40" : "hover:bg-gray-50/50"
+                        }`}
+                      >
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-gray-800">{t.name}</p>
+                          <p className="text-xs text-gray-400">{t.email}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden w-20">
+                              <div
+                                className="h-full bg-emerald-500 rounded-full"
+                                style={{ width: t.total === 0 ? "0%" : `${Math.round((t.answered / t.total) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-600 tabular-nums whitespace-nowrap">
+                              {t.answered}/{t.total}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="text-sm font-semibold text-green-600">{t.pass}</span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className={`text-sm font-semibold ${t.fail > 0 ? "text-red-600" : "text-gray-400"}`}>{t.fail}</span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="text-sm font-semibold text-gray-500">{t.na}</span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className={`text-sm font-semibold ${t.blocked > 0 ? "text-amber-600" : "text-gray-400"}`}>{t.blocked}</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {t.testCompleted ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                              <CheckCircle2 className="h-3 w-3" /> Done
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
