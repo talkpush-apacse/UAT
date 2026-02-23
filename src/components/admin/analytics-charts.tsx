@@ -593,74 +593,89 @@ export default function AnalyticsCharts({
               const pageRows = failedStepsRows.slice(pageStart, pageStart + ATTENTION_PAGE_SIZE)
               return (
                 <div>
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-gray-100">
                     {pageRows.map((row, idx) => (
-                      <div key={pageStart + idx} className="px-4 py-4 hover:bg-gray-50/40 transition-colors">
+                      <div key={pageStart + idx} className="border-b border-gray-50 last:border-0">
 
-                        {/* Meta row — step number, actor, tester, status, finding, resolution */}
-                        <div className="flex items-center flex-wrap gap-2 mb-3">
-                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-gray-100 text-xs font-bold text-gray-600 flex-shrink-0">
+                        {/* ── Step header ── */}
+                        <div className="flex items-start gap-3 px-4 py-3 bg-gray-50/50">
+                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-white border border-gray-200 text-xs font-bold text-gray-600 flex-shrink-0 mt-0.5">
                             {row.stepNumber}
                           </span>
                           <Badge
                             variant="outline"
-                            className={`text-xs font-medium ${ACTOR_BADGE[row.actor] ?? ""}`}
+                            className={`text-xs font-medium flex-shrink-0 mt-0.5 ${ACTOR_BADGE[row.actor] ?? ""}`}
                           >
                             {row.actor}
                           </Badge>
-                          <span className="text-sm font-semibold text-gray-800">{row.testerName}</span>
-                          {row.status === "Fail" ? (
-                            <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">Fail</span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">Up For Review</span>
-                          )}
-                          {row.behaviorType && (
-                            <span
-                              className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                              style={{
-                                backgroundColor:
-                                  row.behaviorType === "Expected Behavior" ? "#dcfce7"
-                                  : row.behaviorType === "Bug/Glitch" ? "#fee2e2"
-                                  : row.behaviorType === "For Retesting" ? "#dbeafe"
-                                  : "#ffedd5",
-                                color:
-                                  row.behaviorType === "Expected Behavior" ? "#166534"
-                                  : row.behaviorType === "Bug/Glitch" ? "#991b1b"
-                                  : row.behaviorType === "For Retesting" ? "#1e40af"
-                                  : "#9a3412",
-                              }}
-                            >
-                              {row.behaviorType}
-                            </span>
-                          )}
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                              RESOLUTION_BADGE[row.resolutionStatus] ?? "bg-gray-100 text-gray-600"
-                            }`}
-                          >
-                            {row.resolutionStatus}
-                          </span>
+                          <p className="text-sm text-gray-700 leading-relaxed">{row.action}</p>
                         </div>
 
-                        {/* Full action text — never truncated */}
-                        <p className="text-sm text-gray-700 leading-relaxed mb-3">{row.action}</p>
+                        {/* ── 3-column review grid ── */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
 
-                        {/* Tester Comments */}
-                        {row.comment && (
-                          <div className="bg-gray-50 rounded-lg px-3 py-2.5 mb-2">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Tester Comments</p>
-                            <p className="text-sm text-gray-700 leading-relaxed">{row.comment}</p>
+                          {/* Col 1 — Tester Report */}
+                          <div className="px-4 py-3">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Tester Report</p>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-semibold text-gray-800">{row.testerName}</span>
+                              {row.status === "Fail" ? (
+                                <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Fail</span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">Up For Review</span>
+                              )}
+                            </div>
+                            {row.comment ? (
+                              <p className="text-sm text-gray-600 leading-relaxed">{row.comment}</p>
+                            ) : (
+                              <p className="text-xs text-gray-400 italic">No comment provided</p>
+                            )}
                           </div>
-                        )}
 
-                        {/* Talkpush Remarks */}
-                        {row.notes && (
-                          <div className="bg-emerald-50 rounded-lg px-3 py-2.5">
-                            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">Talkpush Remarks</p>
-                            <p className="text-sm text-gray-700 leading-relaxed">{row.notes}</p>
+                          {/* Col 2 — Talkpush Finding */}
+                          <div className="px-4 py-3">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Talkpush Finding</p>
+                            {row.behaviorType ? (
+                              <>
+                                <span
+                                  className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mb-2"
+                                  style={{
+                                    backgroundColor:
+                                      row.behaviorType === "Expected Behavior" ? "#dcfce7"
+                                      : row.behaviorType === "Bug/Glitch" ? "#fee2e2"
+                                      : row.behaviorType === "For Retesting" ? "#dbeafe"
+                                      : "#ffedd5",
+                                    color:
+                                      row.behaviorType === "Expected Behavior" ? "#166534"
+                                      : row.behaviorType === "Bug/Glitch" ? "#991b1b"
+                                      : row.behaviorType === "For Retesting" ? "#1e40af"
+                                      : "#9a3412",
+                                  }}
+                                >
+                                  {row.behaviorType}
+                                </span>
+                                {row.notes && (
+                                  <p className="text-sm text-gray-600 leading-relaxed">{row.notes}</p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-xs text-gray-400 italic">Not yet reviewed</p>
+                            )}
                           </div>
-                        )}
 
+                          {/* Col 3 — Resolution */}
+                          <div className="px-4 py-3">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Resolution</p>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                                RESOLUTION_BADGE[row.resolutionStatus] ?? "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {row.resolutionStatus}
+                            </span>
+                          </div>
+
+                        </div>{/* end grid */}
                       </div>
                     ))}
                   </div>
