@@ -187,7 +187,7 @@ export default async function ProjectDetailPage({
             <CopyAnalyticsLinkButton slug={project.slug} />
           </div>
           {/* Row 2 — Secondary */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2">
             <Link href={`/admin/projects/${project.slug}/edit`}>
               <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-50">
                 <Pencil className="h-3.5 w-3.5 mr-1.5" />
