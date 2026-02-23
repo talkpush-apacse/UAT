@@ -17,8 +17,8 @@ import {
   Play,
   ClipboardList,
   Download,
-  ChevronDown,
-  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 
 /* ------------------------------------------------------------------ */
@@ -120,15 +120,10 @@ export default function AnalyticsCharts({
 }) {
   const [filterScope, setFilterScope] = useState<"all" | "completed">("all")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
+  const [attentionPage, setAttentionPage] = useState(0)
   const reportRef = useRef<HTMLDivElement>(null)
 
-  const toggleRow = (i: number) =>
-    setExpandedRows(prev => {
-      const next = new Set(prev)
-      if (next.has(i)) { next.delete(i) } else { next.add(i) }
-      return next
-    })
+  const ATTENTION_PAGE_SIZE = 10
 
   /* ---------- Completed tester IDs ---------- */
   const completedTesterIds = useMemo(() => {
@@ -592,125 +587,52 @@ export default function AnalyticsCharts({
                 <p className="text-sm font-medium">No failed or flagged steps</p>
                 <p className="text-xs mt-1">All responses are passing or not yet tested</p>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-14">#</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-24">Actor</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Step</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-32">Tester</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-28">Tester Status</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-36">Talkpush Finding</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Tester Comments</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-28">Resolution</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Talkpush Remarks</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {failedStepsRows.map((row, idx) => {
-                      const isExpanded = expandedRows.has(idx)
-                      return (
-                      <tr
-                        key={idx}
-                        className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${
-                          idx % 2 === 0 ? "" : "bg-gray-50/30"
-                        }`}
-                      >
-                        {/* Step # */}
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600">
+            ) : (() => {
+              const totalPages = Math.ceil(failedStepsRows.length / ATTENTION_PAGE_SIZE)
+              const pageStart = attentionPage * ATTENTION_PAGE_SIZE
+              const pageRows = failedStepsRows.slice(pageStart, pageStart + ATTENTION_PAGE_SIZE)
+              return (
+                <div>
+                  <div className="divide-y divide-gray-50">
+                    {pageRows.map((row, idx) => (
+                      <div key={pageStart + idx} className="px-4 py-4 hover:bg-gray-50/40 transition-colors">
+
+                        {/* Meta row — step number, actor, tester, status, finding, resolution */}
+                        <div className="flex items-center flex-wrap gap-2 mb-3">
+                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-gray-100 text-xs font-bold text-gray-600 flex-shrink-0">
                             {row.stepNumber}
                           </span>
-                        </td>
-
-                        {/* Actor */}
-                        <td className="px-4 py-3">
                           <Badge
                             variant="outline"
                             className={`text-xs font-medium ${ACTOR_BADGE[row.actor] ?? ""}`}
                           >
                             {row.actor}
                           </Badge>
-                        </td>
-
-                        {/* Action */}
-                        <td className="px-4 py-3 text-gray-700">
-                          <div className="flex items-start gap-1.5">
-                            <span className={isExpanded ? "whitespace-normal flex-1" : "line-clamp-1 flex-1 min-w-0"}>
-                              {row.action}
-                            </span>
-                            <button
-                              onClick={() => toggleRow(idx)}
-                              className="flex-shrink-0 text-gray-400 hover:text-gray-600 mt-0.5 transition-colors"
-                              aria-label={isExpanded ? "Collapse row" : "Expand row"}
-                            >
-                              {isExpanded
-                                ? <ChevronUp className="h-3.5 w-3.5" />
-                                : <ChevronDown className="h-3.5 w-3.5" />}
-                            </button>
-                          </div>
-                        </td>
-
-                        {/* Tester */}
-                        <td className="px-4 py-3 text-gray-700 font-medium">{row.testerName}</td>
-
-                        {/* Status */}
-                        <td className="px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-800">{row.testerName}</span>
                           {row.status === "Fail" ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-                              Fail
-                            </span>
+                            <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">Fail</span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                              Up For Review
-                            </span>
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">Up For Review</span>
                           )}
-                        </td>
-
-                        {/* Talkpush Finding (was "Issue Type") */}
-                        <td className="px-4 py-3">
-                          {row.behaviorType ? (
+                          {row.behaviorType && (
                             <span
-                              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                              className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
                               style={{
                                 backgroundColor:
-                                  row.behaviorType === "Expected Behavior"
-                                    ? "#dcfce7"
-                                    : row.behaviorType === "Bug/Glitch"
-                                    ? "#fee2e2"
-                                    : row.behaviorType === "For Retesting"
-                                    ? "#dbeafe"
-                                    : "#ffedd5",
+                                  row.behaviorType === "Expected Behavior" ? "#dcfce7"
+                                  : row.behaviorType === "Bug/Glitch" ? "#fee2e2"
+                                  : row.behaviorType === "For Retesting" ? "#dbeafe"
+                                  : "#ffedd5",
                                 color:
-                                  row.behaviorType === "Expected Behavior"
-                                    ? "#166534"
-                                    : row.behaviorType === "Bug/Glitch"
-                                    ? "#991b1b"
-                                    : row.behaviorType === "For Retesting"
-                                    ? "#1e40af"
-                                    : "#9a3412",
+                                  row.behaviorType === "Expected Behavior" ? "#166534"
+                                  : row.behaviorType === "Bug/Glitch" ? "#991b1b"
+                                  : row.behaviorType === "For Retesting" ? "#1e40af"
+                                  : "#9a3412",
                               }}
                             >
                               {row.behaviorType}
                             </span>
-                          ) : (
-                            <span className="text-xs text-gray-400">—</span>
                           )}
-                        </td>
-
-                        {/* Comment (tester's comment) */}
-                        <td className="px-4 py-3 text-gray-600 text-xs">
-                          {row.comment ? (
-                            <span className={isExpanded ? "whitespace-normal" : "line-clamp-1"}>{row.comment}</span>
-                          ) : (
-                            <span className="text-gray-400">—</span>
-                          )}
-                        </td>
-
-                        {/* Resolution */}
-                        <td className="px-4 py-3">
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
                               RESOLUTION_BADGE[row.resolutionStatus] ?? "bg-gray-100 text-gray-600"
@@ -718,22 +640,61 @@ export default function AnalyticsCharts({
                           >
                             {row.resolutionStatus}
                           </span>
-                        </td>
+                        </div>
 
-                        {/* Talkpush Remarks (admin notes) */}
-                        <td className="px-4 py-3 text-gray-600 text-xs">
-                          {row.notes ? (
-                            <span className={isExpanded ? "whitespace-normal" : "line-clamp-1"}>{row.notes}</span>
-                          ) : (
-                            <span className="text-gray-400">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    )})}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                        {/* Full action text — never truncated */}
+                        <p className="text-sm text-gray-700 leading-relaxed mb-3">{row.action}</p>
+
+                        {/* Tester Comments */}
+                        {row.comment && (
+                          <div className="bg-gray-50 rounded-lg px-3 py-2.5 mb-2">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Tester Comments</p>
+                            <p className="text-sm text-gray-700 leading-relaxed">{row.comment}</p>
+                          </div>
+                        )}
+
+                        {/* Talkpush Remarks */}
+                        {row.notes && (
+                          <div className="bg-emerald-50 rounded-lg px-3 py-2.5">
+                            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">Talkpush Remarks</p>
+                            <p className="text-sm text-gray-700 leading-relaxed">{row.notes}</p>
+                          </div>
+                        )}
+
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                      <span className="text-xs text-gray-400">
+                        Showing {pageStart + 1}–{Math.min(pageStart + ATTENTION_PAGE_SIZE, failedStepsRows.length)} of {failedStepsRows.length} issues
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setAttentionPage(p => p - 1)}
+                          disabled={attentionPage === 0}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                          Previous
+                        </button>
+                        <span className="px-2 text-xs text-gray-500">{attentionPage + 1} / {totalPages}</span>
+                        <button
+                          onClick={() => setAttentionPage(p => p + 1)}
+                          disabled={attentionPage >= totalPages - 1}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Next
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </CardContent>
         </Card>
 
