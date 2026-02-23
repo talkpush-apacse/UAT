@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 import { deleteTester } from "@/lib/actions/testers"
 import { Users, ExternalLink, Trash2, RefreshCw, AlertTriangle } from "lucide-react"
 
@@ -106,7 +107,9 @@ export default function LiveProgressTable({
 
   const handleDelete = async (testerId: string) => {
     const result = await deleteTester(slug, testerId)
-    if (!result.error) {
+    if (result.error) {
+      toast.error("Failed to delete tester. Please try again.")
+    } else {
       setTesters((prev) => prev.filter((t) => t.id !== testerId))
     }
   }
@@ -220,8 +223,7 @@ export default function LiveProgressTable({
                             View
                           </Button>
                         </Link>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                          <AlertDialog>
+                        <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-7 px-2 text-gray-400 hover:text-red-600 hover:bg-red-50">
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -246,7 +248,6 @@ export default function LiveProgressTable({
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        </div>
                       </div>
                     </td>
                   </tr>
