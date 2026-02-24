@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useMemo, useEffect, useId } from "react"
+import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2 } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import { markTestComplete } from "@/lib/actions/testers"
 
@@ -258,9 +259,18 @@ export default function ChecklistView({
         {checklistItems.length > 0 && (
           <div className="pt-4 pb-6 border-t border-gray-200 mt-2">
             {isTestComplete ? (
-              <div className="flex items-center justify-center gap-2.5 rounded-xl bg-green-50 border border-green-200 py-5 px-6">
-                <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                <span className="text-sm font-semibold text-green-700">Test Marked Complete</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-center gap-2.5 rounded-xl bg-green-50 border border-green-200 py-5 px-6">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span className="text-sm font-semibold text-green-700">Test Marked Complete</span>
+                </div>
+                <Link
+                  href={`/test/${project.slug}/results?tester=${tester.id}`}
+                  className="flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-200 bg-white py-3.5 px-6 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
+                >
+                  View My Results
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             ) : (
               <>

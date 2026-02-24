@@ -7,6 +7,14 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import ReviewPanel from "@/components/admin/review-panel"
 import PublishReviewButton from "@/components/admin/publish-review-button"
+import NotifyTestersButton from "@/components/admin/notify-testers-button"
+
+export type HistoryEntry = {
+  fieldChanged: string
+  oldValue: string | null
+  newValue: string | null
+  changedAt: string
+}
 
 export type ReviewStep = {
   checklistItemId: string
@@ -22,6 +30,7 @@ export type ReviewStep = {
     resolutionStatus: string
     notes: string | null
   } | null
+  history: HistoryEntry[]
 }
 
 export type TesterSection = {
@@ -101,6 +110,39 @@ export default async function ReviewPage({
     adminReviews = data || []
   }
 
+  // Fetch admin review history for activity timeline
+  let reviewHistory: {
+    checklist_item_id: string
+    tester_id: string
+    field_changed: string
+    old_value: string | null
+    new_value: string | null
+    changed_at: string
+  }[] = []
+
+  if (testerIds.length > 0 && itemIds.length > 0) {
+    const { data } = await supabase
+      .from("admin_review_history")
+      .select("checklist_item_id, tester_id, field_changed, old_value, new_value, changed_at")
+      .in("tester_id", testerIds)
+      .in("checklist_item_id", itemIds)
+      .order("changed_at", { ascending: false })
+    reviewHistory = data || []
+  }
+
+  // Build history lookup: key = "testerId:checklistItemId" → HistoryEntry[]
+  const historyMap = new Map<string, HistoryEntry[]>()
+  reviewHistory.forEach((h) => {
+    const key = `${h.tester_id}:${h.checklist_item_id}`
+    if (!historyMap.has(key)) historyMap.set(key, [])
+    historyMap.get(key)!.push({
+      fieldChanged: h.field_changed,
+      oldValue: h.old_value,
+      newValue: h.new_value,
+      changedAt: h.changed_at,
+    })
+  })
+
   // Build lookup maps
   const responseMap = new Map<string, (typeof responses)[0]>()
   responses.forEach((r) => {
@@ -146,6 +188,7 @@ export default async function ReviewPage({
               notes: adminReview.notes,
             }
           : null,
+        history: historyMap.get(`${tester.id}:${item.id}`) || [],
       })
     }
 
@@ -190,7 +233,8 @@ export default async function ReviewPage({
             Non-pass steps and items flagged for retesting, grouped by tester.
           </p>
         </div>
-        <div className="flex-shrink-0 pt-1">
+        <div className="flex-shrink-0 pt-1 flex items-center gap-2">
+          <NotifyTestersButton slug={project.slug} testerCount={testerSections.length} />
           <PublishReviewButton slug={project.slug} />
         </div>
       </div>
