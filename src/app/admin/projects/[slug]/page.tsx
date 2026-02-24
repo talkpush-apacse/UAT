@@ -24,6 +24,7 @@ import {
   Download,
   CheckCircle2,
   ClipboardCheck,
+  Sparkles,
 } from "lucide-react"
 
 const ACTOR_STYLES: Record<string, string> = {
@@ -153,6 +154,12 @@ export default async function ProjectDetailPage({
       label: "Sign Off",
       sub: `${signoffs?.length || 0} sign-offs`,
     },
+    {
+      href: `/admin/projects/${project.slug}/ai-summary`,
+      icon: Sparkles,
+      label: "AI Summary",
+      sub: "LLM-powered report",
+    },
   ]
 
   return (
@@ -183,26 +190,19 @@ export default async function ProjectDetailPage({
             <p className="text-sm text-gray-600 mt-2 leading-relaxed">{project.test_scenario}</p>
           )}
         </div>
-        <div className="flex flex-col gap-2 sm:items-end">
-          {/* Row 1 — Primary */}
-          <div className="flex flex-wrap gap-2">
-            <CopyLinkButton slug={project.slug} />
-            <CopyAnalyticsLinkButton slug={project.slug} />
-          </div>
-          {/* Row 2 — Secondary */}
-          <div className="flex flex-col gap-2">
-            <Link href={`/admin/projects/${project.slug}/edit`}>
-              <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-50">
-                <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Edit Project
-              </Button>
-            </Link>
-            <DuplicateProjectButton projectId={project.id} slug={project.slug} />
-          </div>
-          {/* Row 3 — Destructive */}
-          <div className="border-t border-gray-100 pt-2 w-full flex justify-end">
-            <DeleteProjectButton projectId={project.id} companyName={project.company_name} />
-          </div>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <CopyLinkButton slug={project.slug} />
+          <CopyAnalyticsLinkButton slug={project.slug} />
+          {/* Visual separator between share actions and management actions */}
+          <div className="hidden sm:block w-px h-6 bg-gray-200" />
+          <Link href={`/admin/projects/${project.slug}/edit`}>
+            <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-50">
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              Edit Project
+            </Button>
+          </Link>
+          <DuplicateProjectButton projectId={project.id} slug={project.slug} />
+          <DeleteProjectButton projectId={project.id} companyName={project.company_name} />
         </div>
       </div>
 
@@ -220,7 +220,7 @@ export default async function ProjectDetailPage({
         </div>
       )}
 
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
         {actionCards.map((card) => (
           <Link key={card.href} href={card.href}>
             <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 hover:bg-gray-50 transition-all duration-200 cursor-pointer p-5 text-center">
