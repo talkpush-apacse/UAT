@@ -201,18 +201,19 @@ ${reports}`
     const inProgressCount = issues.filter((i) => i.resolutionStatus === "in-progress").length
     const pendingCount = issues.filter((i) => i.resolutionStatus === "pending").length
 
-    const prompt = `Summarize the following UAT results as a concise executive report. This report will be shared with enterprise stakeholders for internal presentation — it must be scannable, data-driven, and actionable.
+    const prompt = `Summarize the following UAT results as a concise executive report. The reader may NOT have participated in the UAT sessions — the report must be fully self-contained so that any stakeholder can understand what was tested, what was found, and what needs to happen next.
 
 PROJECT: ${project.company_name}
 ${project.test_scenario ? `SCENARIO: ${project.test_scenario}` : ""}
+PLATFORM UNDER TEST: Talkpush — an automated candidate engagement platform used for high-volume hiring. It handles chatbot-based candidate screening, recruiter workflows, and integration with the client's hiring systems.
 
 UAT STATISTICS:
 - Checklist steps: ${totalSteps}
 - Testers: ${totalTesters}
 - Total test executions: ${totalExecutions}
-- Pass: ${passCount} (${totalExecutions > 0 ? Math.round((passCount / totalExecutions) * 100) : 0}%)
-- Fail: ${failCount} (${totalExecutions > 0 ? Math.round((failCount / totalExecutions) * 100) : 0}%)
-- Up For Review: ${blockedCount} (${totalExecutions > 0 ? Math.round((blockedCount / totalExecutions) * 100) : 0}%)
+- Pass: ${passCount} (${totalExecutions > 0 ? Math.round((passCount / totalExecutions) * 100) : 0}%) — step worked as expected
+- Fail: ${failCount} (${totalExecutions > 0 ? Math.round((failCount / totalExecutions) * 100) : 0}%) — step did not work as expected
+- Up For Review: ${blockedCount} (${totalExecutions > 0 ? Math.round((blockedCount / totalExecutions) * 100) : 0}%) — step needs further clarification from the tester (e.g., minor verbiage changes, translation updates, cosmetic feedback). These are NOT failures.
 - N/A: ${naCount}
 - Not Yet Tested: ${notTestedCount}
 
@@ -220,6 +221,12 @@ RESOLUTION COUNTS:
 - Resolved: ${resolvedCount}
 - In Progress: ${inProgressCount}
 - Pending: ${pendingCount}
+
+CLASSIFICATION GLOSSARY (for your reference — do NOT reproduce this glossary in the output):
+- "Bug/Glitch" = a technical defect in the platform. Owner: Talkpush.
+- "Configuration Issue" = the platform works but a setting needs adjusting for this client's setup. Owner: Talkpush.
+- "Expected Behavior" = the platform is working as designed; the tester expected something different. Owner: no action needed.
+- "For Retesting" = the issue may have been fixed or was intermittent; needs the tester to verify again. Owner: Talkpush + Tester.
 
 ${issues.length > 0 ? `STEPS WITH ISSUES (sorted by frequency):
 
@@ -231,24 +238,33 @@ Write the report using this exact structure and markdown formatting. Be concise 
 
 ## UAT Status
 
-Open with one bold status line summarizing overall health, e.g.:
-**UAT Status: ON TRACK** — 92% pass rate across 150 test executions. 3 issues pending resolution.
+Start with a one-sentence **project context line** that any reader can understand, even with zero background. Describe what is being tested in plain business language. Example:
+"${project.company_name} is conducting User Acceptance Testing on the Talkpush hiring platform to validate the end-to-end candidate experience — from initial application through recruiter review${project.test_scenario ? ` — specifically for the ${project.test_scenario} workflow` : ""}."
+
+Then add one bold status line summarizing overall health, e.g.:
+**UAT Status: ON TRACK** — 92% pass rate across 150 test executions. 3 items pending resolution.
 
 Choose the appropriate status label:
 - **ON TRACK** — pass rate ≥ 90% AND no unresolved critical bugs
 - **NEEDS ATTENTION** — pass rate 70–89% OR some unresolved issues remain
 - **AT RISK** — pass rate < 70% OR multiple critical unresolved bugs
 
-Follow with 2–3 sentences: project name, number of testers, total executions, pass rate, and how many were flagged (Fail + Up For Review combined). Keep it tight.
+Follow with 2–3 sentences: number of testers, total executions, pass rate, how many failed, and how many are up for review (clarify that "Up For Review" items are not failures — they are steps where testers flagged minor clarifications such as wording changes or translation updates).
 
 ## Key Findings
 
-Group issues by pattern (steps with similar classifications or steps reported by multiple testers). For each group:
-- Always reference the **step number** (e.g., "Step 4") and briefly describe what the step does
-- State how many testers reported the issue (do NOT name individual testers)
-- Include the Talkpush classification (Bug/Glitch, Configuration Issue, Expected Behavior, For Retesting)
-- Include Talkpush remarks if available
-- Note the current resolution status (Resolved / In Progress / Pending)
+Group issues by pattern (steps with similar classifications or steps reported by multiple testers). For each finding, use this format:
+
+- **Step [number]**: [plain-English description of what the step does and who it affects — candidate, recruiter, or the system]
+  - Reported by [X] tester(s) · Classification: [type] · Owner: [Talkpush or Client] · Status: [Resolved / In Progress / Pending]
+  - **Impact**: [One sentence — what does this mean for the hiring process? Frame it in terms of the people affected: candidates, recruiters, or hiring managers. Example: "Candidates in the Philippines may experience delayed SMS invitations, slowing initial engagement."]
+  - Talkpush remarks: "[remarks if available]"
+
+IMPORTANT — when describing findings:
+- Describe each step's action in plain business language that a non-technical reader can understand.
+- Translate internal/technical terms: say "candidate messaging" not "SMS gateway"; say "candidate screening scores" not "knockout scores"; say "recruiter dashboard" not "CRM profile view"; say "client's hiring system" not "ATS".
+- Always state who owns the resolution: **Talkpush** (for bugs and configuration issues) or **Client** (if action is needed from the client's side). If the classification is "Expected Behavior", state "No action needed."
+- If the classification is "For Retesting", note that this item has potentially been addressed and is awaiting tester verification.
 
 Use bullet points. If there are no issues, state that clearly in one sentence.
 
@@ -262,19 +278,24 @@ Present as a simple markdown table:
 | In Progress | X |
 | Pending | X |
 
-Add one sentence noting whether the resolution trend is healthy or if attention is needed.
+Add one sentence noting whether resolution progress is healthy or if attention is needed.
 
 ## Recommendation
 
-1–2 consultative sentences. Frame as advisory guidance, e.g., "We recommend resolving the 2 pending configuration issues before proceeding to sign-off." or "All critical items have been addressed — the UAT is ready for sign-off."
+1–2 consultative sentences. Frame as advisory guidance. Focus on what needs to happen next — do NOT commit to specific dates or timelines. Examples:
+- "We recommend addressing the 2 pending platform defects before proceeding to sign-off."
+- "All critical items have been resolved — the UAT is ready for final sign-off."
+- "Three configuration items remain in progress with the Talkpush team. Once resolved and retested, the UAT can proceed to sign-off."
 
 ---
 
 RULES:
 - Do NOT include individual tester names anywhere in the output.
 - Do NOT invent data — only reference what is provided above.
+- Do NOT include specific dates, deadlines, or time estimates.
 - Write in neutral third-person. Never use "you" or "your".
 - Keep the tone professional but consultative — like a trusted advisor, not a cold report.
+- Use plain business language throughout. Avoid technical jargon, acronyms, or platform-specific terms. If a technical concept must be referenced, explain it in parentheses on first use.
 - Use short paragraphs, bullet points, and the table. Avoid long prose blocks.
 - The entire report should fit in roughly one page / one screen.`
 
@@ -288,11 +309,11 @@ RULES:
       },
       body: JSON.stringify({
         model: "gpt-5.1",
-        max_tokens: 1200,
+        max_tokens: 1500,
         messages: [
           {
             role: "system",
-            content: "You are a senior QA consultant who writes clear, scannable UAT executive summaries. Your tone is professional yet consultative — warm enough to feel like a trusted advisor, but always grounded in data. Write in neutral third-person (never use 'you/your'). Prioritize brevity: use short paragraphs, bullet points, and tables over long prose. Every sentence must earn its place.",
+            content: "You are a senior QA consultant writing UAT executive summaries for enterprise stakeholders who may have NO technical background and did NOT participate in the testing sessions. Your job is to make the report fully self-contained and understandable to any reader. Use plain business language — never use technical jargon, platform acronyms, or internal terminology without explaining it. Frame every finding in terms of business impact: who is affected (candidates, recruiters, hiring managers) and how. Your tone is professional yet consultative — a trusted advisor, not a cold report. Write in neutral third-person. Prioritize brevity: short paragraphs, bullet points, and tables. Every sentence must earn its place. Never commit to dates or timelines.",
           },
           {
             role: "user",
