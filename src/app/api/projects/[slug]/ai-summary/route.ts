@@ -196,45 +196,87 @@ ${reports}`
       })
       .join("\n\n")
 
-    const prompt = `You are a QA analyst summarizing User Acceptance Testing (UAT) results for a Talkpush implementation project.
+    // Compute resolution counts for the prompt
+    const resolvedCount = issues.filter((i) => i.resolutionStatus === "resolved").length
+    const inProgressCount = issues.filter((i) => i.resolutionStatus === "in-progress").length
+    const pendingCount = issues.filter((i) => i.resolutionStatus === "pending").length
+
+    const prompt = `Summarize the following UAT results as a concise executive report. This report will be shared with enterprise stakeholders for internal presentation — it must be scannable, data-driven, and actionable.
 
 PROJECT: ${project.company_name}
 ${project.test_scenario ? `SCENARIO: ${project.test_scenario}` : ""}
 
 UAT STATISTICS:
-- Total checklist steps: ${totalSteps}
-- Number of testers: ${totalTesters}
-- Total test executions (steps × testers): ${totalExecutions}
+- Checklist steps: ${totalSteps}
+- Testers: ${totalTesters}
+- Total test executions: ${totalExecutions}
 - Pass: ${passCount} (${totalExecutions > 0 ? Math.round((passCount / totalExecutions) * 100) : 0}%)
 - Fail: ${failCount} (${totalExecutions > 0 ? Math.round((failCount / totalExecutions) * 100) : 0}%)
-- Up For Review (Blocked): ${blockedCount} (${totalExecutions > 0 ? Math.round((blockedCount / totalExecutions) * 100) : 0}%)
+- Up For Review: ${blockedCount} (${totalExecutions > 0 ? Math.round((blockedCount / totalExecutions) * 100) : 0}%)
 - N/A: ${naCount}
 - Not Yet Tested: ${notTestedCount}
 
-${issues.length > 0 ? `STEPS WITH ISSUES (sorted by frequency of reports):
+RESOLUTION COUNTS:
+- Resolved: ${resolvedCount}
+- In Progress: ${inProgressCount}
+- Pending: ${pendingCount}
 
-${issueDetails}` : "No failed or blocked steps recorded."}
+${issues.length > 0 ? `STEPS WITH ISSUES (sorted by frequency):
 
-TESTER NAMES: ${testerList.map((t) => t.name).join(", ")}
+${issueDetails}` : "No failed or blocked steps were recorded."}
 
 ---
 
-Write a concise executive summary of this UAT in the following structure. Use markdown formatting.
+Write the report using this exact structure and markdown formatting. Be concise — aim for a single-page read.
 
-1. **Overview** — One paragraph: project name, number of testers, total test executions, and overall pass rate. Mention how many test executions passed versus how many were flagged (Fail + Up For Review combined).
+## UAT Status
 
-2. **Key Findings** — Analyze the steps with issues. Group by recurring patterns (i.e., steps reported by multiple testers or steps with similar findings). For each finding:
-   - Mention the step number and what the step does
-   - How many testers reported it
-   - What the Talkpush finding/classification is (Bug/Glitch, Configuration Issue, Expected Behavior, For Retesting)
-   - Include the Talkpush remarks if available
-   - Note the resolution status
+Open with one bold status line summarizing overall health, e.g.:
+**UAT Status: ON TRACK** — 92% pass rate across 150 test executions. 3 issues pending resolution.
 
-3. **Resolution Status** — Brief summary of how many issues are pending, in-progress, or resolved.
+Choose the appropriate status label:
+- **ON TRACK** — pass rate ≥ 90% AND no unresolved critical bugs
+- **NEEDS ATTENTION** — pass rate 70–89% OR some unresolved issues remain
+- **AT RISK** — pass rate < 70% OR multiple critical unresolved bugs
 
-4. **Recommendation** — One or two sentences about whether the UAT is ready for sign-off or if there are outstanding items to address.
+Follow with 2–3 sentences: project name, number of testers, total executions, pass rate, and how many were flagged (Fail + Up For Review combined). Keep it tight.
 
-Keep the tone professional and factual. This will be shared internally at Talkpush. Do not invent data — only reference what is provided above.`
+## Key Findings
+
+Group issues by pattern (steps with similar classifications or steps reported by multiple testers). For each group:
+- Always reference the **step number** (e.g., "Step 4") and briefly describe what the step does
+- State how many testers reported the issue (do NOT name individual testers)
+- Include the Talkpush classification (Bug/Glitch, Configuration Issue, Expected Behavior, For Retesting)
+- Include Talkpush remarks if available
+- Note the current resolution status (Resolved / In Progress / Pending)
+
+Use bullet points. If there are no issues, state that clearly in one sentence.
+
+## Resolution Status
+
+Present as a simple markdown table:
+
+| Status | Count |
+|---|---|
+| Resolved | X |
+| In Progress | X |
+| Pending | X |
+
+Add one sentence noting whether the resolution trend is healthy or if attention is needed.
+
+## Recommendation
+
+1–2 consultative sentences. Frame as advisory guidance, e.g., "We recommend resolving the 2 pending configuration issues before proceeding to sign-off." or "All critical items have been addressed — the UAT is ready for sign-off."
+
+---
+
+RULES:
+- Do NOT include individual tester names anywhere in the output.
+- Do NOT invent data — only reference what is provided above.
+- Write in neutral third-person. Never use "you" or "your".
+- Keep the tone professional but consultative — like a trusted advisor, not a cold report.
+- Use short paragraphs, bullet points, and the table. Avoid long prose blocks.
+- The entire report should fit in roughly one page / one screen.`
 
     // ── Call OpenAI API ──
 
@@ -246,11 +288,11 @@ Keep the tone professional and factual. This will be shared internally at Talkpu
       },
       body: JSON.stringify({
         model: "gpt-5.1",
-        max_tokens: 2048,
+        max_tokens: 1200,
         messages: [
           {
             role: "system",
-            content: "You are a QA analyst who writes concise, professional UAT executive summaries for Talkpush, a hiring tech SaaS company.",
+            content: "You are a senior QA consultant who writes clear, scannable UAT executive summaries. Your tone is professional yet consultative — warm enough to feel like a trusted advisor, but always grounded in data. Write in neutral third-person (never use 'you/your'). Prioritize brevity: use short paragraphs, bullet points, and tables over long prose. Every sentence must earn its place.",
           },
           {
             role: "user",
