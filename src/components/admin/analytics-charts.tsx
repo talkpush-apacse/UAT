@@ -599,8 +599,8 @@ export default function AnalyticsCharts({
 
                         {/* ── Step header ── */}
                         <div className="flex items-start gap-3 px-4 py-3 bg-gray-50/50">
-                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-white border border-gray-200 text-xs font-bold text-gray-600 flex-shrink-0 mt-0.5">
-                            {row.stepNumber}
+                          <span className="inline-flex items-center justify-center h-6 rounded-md bg-white border border-gray-200 px-2 text-xs font-bold text-gray-600 flex-shrink-0 mt-0.5 whitespace-nowrap">
+                            Step {row.stepNumber}
                           </span>
                           <Badge
                             variant="outline"
