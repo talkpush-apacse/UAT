@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { ShieldCheck } from "lucide-react"
-import { saveAdminReview } from "@/lib/actions/admin-reviews"
-import type { TesterSection } from "@/app/admin/projects/[slug]/review/page"
+import { useRouter } from "next/navigation"
+import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X } from "lucide-react"
+import { saveAdminReview, bulkMarkResolved } from "@/lib/actions/admin-reviews"
+import type { TesterSection, HistoryEntry } from "@/app/admin/projects/[slug]/review/page"
 
 type SaveStatus = "idle" | "saving" | "saved" | "error"
 
@@ -39,13 +40,113 @@ const RESOLUTION_OPTIONS = [
   { value: "Done", activeStyle: "bg-green-600 text-white border-green-600" },
 ] as const
 
+/* ------------------------------------------------------------------ */
+/*  Relative time helper                                               */
+/* ------------------------------------------------------------------ */
+
+function relativeTime(dateStr: string): string {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diffMs = now - then
+
+  const minutes = Math.floor(diffMs / 60000)
+  if (minutes < 1) return "just now"
+  if (minutes < 60) return `${minutes}m ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/*  Friendly field/value labels                                        */
+/* ------------------------------------------------------------------ */
+
+const FIELD_LABELS: Record<string, string> = {
+  behavior_type: "Behavior Type",
+  resolution_status: "Resolution Status",
+  notes: "Notes",
+}
+
+function displayValue(value: string | null): string {
+  if (value === null || value === "") return "—"
+  // Truncate long notes in timeline
+  if (value.length > 60) return value.slice(0, 57) + "..."
+  return value
+}
+
+/* ------------------------------------------------------------------ */
+/*  Activity Timeline                                                   */
+/* ------------------------------------------------------------------ */
+
+function ActivityTimeline({ history }: { history: HistoryEntry[] }) {
+  const [expanded, setExpanded] = useState(false)
+
+  if (history.length === 0) return null
+
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setExpanded((prev) => !prev)}
+        className="flex items-center gap-1.5 text-xs text-violet-500 hover:text-violet-700 transition-colors"
+      >
+        <Clock className="h-3 w-3" />
+        <span className="font-medium">
+          Activity ({history.length})
+        </span>
+        {expanded ? (
+          <ChevronUp className="h-3 w-3" />
+        ) : (
+          <ChevronDown className="h-3 w-3" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="mt-2 ml-1.5 border-l-2 border-violet-100 pl-3 space-y-2">
+          {history.map((entry, i) => (
+            <div key={i} className="relative">
+              {/* Timeline dot */}
+              <div className="absolute -left-[17px] top-1 w-2 h-2 rounded-full bg-violet-300" />
+              <div className="text-xs">
+                <span className="text-gray-400">{relativeTime(entry.changedAt)}</span>
+                <span className="text-gray-500 mx-1">·</span>
+                <span className="font-medium text-violet-700">
+                  {FIELD_LABELS[entry.fieldChanged] || entry.fieldChanged}
+                </span>
+                <span className="text-gray-400">
+                  {" "}
+                  {displayValue(entry.oldValue)} → {displayValue(entry.newValue)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  StepRow                                                             */
+/* ------------------------------------------------------------------ */
+
 interface StepRowProps {
   step: TesterSection["steps"][0]
   testerId: string
   projectSlug: string
+  selected: boolean
+  onToggle: (key: string) => void
 }
 
-function StepRow({ step, testerId, projectSlug }: StepRowProps) {
+function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowProps) {
   const [behaviorType, setBehaviorType] = useState<string | null>(
     step.adminReview?.behaviorType ?? null
   )
@@ -55,6 +156,9 @@ function StepRow({ step, testerId, projectSlug }: StepRowProps) {
   const [notes, setNotes] = useState<string>(step.adminReview?.notes ?? "")
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  const selectionKey = `${testerId}::${step.checklistItemId}`
+  const showCheckbox = resolutionStatus !== "Done"
 
   const saveReview = async (
     newBehavior: string | null,
@@ -98,6 +202,17 @@ function StepRow({ step, testerId, projectSlug }: StepRowProps) {
       {/* Step info row */}
       <div className="px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 mb-2">
+          {/* Bulk selection checkbox */}
+          {showCheckbox && (
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={() => onToggle(selectionKey)}
+              className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 flex-shrink-0 cursor-pointer"
+              aria-label={`Select step ${step.stepNumber} for bulk action`}
+            />
+          )}
+
           {/* Step number */}
           <span className="w-7 h-7 rounded-md bg-gray-100 text-xs font-semibold text-gray-600 flex items-center justify-center flex-shrink-0">
             {step.stepNumber}
@@ -221,10 +336,17 @@ function StepRow({ step, testerId, projectSlug }: StepRowProps) {
               transition-colors"
           />
         </div>
+
+        {/* Activity Timeline */}
+        <ActivityTimeline history={step.history} />
       </div>
     </div>
   )
 }
+
+/* ------------------------------------------------------------------ */
+/*  ReviewPanel                                                         */
+/* ------------------------------------------------------------------ */
 
 interface Props {
   testerSections: TesterSection[]
@@ -232,54 +354,197 @@ interface Props {
 }
 
 export default function ReviewPanel({ testerSections, projectSlug }: Props) {
+  const router = useRouter()
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkResult, setBulkResult] = useState<{ message: string; type: "success" | "error" } | null>(null)
+
+  const toggleItem = (key: string) => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }
+
+  const toggleAllForTester = (testerId: string, steps: TesterSection["steps"]) => {
+    const unresolvedKeys = steps
+      .filter((s) => (s.adminReview?.resolutionStatus ?? "Not Yet Started") !== "Done")
+      .map((s) => `${testerId}::${s.checklistItemId}`)
+
+    const allSelected = unresolvedKeys.every((k) => selectedItems.has(k))
+
+    setSelectedItems((prev) => {
+      const next = new Set(prev)
+      if (allSelected) {
+        // Deselect all for this tester
+        unresolvedKeys.forEach((k) => next.delete(k))
+      } else {
+        // Select all for this tester
+        unresolvedKeys.forEach((k) => next.add(k))
+      }
+      return next
+    })
+  }
+
+  const clearSelection = () => setSelectedItems(new Set())
+
+  const handleBulkResolve = async () => {
+    setBulkLoading(true)
+    setBulkResult(null)
+
+    const items = Array.from(selectedItems).map((key) => {
+      const [testerId, checklistItemId] = key.split("::")
+      return { testerId, checklistItemId }
+    })
+
+    const result = await bulkMarkResolved(items, projectSlug)
+
+    if (result.error) {
+      setBulkResult({ message: result.error, type: "error" })
+      setBulkLoading(false)
+    } else {
+      setBulkResult({
+        message: `${result.updated} item${result.updated !== 1 ? "s" : ""} marked as resolved`,
+        type: "success",
+      })
+      setSelectedItems(new Set())
+      // Refresh server data after a brief delay so the user sees the success message
+      setTimeout(() => {
+        router.refresh()
+        setBulkResult(null)
+      }, 1500)
+      setBulkLoading(false)
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      {testerSections.map(({ tester, steps }) => {
-        const doneCount = steps.filter(
-          (s) => s.adminReview?.resolutionStatus === "Done"
-        ).length
+    <div className="relative pb-20">
+      <div className="space-y-6">
+        {testerSections.map(({ tester, steps }) => {
+          const doneCount = steps.filter(
+            (s) => s.adminReview?.resolutionStatus === "Done"
+          ).length
 
-        return (
-          <div
-            key={tester.id}
-            className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
-          >
-            {/* Section header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+          const unresolvedKeys = steps
+            .filter((s) => (s.adminReview?.resolutionStatus ?? "Not Yet Started") !== "Done")
+            .map((s) => `${tester.id}::${s.checklistItemId}`)
+
+          const allTesterSelected =
+            unresolvedKeys.length > 0 &&
+            unresolvedKeys.every((k) => selectedItems.has(k))
+
+          const someTesterSelected =
+            unresolvedKeys.some((k) => selectedItems.has(k)) && !allTesterSelected
+
+          return (
+            <div
+              key={tester.id}
+              className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+            >
+              {/* Section header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                <div className="flex items-center gap-3">
+                  {/* Select all checkbox for this tester */}
+                  {unresolvedKeys.length > 0 && (
+                    <input
+                      type="checkbox"
+                      checked={allTesterSelected}
+                      ref={(el) => {
+                        if (el) el.indeterminate = someTesterSelected
+                      }}
+                      onChange={() => toggleAllForTester(tester.id, steps)}
+                      className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      aria-label={`Select all unresolved steps for ${tester.name}`}
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{tester.name}</p>
+                    <p className="text-xs text-gray-400">{tester.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                    {steps.length} {steps.length === 1 ? "step" : "steps"}
+                  </span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      doneCount === steps.length
+                        ? "bg-green-100 text-green-700"
+                        : "bg-violet-100 text-violet-700"
+                    }`}
+                  >
+                    {doneCount} / {steps.length} resolved
+                  </span>
+                </div>
+              </div>
+
+              {/* Step rows */}
               <div>
-                <p className="text-sm font-semibold text-gray-800">{tester.name}</p>
-                <p className="text-xs text-gray-400">{tester.email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                  {steps.length} {steps.length === 1 ? "step" : "steps"}
-                </span>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    doneCount === steps.length
-                      ? "bg-green-100 text-green-700"
-                      : "bg-violet-100 text-violet-700"
-                  }`}
-                >
-                  {doneCount} / {steps.length} resolved
-                </span>
+                {steps.map((step) => (
+                  <StepRow
+                    key={step.checklistItemId}
+                    step={step}
+                    testerId={tester.id}
+                    projectSlug={projectSlug}
+                    selected={selectedItems.has(`${tester.id}::${step.checklistItemId}`)}
+                    onToggle={toggleItem}
+                  />
+                ))}
               </div>
             </div>
+          )
+        })}
+      </div>
 
-            {/* Step rows */}
-            <div>
-              {steps.map((step) => (
-                <StepRow
-                  key={step.checklistItemId}
-                  step={step}
-                  testerId={tester.id}
-                  projectSlug={projectSlug}
-                />
-              ))}
-            </div>
+      {/* Floating bulk action bar */}
+      {(selectedItems.size > 0 || bulkResult) && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="flex items-center gap-3 bg-white border border-gray-200 shadow-lg rounded-xl px-5 py-3">
+            {bulkResult ? (
+              <div className={`flex items-center gap-2 text-sm font-medium ${
+                bulkResult.type === "success" ? "text-green-700" : "text-red-600"
+              }`}>
+                {bulkResult.type === "success" && <CheckCircle2 className="h-4 w-4" />}
+                {bulkResult.message}
+              </div>
+            ) : (
+              <>
+                <span className="text-sm font-medium text-gray-700">
+                  {selectedItems.size} item{selectedItems.size !== 1 ? "s" : ""} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={handleBulkResolve}
+                  disabled={bulkLoading}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {bulkLoading ? (
+                    <span className="animate-pulse">Resolving...</span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Mark as Resolved
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  className="flex items-center gap-1 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear
+                </button>
+              </>
+            )}
           </div>
-        )
-      })}
+        </div>
+      )}
     </div>
   )
 }

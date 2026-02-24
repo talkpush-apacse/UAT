@@ -249,6 +249,51 @@ export type Database = {
           },
         ]
       }
+      admin_review_history: {
+        Row: {
+          id: string
+          checklist_item_id: string
+          tester_id: string
+          field_changed: string
+          old_value: string | null
+          new_value: string | null
+          changed_at: string
+        }
+        Insert: {
+          id?: string
+          checklist_item_id: string
+          tester_id: string
+          field_changed: string
+          old_value?: string | null
+          new_value?: string | null
+          changed_at?: string
+        }
+        Update: {
+          id?: string
+          checklist_item_id?: string
+          tester_id?: string
+          field_changed?: string
+          old_value?: string | null
+          new_value?: string | null
+          changed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_review_history_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_review_history_tester_id_fkey"
+            columns: ["tester_id"]
+            isOneToOne: false
+            referencedRelation: "testers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signoffs: {
         Row: {
           id: string
