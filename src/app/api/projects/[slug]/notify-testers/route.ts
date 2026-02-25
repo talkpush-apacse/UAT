@@ -30,8 +30,8 @@ export async function POST(
       )
     }
 
-    // Parse the origin from the request so we can build tester result URLs
-    const { origin } = await request.json().catch(() => ({ origin: null }))
+    // Parse the origin and optional tester filter from the request
+    const { origin, testerIds: selectedTesterIds } = await request.json().catch(() => ({ origin: null, testerIds: null }))
     const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app"
 
     const resend = new Resend(resendKey)
@@ -55,7 +55,12 @@ export async function POST(
       .eq("project_id", project.id)
       .order("created_at", { ascending: true })
 
-    const testerList = testers || []
+    let testerList = testers || []
+    // If the client sent a specific set of tester IDs, restrict to those
+    if (Array.isArray(selectedTesterIds) && selectedTesterIds.length > 0) {
+      const allowed = new Set(selectedTesterIds as string[])
+      testerList = testerList.filter((t) => allowed.has(t.id))
+    }
     if (testerList.length === 0) {
       return NextResponse.json({ sent: 0, errors: [] })
     }
@@ -97,6 +102,7 @@ export async function POST(
 
     let sentCount = 0
     const errors: string[] = []
+    const skipped: { name: string; reason: string }[] = []
 
     for (const tester of testerList) {
       // Only email testers who reported at least one non-pass step
@@ -104,7 +110,18 @@ export async function POST(
         (r) => r.tester_id === tester.id && r.status !== null && r.status !== "Pass" && r.status !== "N/A"
       )
 
-      if (testerResponses.length === 0) continue
+      if (testerResponses.length === 0) {
+        const hasAnyResponse = responseList.some(
+          (r) => r.tester_id === tester.id && r.status !== null
+        )
+        skipped.push({
+          name: tester.name,
+          reason: hasAnyResponse
+            ? "All responses are Pass or N/A"
+            : "No responses submitted yet",
+        })
+        continue
+      }
 
       // Count resolution statuses for this tester
       let resolvedCount = 0
@@ -152,7 +169,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ sent: sentCount, errors })
+    return NextResponse.json({ sent: sentCount, errors, skipped })
   } catch (err) {
     console.error("Notify testers API - unexpected error:", err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 })

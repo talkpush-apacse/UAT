@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -216,58 +216,7 @@ export default function AISummaryPanel({ slug }: { slug: string }) {
             <CardContent className="pt-5 pb-6 px-5">
               {/* Render markdown-like summary as formatted text */}
               <div className="prose prose-sm prose-gray max-w-none">
-                {summary.split("\n").map((line, i) => {
-                  // H2 headers
-                  if (line.startsWith("## ")) {
-                    return (
-                      <h2 key={i} className="text-base font-semibold text-gray-900 mt-6 mb-2 first:mt-0">
-                        {line.replace("## ", "")}
-                      </h2>
-                    )
-                  }
-                  // H3 headers
-                  if (line.startsWith("### ")) {
-                    return (
-                      <h3 key={i} className="text-sm font-semibold text-gray-800 mt-4 mb-1">
-                        {line.replace("### ", "")}
-                      </h3>
-                    )
-                  }
-                  // Bold lines (like **Overview**)
-                  if (line.match(/^\*\*[^*]+\*\*$/)) {
-                    return (
-                      <h3 key={i} className="text-sm font-semibold text-gray-800 mt-5 mb-1">
-                        {line.replace(/\*\*/g, "")}
-                      </h3>
-                    )
-                  }
-                  // Bullet points
-                  if (line.match(/^[-•]\s/)) {
-                    return (
-                      <li key={i} className="text-sm text-gray-700 leading-relaxed ml-4 list-disc">
-                        {renderInlineFormatting(line.replace(/^[-•]\s/, ""))}
-                      </li>
-                    )
-                  }
-                  // Numbered list items
-                  if (line.match(/^\d+\.\s/)) {
-                    return (
-                      <li key={i} className="text-sm text-gray-700 leading-relaxed ml-4 list-decimal">
-                        {renderInlineFormatting(line.replace(/^\d+\.\s/, ""))}
-                      </li>
-                    )
-                  }
-                  // Empty lines
-                  if (line.trim() === "") {
-                    return <div key={i} className="h-2" />
-                  }
-                  // Regular paragraphs
-                  return (
-                    <p key={i} className="text-sm text-gray-700 leading-relaxed mb-2">
-                      {renderInlineFormatting(line)}
-                    </p>
-                  )
-                })}
+                {renderMarkdownBlocks(summary)}
               </div>
             </CardContent>
           </Card>
@@ -283,6 +232,127 @@ export default function AISummaryPanel({ slug }: { slug: string }) {
       )}
     </div>
   )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Block-level markdown renderer (handles tables, headings, lists)    */
+/* ------------------------------------------------------------------ */
+
+function renderMarkdownBlocks(text: string) {
+  const lines = text.split("\n")
+  const elements: React.ReactNode[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Markdown table: collect consecutive pipe-delimited rows
+    if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+      const tableLines: string[] = []
+      while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+        tableLines.push(lines[i])
+        i++
+      }
+      // Parse: first row = header, second row = separator (skip), rest = body
+      const parseRow = (row: string) =>
+        row.split("|").slice(1, -1).map((cell) => cell.trim())
+
+      const headerCells = parseRow(tableLines[0])
+      const bodyRows = tableLines.slice(2).map(parseRow) // skip separator row
+
+      elements.push(
+        <table key={`tbl-${i}`} className="w-full text-sm my-3 border-collapse">
+          <thead>
+            <tr className="border-b border-gray-200">
+              {headerCells.map((cell, ci) => (
+                <th key={ci} className="text-left py-1.5 px-3 font-semibold text-gray-800 bg-gray-50">
+                  {renderInlineFormatting(cell)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {bodyRows.map((row, ri) => (
+              <tr key={ri} className="border-b border-gray-100">
+                {row.map((cell, ci) => (
+                  <td key={ci} className="py-1.5 px-3 text-gray-700">
+                    {renderInlineFormatting(cell)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )
+      continue
+    }
+
+    // H2 headers
+    if (line.startsWith("## ")) {
+      elements.push(
+        <h2 key={i} className="text-base font-semibold text-gray-900 mt-6 mb-2 first:mt-0">
+          {line.replace("## ", "")}
+        </h2>
+      )
+      i++
+      continue
+    }
+    // H3 headers
+    if (line.startsWith("### ")) {
+      elements.push(
+        <h3 key={i} className="text-sm font-semibold text-gray-800 mt-4 mb-1">
+          {line.replace("### ", "")}
+        </h3>
+      )
+      i++
+      continue
+    }
+    // Bold-only lines (like **Overview**)
+    if (line.match(/^\*\*[^*]+\*\*$/)) {
+      elements.push(
+        <h3 key={i} className="text-sm font-semibold text-gray-800 mt-5 mb-1">
+          {line.replace(/\*\*/g, "")}
+        </h3>
+      )
+      i++
+      continue
+    }
+    // Bullet points
+    if (line.match(/^[-•]\s/)) {
+      elements.push(
+        <li key={i} className="text-sm text-gray-700 leading-relaxed ml-4 list-disc">
+          {renderInlineFormatting(line.replace(/^[-•]\s/, ""))}
+        </li>
+      )
+      i++
+      continue
+    }
+    // Numbered list items
+    if (line.match(/^\d+\.\s/)) {
+      elements.push(
+        <li key={i} className="text-sm text-gray-700 leading-relaxed ml-4 list-decimal">
+          {renderInlineFormatting(line.replace(/^\d+\.\s/, ""))}
+        </li>
+      )
+      i++
+      continue
+    }
+    // Empty lines
+    if (line.trim() === "") {
+      elements.push(<div key={i} className="h-2" />)
+      i++
+      continue
+    }
+    // Regular paragraphs
+    elements.push(
+      <p key={i} className="text-sm text-gray-700 leading-relaxed mb-2">
+        {renderInlineFormatting(line)}
+      </p>
+    )
+    i++
+  }
+
+  return elements
 }
 
 /* ------------------------------------------------------------------ */
