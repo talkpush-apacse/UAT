@@ -5,9 +5,11 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Users, FolderOpen } from "lucide-react"
+import { Plus, FolderOpen } from "lucide-react"
+import ClientGroupedDashboard, {
+  type ClientGroup,
+  type ProjectWithCounts,
+} from "@/components/admin/client-grouped-dashboard"
 
 export default async function AdminDashboard() {
   const isAdmin = await verifyAdminSession()
@@ -36,6 +38,27 @@ export default async function AdminDashboard() {
       return { ...project, testerCount: count || 0, signoffCount: signoffCount || 0 }
     })
   )
+
+  // Group projects by client name
+  const groupedByClient: ClientGroup[] = Object.entries(
+    projectsWithCounts.reduce<Record<string, ProjectWithCounts[]>>(
+      (acc, project) => {
+        const key = project.company_name || "Unknown Client"
+        if (!acc[key]) acc[key] = []
+        acc[key].push(project)
+        return acc
+      },
+      {}
+    )
+  )
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([clientName, clientProjects]) => ({
+      clientName,
+      projects: clientProjects.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      ),
+    }))
 
   return (
     <div>
@@ -67,54 +90,7 @@ export default async function AdminDashboard() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projectsWithCounts.map((project) => {
-            const status =
-              project.signoffCount > 0
-                ? { label: "Signed Off", color: "bg-green-50 text-green-700 border-green-200" }
-                : project.testerCount === 0
-                ? { label: "Not Started", color: "bg-gray-100 text-gray-500 border-gray-200" }
-                : { label: "In Progress", color: "bg-blue-50 text-blue-700 border-blue-200" }
-            return (
-            <Link key={project.id} href={`/admin/projects/${project.slug}`}>
-              <Card className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 cursor-pointer h-full">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle
-                      className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug"
-                      title={project.company_name}
-                    >
-                      {project.company_name}
-                    </CardTitle>
-                    <Badge variant="outline" className={`text-xs ${status.color}`}>
-                      {status.label}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-gray-400 font-mono">
-                    /{project.slug}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {project.test_scenario && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-                      {project.test_scenario}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-4 text-xs text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {project.testerCount} tester{project.testerCount !== 1 ? "s" : ""}
-                    </span>
-                    <span>
-                      {new Date(project.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            )
-          })}
-        </div>
+        <ClientGroupedDashboard groups={groupedByClient} />
       )}
     </div>
   )
