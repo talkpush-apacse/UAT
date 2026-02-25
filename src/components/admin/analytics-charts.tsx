@@ -421,150 +421,164 @@ export default function AnalyticsCharts({
         </Card>
       </div>
 
-      {/* Overall Status Breakdown */}
-      <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-gray-700">Overall Status Breakdown</CardTitle>
-            {/* Scope pill toggle */}
-            <div className="flex items-center rounded-full bg-gray-100 p-0.5 text-xs font-medium">
-              <button
-                onClick={() => setFilterScope("all")}
-                className={`px-3 py-1 rounded-full transition-all ${
-                  filterScope === "all"
-                    ? "bg-white text-gray-800 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                All Testers
-              </button>
-              <button
-                onClick={() => setFilterScope("completed")}
-                className={`px-3 py-1 rounded-full transition-all ${
-                  filterScope === "completed"
-                    ? "bg-white text-gray-800 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Completed Only
-              </button>
-            </div>
-          </div>
-          {filterScope === "completed" && completedTesterIds.size === 0 && (
-            <p className="text-xs text-amber-600 mt-1">No testers have completed the final step yet.</p>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            <ResponsiveContainer width={300} height={280}>
-              <PieChart>
-                <Pie
-                  data={overallBreakdown}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={65}
-                  outerRadius={110}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {overallBreakdown.map((entry) => (
-                    <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            {/* Legend */}
-            <div className="flex flex-col gap-2.5 min-w-[180px]">
-              {(() => {
-                const legendTotal = overallBreakdown.reduce((sum, e) => sum + e.value, 0)
-                const STATUS_DISPLAY: Record<string, string> = {
-                  Pass: "Pass",
-                  Fail: "Fail",
-                  "N/A": "N/A",
-                  Blocked: "Up For Review",
-                  "Not Tested": "Not Tested",
-                }
-                return overallBreakdown.map((entry) => {
-                  const pctLabel = legendTotal === 0
-                    ? "0%"
-                    : `${Math.round((entry.value / legendTotal) * 100)}%`
-                  return (
-                    <div key={entry.name} className="flex items-center gap-2.5">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: STATUS_COLORS[entry.name] }}
-                      />
-                      <span className="text-sm text-gray-700 flex-1">
-                        {STATUS_DISPLAY[entry.name] ?? entry.name}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900 tabular-nums">
-                        {entry.value}
-                        <span className="text-xs font-normal text-gray-400 ml-1">({pctLabel})</span>
-                      </span>
-                    </div>
-                  )
-                })
-              })()}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Overall Status Breakdown + Talkpush Findings Breakdown — side-by-side */}
+      <div className={`grid gap-4 ${findingsBreakdown.total > 0 ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
 
-      {/* Talkpush Findings Breakdown — non-Pass steps reviewed by Talkpush */}
-      {findingsBreakdown.total > 0 && (
+        {/* Overall Status Breakdown */}
         <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-gray-700">Talkpush Findings Breakdown</CardTitle>
-            <p className="text-xs text-gray-500">
-              Admin review findings for all non-Pass steps ({findingsBreakdown.total} total)
-            </p>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-sm font-semibold text-gray-700">Overall Status Breakdown</CardTitle>
+              {/* Scope pill toggle */}
+              <div className="flex items-center rounded-full bg-gray-100 p-0.5 text-xs font-medium">
+                <button
+                  onClick={() => setFilterScope("all")}
+                  className={`px-3 py-1 rounded-full transition-all ${
+                    filterScope === "all"
+                      ? "bg-white text-gray-800 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  All Testers
+                </button>
+                <button
+                  onClick={() => setFilterScope("completed")}
+                  className={`px-3 py-1 rounded-full transition-all ${
+                    filterScope === "completed"
+                      ? "bg-white text-gray-800 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Completed Only
+                </button>
+              </div>
+            </div>
+            {filterScope === "completed" && completedTesterIds.size === 0 && (
+              <p className="text-xs text-amber-600 mt-1">No testers have completed the final step yet.</p>
+            )}
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              <ResponsiveContainer width={300} height={280}>
+            <div className="flex flex-col items-center gap-4">
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie
-                    data={findingsBreakdown.entries}
+                    data={overallBreakdown}
                     cx="50%"
                     cy="50%"
-                    innerRadius={65}
-                    outerRadius={110}
+                    innerRadius={55}
+                    outerRadius={95}
                     paddingAngle={2}
                     dataKey="value"
                   >
-                    {findingsBreakdown.entries.map((entry) => (
-                      <Cell key={entry.name} fill={FINDING_COLORS[entry.name] ?? "#94a3b8"} />
+                    {overallBreakdown.map((entry) => (
+                      <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
                     ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
               {/* Legend */}
-              <div className="flex flex-col gap-2.5 min-w-[200px]">
-                {findingsBreakdown.entries.map((entry) => {
-                  const pctLabel = findingsBreakdown.total === 0
-                    ? "0%"
-                    : `${Math.round((entry.value / findingsBreakdown.total) * 100)}%`
+              <div className="w-full space-y-1.5">
+                {(() => {
+                  const legendTotal = overallBreakdown.reduce((sum, e) => sum + e.value, 0)
+                  const STATUS_DISPLAY: Record<string, string> = {
+                    Pass: "Pass",
+                    Fail: "Fail",
+                    "N/A": "N/A",
+                    Blocked: "Up For Review",
+                    "Not Tested": "Not Tested",
+                  }
                   return (
-                    <div key={entry.name} className="flex items-center gap-2.5">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: FINDING_COLORS[entry.name] ?? "#94a3b8" }}
-                      />
-                      <span className="text-sm text-gray-700 flex-1">{entry.name}</span>
-                      <span className="text-sm font-semibold text-gray-900 tabular-nums">
-                        {entry.value}
-                        <span className="text-xs font-normal text-gray-400 ml-1">({pctLabel})</span>
-                      </span>
-                    </div>
+                    <>
+                      {overallBreakdown.map((entry) => {
+                        const pctLabel = legendTotal === 0
+                          ? "0%"
+                          : `${Math.round((entry.value / legendTotal) * 100)}%`
+                        return (
+                          <div key={entry.name} className="flex items-center gap-2.5">
+                            <span
+                              className="inline-block h-3 w-3 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: STATUS_COLORS[entry.name] }}
+                            />
+                            <span className="text-sm text-gray-700 flex-1">
+                              {STATUS_DISPLAY[entry.name] ?? entry.name}
+                            </span>
+                            <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                              {entry.value}
+                              <span className="text-xs font-normal text-gray-400 ml-1">({pctLabel})</span>
+                            </span>
+                          </div>
+                        )
+                      })}
+                      <div className="border-t border-gray-100 pt-1.5 mt-1.5 flex items-center gap-2.5">
+                        <span className="inline-block h-3 w-3 flex-shrink-0" />
+                        <span className="text-sm font-semibold text-gray-800 flex-1">Total Test Executions</span>
+                        <span className="text-sm font-bold text-gray-900 tabular-nums">{legendTotal}</span>
+                      </div>
+                    </>
                   )
-                })}
+                })()}
               </div>
             </div>
           </CardContent>
         </Card>
-      )}
+
+        {/* Talkpush Findings Breakdown — non-Pass steps reviewed by Talkpush */}
+        {findingsBreakdown.total > 0 && (
+          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-gray-700">Talkpush Findings Breakdown</CardTitle>
+              <p className="text-xs text-gray-500">
+                Admin review findings for all non-Pass steps ({findingsBreakdown.total} total)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center gap-4">
+                <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                    <Pie
+                      data={findingsBreakdown.entries}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={95}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {findingsBreakdown.entries.map((entry) => (
+                        <Cell key={entry.name} fill={FINDING_COLORS[entry.name] ?? "#94a3b8"} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Legend */}
+                <div className="w-full space-y-1.5">
+                  {findingsBreakdown.entries.map((entry) => {
+                    const pctLabel = findingsBreakdown.total === 0
+                      ? "0%"
+                      : `${Math.round((entry.value / findingsBreakdown.total) * 100)}%`
+                    return (
+                      <div key={entry.name} className="flex items-center gap-2.5">
+                        <span
+                          className="inline-block h-3 w-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: FINDING_COLORS[entry.name] ?? "#94a3b8" }}
+                        />
+                        <span className="text-sm text-gray-700 flex-1">{entry.name}</span>
+                        <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                          {entry.value}
+                          <span className="text-xs font-normal text-gray-400 ml-1">({pctLabel})</span>
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+      </div>{/* end 2-col grid */}
 
       <div ref={reportRef} className="space-y-6">
 
@@ -593,91 +607,102 @@ export default function AnalyticsCharts({
               const pageRows = failedStepsRows.slice(pageStart, pageStart + ATTENTION_PAGE_SIZE)
               return (
                 <div>
-                  <div className="divide-y divide-gray-100">
-                    {pageRows.map((row, idx) => (
-                      <div key={pageStart + idx} className="border-b border-gray-50 last:border-0">
-
-                        {/* ── Step header ── */}
-                        <div className="flex items-start gap-3 px-4 py-3 bg-gray-50/50">
-                          <span className="inline-flex items-center justify-center h-6 rounded-md bg-white border border-gray-200 px-2 text-xs font-bold text-gray-600 flex-shrink-0 mt-0.5 whitespace-nowrap">
-                            Step {row.stepNumber}
-                          </span>
-                          <Badge
-                            variant="outline"
-                            className={`text-xs font-medium flex-shrink-0 mt-0.5 ${ACTOR_BADGE[row.actor] ?? ""}`}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr>
+                          <th className="text-left text-xs font-semibold text-white px-4 py-2.5 bg-gray-700 first:rounded-tl-none">Step</th>
+                          <th className="text-left text-xs font-semibold text-white px-4 py-2.5 bg-sky-600">Tester</th>
+                          <th className="text-center text-xs font-semibold text-white px-4 py-2.5 bg-red-500 w-28">Status</th>
+                          <th className="text-left text-xs font-semibold text-white px-4 py-2.5 bg-orange-500">Talkpush Finding</th>
+                          <th className="text-center text-xs font-semibold text-white px-4 py-2.5 bg-emerald-600 w-28">Resolution</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pageRows.map((row, idx) => (
+                          <tr
+                            key={pageStart + idx}
+                            className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"} hover:bg-gray-50`}
                           >
-                            {row.actor}
-                          </Badge>
-                          <p className="text-sm text-gray-700 leading-relaxed">{row.action}</p>
-                        </div>
-
-                        {/* ── 3-column review grid ── */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
-
-                          {/* Col 1 — Tester Report */}
-                          <div className="px-4 py-3">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Tester Report</p>
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-sm font-semibold text-gray-800">{row.testerName}</span>
-                              {row.status === "Fail" ? (
-                                <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Fail</span>
-                              ) : (
-                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">Up For Review</span>
-                              )}
-                            </div>
-                            {row.comment ? (
-                              <p className="text-sm text-gray-600 leading-relaxed">{row.comment}</p>
-                            ) : (
-                              <p className="text-xs text-gray-400 italic">No comment provided</p>
-                            )}
-                          </div>
-
-                          {/* Col 2 — Talkpush Finding */}
-                          <div className="px-4 py-3">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Talkpush Finding</p>
-                            {row.behaviorType ? (
-                              <>
-                                <span
-                                  className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mb-2"
-                                  style={{
-                                    backgroundColor:
-                                      row.behaviorType === "Expected Behavior" ? "#dcfce7"
-                                      : row.behaviorType === "Bug/Glitch" ? "#fee2e2"
-                                      : row.behaviorType === "For Retesting" ? "#dbeafe"
-                                      : "#ffedd5",
-                                    color:
-                                      row.behaviorType === "Expected Behavior" ? "#166534"
-                                      : row.behaviorType === "Bug/Glitch" ? "#991b1b"
-                                      : row.behaviorType === "For Retesting" ? "#1e40af"
-                                      : "#9a3412",
-                                  }}
-                                >
-                                  {row.behaviorType}
+                            {/* Step */}
+                            <td className="px-4 py-3 align-top">
+                              <div className="flex items-start gap-2">
+                                <span className="inline-flex items-center justify-center h-6 rounded-md bg-gray-100 border border-gray-200 px-2 text-xs font-bold text-gray-700 flex-shrink-0 whitespace-nowrap">
+                                  Step {row.stepNumber}
                                 </span>
-                                {row.notes && (
-                                  <p className="text-sm text-gray-600 leading-relaxed">{row.notes}</p>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-xs text-gray-400 italic">Not yet reviewed</p>
-                            )}
-                          </div>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] font-medium flex-shrink-0 ${ACTOR_BADGE[row.actor] ?? ""}`}
+                                >
+                                  {row.actor}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1.5 leading-relaxed line-clamp-2">{row.action}</p>
+                            </td>
 
-                          {/* Col 3 — Resolution */}
-                          <div className="px-4 py-3">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Resolution</p>
-                            <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                                RESOLUTION_BADGE[row.resolutionStatus] ?? "bg-gray-100 text-gray-600"
-                              }`}
-                            >
-                              {row.resolutionStatus}
-                            </span>
-                          </div>
+                            {/* Tester */}
+                            <td className="px-4 py-3 align-top">
+                              <p className="text-sm font-medium text-gray-800">{row.testerName}</p>
+                              {row.comment ? (
+                                <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">{row.comment}</p>
+                              ) : (
+                                <p className="text-xs text-gray-400 italic mt-1">No comment</p>
+                              )}
+                            </td>
 
-                        </div>{/* end grid */}
-                      </div>
-                    ))}
+                            {/* Status */}
+                            <td className="px-4 py-3 align-top text-center">
+                              {row.status === "Fail" ? (
+                                <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">Fail</span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">Review</span>
+                              )}
+                            </td>
+
+                            {/* Talkpush Finding */}
+                            <td className="px-4 py-3 align-top">
+                              {row.behaviorType ? (
+                                <>
+                                  <span
+                                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                    style={{
+                                      backgroundColor:
+                                        row.behaviorType === "Expected Behavior" ? "#dcfce7"
+                                        : row.behaviorType === "Bug/Glitch" ? "#fee2e2"
+                                        : row.behaviorType === "For Retesting" ? "#dbeafe"
+                                        : "#ffedd5",
+                                      color:
+                                        row.behaviorType === "Expected Behavior" ? "#166534"
+                                        : row.behaviorType === "Bug/Glitch" ? "#991b1b"
+                                        : row.behaviorType === "For Retesting" ? "#1e40af"
+                                        : "#9a3412",
+                                    }}
+                                  >
+                                    {row.behaviorType}
+                                  </span>
+                                  {row.notes && (
+                                    <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">{row.notes}</p>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-xs text-gray-400 italic">Not yet reviewed</span>
+                              )}
+                            </td>
+
+                            {/* Resolution */}
+                            <td className="px-4 py-3 align-top text-center">
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                                  RESOLUTION_BADGE[row.resolutionStatus] ?? "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {row.resolutionStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
 
                   {/* Pagination */}
