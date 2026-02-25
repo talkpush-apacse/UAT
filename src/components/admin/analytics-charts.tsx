@@ -608,21 +608,25 @@ export default function AnalyticsCharts({
               return (
                 <div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm border-collapse">
                       <thead>
-                        <tr>
-                          <th className="text-left text-xs font-semibold text-white px-4 py-2.5 bg-gray-700 first:rounded-tl-none">Step</th>
-                          <th className="text-left text-xs font-semibold text-white px-4 py-2.5 bg-sky-600">Tester</th>
-                          <th className="text-center text-xs font-semibold text-white px-4 py-2.5 bg-red-500 w-28">Status</th>
-                          <th className="text-left text-xs font-semibold text-white px-4 py-2.5 bg-orange-500">Talkpush Finding</th>
-                          <th className="text-center text-xs font-semibold text-white px-4 py-2.5 bg-emerald-600 w-28">Resolution</th>
+                        <tr className="bg-slate-800">
+                          <th className="text-left text-xs font-semibold text-slate-200 uppercase tracking-wider px-4 py-3">Step</th>
+                          <th className="text-left text-xs font-semibold text-slate-200 uppercase tracking-wider px-4 py-3">Tester</th>
+                          <th className="text-center text-xs font-semibold text-slate-200 uppercase tracking-wider px-4 py-3 w-24">Status</th>
+                          <th className="text-left text-xs font-semibold text-slate-200 uppercase tracking-wider px-4 py-3">Talkpush Finding</th>
+                          <th className="text-center text-xs font-semibold text-slate-200 uppercase tracking-wider px-4 py-3 w-28">Resolution</th>
                         </tr>
                       </thead>
                       <tbody>
                         {pageRows.map((row, idx) => (
                           <tr
                             key={pageStart + idx}
-                            className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"} hover:bg-gray-50`}
+                            className={`border-b border-gray-100 border-l-[3px] ${
+                              row.status === "Fail"
+                                ? "border-l-red-400 bg-red-50/25 hover:bg-red-50/50"
+                                : "border-l-amber-400 bg-amber-50/20 hover:bg-amber-50/40"
+                            } ${idx % 2 === 1 ? "brightness-[0.99]" : ""}`}
                           >
                             {/* Step */}
                             <td className="px-4 py-3 align-top">
