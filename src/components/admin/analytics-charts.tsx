@@ -120,6 +120,7 @@ export default function AnalyticsCharts({
 }) {
   const [filterScope, setFilterScope] = useState<"all" | "completed">("all")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [attentionPage, setAttentionPage] = useState(0)
   const reportRef = useRef<HTMLDivElement>(null)
 
@@ -260,6 +261,7 @@ export default function AnalyticsCharts({
       actor: string
       action: string
       testerName: string
+      testerEmail: string
       status: string
       behaviorType: string | null
       resolutionStatus: string
@@ -278,6 +280,7 @@ export default function AnalyticsCharts({
         actor: item.actor,
         action: stripMarkdown(item.action),
         testerName: tester.name,
+        testerEmail: tester.email,
         status: r.status,
         behaviorType: review?.behavior_type ?? null,
         resolutionStatus: review?.resolution_status ?? "pending",
@@ -330,6 +333,60 @@ export default function AnalyticsCharts({
       console.error("PDF generation failed:", err instanceof Error ? err.message : String(err))
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  /* ---------- XLSX Export: Steps Requiring Attention ---------- */
+  const handleDownloadXLSX = async () => {
+    if (failedStepsRows.length === 0) return
+    setIsExporting(true)
+    try {
+      const ExcelJS = (await import("exceljs")).default
+      const workbook = new ExcelJS.Workbook()
+      const sheet = workbook.addWorksheet("Steps Requiring Attention")
+
+      sheet.columns = [
+        { header: "Step Number", key: "stepNumber", width: 14 },
+        { header: "Step Description", key: "action", width: 50 },
+        { header: "Tester Email", key: "testerEmail", width: 30 },
+        { header: "Tester Finding", key: "testerFinding", width: 40 },
+        { header: "Talkpush Finding", key: "talkpushFinding", width: 40 },
+        { header: "Resolution", key: "resolution", width: 18 },
+      ]
+
+      sheet.getRow(1).font = { bold: true }
+
+      for (const row of failedStepsRows) {
+        const talkpushParts: string[] = []
+        if (row.behaviorType) talkpushParts.push(row.behaviorType)
+        if (row.notes) talkpushParts.push(row.notes)
+
+        sheet.addRow({
+          stepNumber: row.stepNumber,
+          action: row.action,
+          testerEmail: row.testerEmail,
+          testerFinding: row.comment ?? "",
+          talkpushFinding: talkpushParts.length > 0 ? talkpushParts.join(" — ") : "",
+          resolution: row.resolutionStatus,
+        })
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "Steps-Requiring-Attention.xlsx"
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error("XLSX export failed:", err instanceof Error ? err.message : String(err))
+    } finally {
+      setIsExporting(false)
     }
   }
 
@@ -573,12 +630,26 @@ export default function AnalyticsCharts({
         {/* ══════════════════════════════════════════════════════════════ */}
         <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-gray-700">
-              Steps Requiring Attention
-            </CardTitle>
-            <p className="text-xs text-gray-500">
-              All steps with a Fail or Up For Review (Blocked) response, with admin review remarks
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle className="text-sm font-semibold text-gray-700">
+                  Steps Requiring Attention
+                </CardTitle>
+                <p className="text-xs text-gray-500">
+                  All steps with a Fail or Up For Review (Blocked) response, with admin review remarks
+                </p>
+              </div>
+              {failedStepsRows.length > 0 && (
+                <button
+                  onClick={handleDownloadXLSX}
+                  disabled={isExporting}
+                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex-shrink-0"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {isExporting ? "Exporting\u2026" : "Export XLSX"}
+                </button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="px-0 pb-0">
             {failedStepsRows.length === 0 ? (

@@ -8,6 +8,7 @@ import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import ReviewPanel from "@/components/admin/review-panel"
 import PublishReviewButton from "@/components/admin/publish-review-button"
 import NotifyTestersButton from "@/components/admin/notify-testers-button"
+import CompleteReviewButton from "@/components/admin/complete-review-button"
 
 export type HistoryEntry = {
   fieldChanged: string
@@ -235,6 +236,7 @@ export default async function ReviewPage({
         </div>
         <div className="flex-shrink-0 pt-1 flex items-center gap-2">
           <NotifyTestersButton slug={project.slug} testerCount={testerSections.length} />
+          <CompleteReviewButton slug={project.slug} testerSections={testerSections} />
           <PublishReviewButton slug={project.slug} />
         </div>
       </div>

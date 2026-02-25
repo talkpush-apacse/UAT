@@ -179,3 +179,102 @@ export async function bulkMarkResolved(
   revalidatePath(`/admin/projects/${projectSlug}/review`)
   return { updated: updatedCount }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Complete all reviews — categorize + resolve every item             */
+/* ------------------------------------------------------------------ */
+
+export async function completeAllReviews(
+  items: { checklistItemId: string; testerId: string }[],
+  projectSlug: string
+): Promise<{ updated: number; categorized: number; error?: string }> {
+  const isAdmin = await verifyAdminSession()
+  if (!isAdmin) return { updated: 0, categorized: 0, error: 'Unauthorized' }
+
+  if (items.length === 0) return { updated: 0, categorized: 0 }
+
+  const supabase = createAdminClient()
+  const now = new Date().toISOString()
+  let updatedCount = 0
+  let categorizedCount = 0
+
+  for (const item of items) {
+    // Fetch current row to compare
+    const { data: existing } = await supabase
+      .from('admin_reviews')
+      .select('behavior_type, resolution_status, notes')
+      .eq('checklist_item_id', item.checklistItemId)
+      .eq('tester_id', item.testerId)
+      .maybeSingle()
+
+    const oldBehavior = existing?.behavior_type ?? null
+    const oldResolution = existing?.resolution_status ?? null
+
+    // Determine new values
+    const newBehavior = oldBehavior ?? 'Expected Behavior'
+    const newResolution = 'Done'
+
+    // Skip if already fully complete
+    if (oldBehavior !== null && oldResolution === 'Done') continue
+
+    // Upsert with both behavior_type and resolution_status
+    const { error } = await supabase
+      .from('admin_reviews')
+      .upsert(
+        {
+          checklist_item_id: item.checklistItemId,
+          tester_id: item.testerId,
+          behavior_type: newBehavior,
+          resolution_status: newResolution,
+          notes: existing?.notes ?? null,
+          updated_at: now,
+        },
+        { onConflict: 'checklist_item_id,tester_id' }
+      )
+
+    if (error) {
+      console.error('completeAllReviews upsert failed:', error.message)
+      continue
+    }
+
+    updatedCount++
+    if (oldBehavior === null) categorizedCount++
+
+    // Record history for each changed field
+    const historyRows: {
+      checklist_item_id: string
+      tester_id: string
+      field_changed: string
+      old_value: string | null
+      new_value: string | null
+    }[] = []
+
+    if (oldBehavior !== newBehavior) {
+      historyRows.push({
+        checklist_item_id: item.checklistItemId,
+        tester_id: item.testerId,
+        field_changed: 'behavior_type',
+        old_value: oldBehavior,
+        new_value: newBehavior,
+      })
+    }
+
+    if (oldResolution !== newResolution) {
+      historyRows.push({
+        checklist_item_id: item.checklistItemId,
+        tester_id: item.testerId,
+        field_changed: 'resolution_status',
+        old_value: oldResolution,
+        new_value: newResolution,
+      })
+    }
+
+    if (historyRows.length > 0) {
+      await supabase.from('admin_review_history').insert(historyRows)
+    }
+  }
+
+  revalidatePath(`/admin/projects/${projectSlug}/analytics`)
+  revalidatePath(`/admin/projects/${projectSlug}/review`)
+  return { updated: updatedCount, categorized: categorizedCount }
+}
