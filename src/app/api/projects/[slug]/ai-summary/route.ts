@@ -309,7 +309,7 @@ RULES:
       },
       body: JSON.stringify({
         model: "gpt-5.1",
-        max_tokens: 1500,
+        max_completion_tokens: 1500,
         messages: [
           {
             role: "system",
@@ -326,8 +326,14 @@ RULES:
     if (!openaiResponse.ok) {
       const errorBody = await openaiResponse.text()
       console.error("OpenAI API error:", openaiResponse.status, errorBody)
+      // Surface the upstream message so admins can diagnose without checking server logs
+      let detail = ""
+      try {
+        const parsed = JSON.parse(errorBody)
+        detail = parsed?.error?.message ?? ""
+      } catch { /* not JSON, ignore */ }
       return NextResponse.json(
-        { error: `AI service error (${openaiResponse.status}). Please try again.` },
+        { error: `AI service error (${openaiResponse.status}). ${detail || "Please try again."}` },
         { status: 502 }
       )
     }
