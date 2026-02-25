@@ -102,6 +102,7 @@ export async function POST(
 
     let sentCount = 0
     const errors: string[] = []
+    const skipped: { name: string; reason: string }[] = []
 
     for (const tester of testerList) {
       // Only email testers who reported at least one non-pass step
@@ -109,7 +110,18 @@ export async function POST(
         (r) => r.tester_id === tester.id && r.status !== null && r.status !== "Pass" && r.status !== "N/A"
       )
 
-      if (testerResponses.length === 0) continue
+      if (testerResponses.length === 0) {
+        const hasAnyResponse = responseList.some(
+          (r) => r.tester_id === tester.id && r.status !== null
+        )
+        skipped.push({
+          name: tester.name,
+          reason: hasAnyResponse
+            ? "All responses are Pass or N/A"
+            : "No responses submitted yet",
+        })
+        continue
+      }
 
       // Count resolution statuses for this tester
       let resolvedCount = 0
@@ -157,7 +169,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ sent: sentCount, errors })
+    return NextResponse.json({ sent: sentCount, errors, skipped })
   } catch (err) {
     console.error("Notify testers API - unexpected error:", err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 })
