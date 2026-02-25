@@ -54,9 +54,25 @@ export default function ClientGroupedDashboard({ groups }: Props) {
     setExpandedGroups(new Set(filteredGroups.map((g) => g.clientName)))
   const collapseAll = () => setExpandedGroups(new Set())
 
-  const filteredGroups = groups.filter((g) =>
-    g.clientName.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredGroups = groups
+    .map((group) => {
+      const query = searchQuery.toLowerCase()
+      // If client name matches, show entire section with all projects
+      if (group.clientName.toLowerCase().includes(query)) {
+        return group
+      }
+      // Otherwise, filter to only matching projects within the section
+      const matchingProjects = group.projects.filter(
+        (p) =>
+          p.company_name.toLowerCase().includes(query) ||
+          p.slug.toLowerCase().includes(query)
+      )
+      if (matchingProjects.length > 0) {
+        return { ...group, projects: matchingProjects }
+      }
+      return null
+    })
+    .filter((g): g is ClientGroup => g !== null)
 
   return (
     <div className="space-y-4">
@@ -66,7 +82,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Filter by client name..."
+            placeholder="Filter by client or project name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none"
@@ -91,7 +107,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
       {/* Client sections */}
       {filteredGroups.length === 0 ? (
         <div className="text-center py-12 text-sm text-gray-400">
-          No clients matching &ldquo;{searchQuery}&rdquo;
+          No results matching &ldquo;{searchQuery}&rdquo;
         </div>
       ) : (
         filteredGroups.map((group) => {
