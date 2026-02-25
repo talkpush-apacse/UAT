@@ -50,7 +50,7 @@ export default async function ProjectDetailPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug, company_name, test_scenario, talkpush_login_link, created_at")
+    .select("id, slug, company_name, title, test_scenario, talkpush_login_link, created_at")
     .eq("slug", params.slug)
     .single()
 
@@ -174,7 +174,8 @@ export default async function ProjectDetailPage({
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{project.company_name}</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{project.title || project.company_name}</h1>
+          <p className="text-xs text-gray-500 mt-0.5">{project.company_name}</p>
           <p className="text-xs text-gray-400 font-mono mt-0.5">
             Tester URL:{" "}
             <a

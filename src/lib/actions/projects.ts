@@ -25,6 +25,7 @@ export async function createProject(
 
   const parsed = createProjectSchema.safeParse({
     companyName: formData.get('companyName'),
+    title: formData.get('title'),
     slug: formData.get('slug'),
     testScenario: formData.get('testScenario'),
     talkpushLoginLink: formData.get('talkpushLoginLink'),
@@ -37,6 +38,7 @@ export async function createProject(
   const supabase = createAdminClient()
   const { error } = await supabase.from('projects').insert({
     company_name: parsed.data.companyName,
+    title: parsed.data.title,
     slug: parsed.data.slug,
     test_scenario: parsed.data.testScenario || null,
     talkpush_login_link: parsed.data.talkpushLoginLink || null,
@@ -63,6 +65,7 @@ export async function updateProject(
 
   const parsed = updateProjectSchema.safeParse({
     companyName: formData.get('companyName'),
+    title: formData.get('title'),
     slug: formData.get('slug'),
     testScenario: formData.get('testScenario'),
     talkpushLoginLink: formData.get('talkpushLoginLink'),
@@ -75,6 +78,7 @@ export async function updateProject(
   const supabase = createAdminClient()
   const updates: ProjectUpdate = {}
   if (parsed.data.companyName) updates.company_name = parsed.data.companyName
+  if (parsed.data.title) updates.title = parsed.data.title
   if (parsed.data.slug) updates.slug = parsed.data.slug
   if (parsed.data.testScenario !== undefined)
     updates.test_scenario = parsed.data.testScenario || null
@@ -137,7 +141,7 @@ export async function duplicateProject(
   // Fetch original project
   const { data: original } = await supabase
     .from('projects')
-    .select('id, slug, company_name, test_scenario, talkpush_login_link')
+    .select('id, slug, company_name, title, test_scenario, talkpush_login_link')
     .eq('id', projectId)
     .single()
 
@@ -157,14 +161,17 @@ export async function duplicateProject(
     newSlug = `${slug}-copy-${suffix++}`
   }
 
+  const orig = original as ProjectRow
+
   // Insert new project
   const { data: newProject, error: projError } = await supabase
     .from('projects')
     .insert({
-      company_name: `${(original as ProjectRow).company_name} (Copy)`,
+      company_name: orig.company_name,
+      title: orig.title ? `${orig.title} (Copy)` : `${orig.company_name} (Copy)`,
       slug: newSlug,
-      test_scenario: (original as ProjectRow).test_scenario,
-      talkpush_login_link: (original as ProjectRow).talkpush_login_link,
+      test_scenario: orig.test_scenario,
+      talkpush_login_link: orig.talkpush_login_link,
     })
     .select()
     .single()

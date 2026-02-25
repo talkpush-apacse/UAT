@@ -17,7 +17,7 @@ export default async function EditProjectPage({
   const supabase = createAdminClient()
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug, company_name, test_scenario, talkpush_login_link")
+    .select("id, slug, company_name, title, test_scenario, talkpush_login_link")
     .eq("slug", params.slug)
     .single()
 

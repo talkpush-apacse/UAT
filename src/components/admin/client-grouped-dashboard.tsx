@@ -17,6 +17,7 @@ export interface ProjectWithCounts {
   id: string
   slug: string
   company_name: string
+  title: string | null
   test_scenario: string | null
   created_at: string
   testerCount: number
@@ -65,7 +66,8 @@ export default function ClientGroupedDashboard({ groups }: Props) {
       const matchingProjects = group.projects.filter(
         (p) =>
           p.company_name.toLowerCase().includes(query) ||
-          p.slug.toLowerCase().includes(query)
+          p.slug.toLowerCase().includes(query) ||
+          (p.title && p.title.toLowerCase().includes(query))
       )
       if (matchingProjects.length > 0) {
         return { ...group, projects: matchingProjects }
@@ -177,9 +179,9 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                               <div className="flex items-start justify-between">
                                 <CardTitle
                                   className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug"
-                                  title={project.company_name}
+                                  title={project.title || project.company_name}
                                 >
-                                  {project.company_name}
+                                  {project.title || project.company_name}
                                 </CardTitle>
                                 <Badge
                                   variant="outline"

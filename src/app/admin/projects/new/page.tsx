@@ -1,13 +1,22 @@
 "use client"
 
+import { useState } from "react"
 import { useFormState } from "react-dom"
 import { createProject, type ProjectActionState } from "@/lib/actions/projects"
+import { CLIENT_NAMES } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import Link from "next/link"
 import { ArrowLeft, Plus } from "lucide-react"
 
@@ -15,6 +24,7 @@ const initialState: ProjectActionState = {}
 
 export default function NewProjectPage() {
   const [state, formAction] = useFormState(createProject, initialState)
+  const [companyName, setCompanyName] = useState("")
 
   return (
     <div className="max-w-2xl">
@@ -36,19 +46,39 @@ export default function NewProjectPage() {
         <CardContent className="p-5">
           <form action={formAction} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="companyName" className="text-xs text-gray-500">Company Name</Label>
-              <Input
-                id="companyName"
-                name="companyName"
-                placeholder="e.g. Acme Corp"
-                required
-              />
+              <Label htmlFor="companyName" className="text-xs text-gray-500">Client Name *</Label>
+              {/* Hidden input to submit the select value with the form */}
+              <input type="hidden" name="companyName" value={companyName} />
+              <Select value={companyName} onValueChange={setCompanyName}>
+                <SelectTrigger className="border border-gray-300 bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                  <SelectValue placeholder="Select a client..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {CLIENT_NAMES.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {state.fieldErrors?.companyName && (
                 <p className="text-sm text-red-600">{state.fieldErrors.companyName[0]}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="slug" className="text-xs text-gray-500">URL Slug</Label>
+              <Label htmlFor="title" className="text-xs text-gray-500">UAT Checklist Title *</Label>
+              <Input
+                id="title"
+                name="title"
+                placeholder="e.g. Q1 2026 CRM Migration UAT"
+                required
+              />
+              {state.fieldErrors?.title && (
+                <p className="text-sm text-red-600">{state.fieldErrors.title[0]}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="slug" className="text-xs text-gray-500">URL Slug *</Label>
               <Input
                 id="slug"
                 name="slug"

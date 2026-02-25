@@ -14,6 +14,7 @@ export type Database = {
           id: string
           slug: string
           company_name: string
+          title: string | null
           test_scenario: string | null
           talkpush_login_link: string | null
           created_at: string
@@ -22,6 +23,7 @@ export type Database = {
           id?: string
           slug: string
           company_name: string
+          title?: string | null
           test_scenario?: string | null
           talkpush_login_link?: string | null
           created_at?: string
@@ -30,6 +32,7 @@ export type Database = {
           id?: string
           slug?: string
           company_name?: string
+          title?: string | null
           test_scenario?: string | null
           talkpush_login_link?: string | null
           created_at?: string
