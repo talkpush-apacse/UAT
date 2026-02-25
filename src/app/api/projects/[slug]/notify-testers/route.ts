@@ -30,8 +30,8 @@ export async function POST(
       )
     }
 
-    // Parse the origin from the request so we can build tester result URLs
-    const { origin } = await request.json().catch(() => ({ origin: null }))
+    // Parse the origin and optional tester filter from the request
+    const { origin, testerIds: selectedTesterIds } = await request.json().catch(() => ({ origin: null, testerIds: null }))
     const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app"
 
     const resend = new Resend(resendKey)
@@ -55,7 +55,12 @@ export async function POST(
       .eq("project_id", project.id)
       .order("created_at", { ascending: true })
 
-    const testerList = testers || []
+    let testerList = testers || []
+    // If the client sent a specific set of tester IDs, restrict to those
+    if (Array.isArray(selectedTesterIds) && selectedTesterIds.length > 0) {
+      const allowed = new Set(selectedTesterIds as string[])
+      testerList = testerList.filter((t) => allowed.has(t.id))
+    }
     if (testerList.length === 0) {
       return NextResponse.json({ sent: 0, errors: [] })
     }
