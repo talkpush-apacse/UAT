@@ -23,6 +23,12 @@ export function createServerSupabaseClient() {
           }
         },
       },
+      global: {
+        // Prevent Next.js Data Cache from serving stale Supabase query results
+        fetch: (url, options = {}) => {
+          return fetch(url, { ...options, cache: 'no-store' })
+        },
+      },
     }
   )
 }
