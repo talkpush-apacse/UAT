@@ -246,10 +246,10 @@ export default async function ProjectDetailPage({
       </div>
 
       <div className="flex gap-2 mb-8">
-        <a href={`/admin/projects/${project.slug}/export`}>
+        <a href={`/admin/projects/${project.slug}/export-steps`}>
           <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50">
             <Download className="h-3.5 w-3.5 mr-1.5" />
-            Export Results (.xlsx)
+            Export Steps (.xlsx)
           </Button>
         </a>
       </div>
