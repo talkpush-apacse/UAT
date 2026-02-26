@@ -108,8 +108,9 @@ export async function saveAdminReview(data: {
     }
   }
 
-  revalidatePath(`/admin/projects/${data.projectSlug}/analytics`)
   revalidatePath(`/admin/projects/${data.projectSlug}/review`)
+  // Also revalidate the public share analytics page
+  revalidatePath(`/share/analytics/${data.projectSlug}`, 'layout')
   return {}
 }
 
@@ -128,45 +129,63 @@ export async function bulkMarkResolved(
 
   const supabase = createAdminClient()
   const now = new Date().toISOString()
-  let updatedCount = 0
 
-  // Process each item — fetch old state, upsert, record history
+  // Build composite keys for the batch lookup
+  const checklistItemIds = items.map((i) => i.checklistItemId)
+  const testerIds = items.map((i) => i.testerId)
+
+  // 1. Batch-fetch all existing reviews in one query instead of N individual fetches
+  const { data: existingRows, error: fetchError } = await supabase
+    .from('admin_reviews')
+    .select('checklist_item_id, tester_id, resolution_status')
+    .in('checklist_item_id', checklistItemIds)
+    .in('tester_id', testerIds)
+
+  if (fetchError) {
+    console.error('bulkMarkResolved fetch failed:', fetchError.message)
+    return { updated: 0, error: fetchError.message }
+  }
+
+  // Build a lookup map: "checklistItemId::testerId" → resolution_status
+  const existingMap = new Map<string, string | null>()
+  for (const row of existingRows ?? []) {
+    existingMap.set(
+      `${row.checklist_item_id}::${row.tester_id}`,
+      row.resolution_status
+    )
+  }
+
+  // 2. Filter out items that are already 'Done', build upsert + history payloads
+  const upsertRows: {
+    checklist_item_id: string
+    tester_id: string
+    resolution_status: string
+    updated_at: string
+  }[] = []
+
+  const historyRows: {
+    checklist_item_id: string
+    tester_id: string
+    field_changed: string
+    old_value: string | null
+    new_value: string | null
+  }[] = []
+
   for (const item of items) {
-    // Fetch current row to track history
-    const { data: existing } = await supabase
-      .from('admin_reviews')
-      .select('resolution_status')
-      .eq('checklist_item_id', item.checklistItemId)
-      .eq('tester_id', item.testerId)
-      .maybeSingle()
-
-    const oldResolution = existing?.resolution_status ?? null
+    const key = `${item.checklistItemId}::${item.testerId}`
+    const oldResolution = existingMap.get(key) ?? null
 
     // Skip if already resolved
     if (oldResolution === 'Done') continue
 
-    // Upsert with resolution_status = 'Done'
-    const { error } = await supabase
-      .from('admin_reviews')
-      .upsert(
-        {
-          checklist_item_id: item.checklistItemId,
-          tester_id: item.testerId,
-          resolution_status: 'Done',
-          updated_at: now,
-        },
-        { onConflict: 'checklist_item_id,tester_id' }
-      )
+    upsertRows.push({
+      checklist_item_id: item.checklistItemId,
+      tester_id: item.testerId,
+      resolution_status: 'Done',
+      updated_at: now,
+    })
 
-    if (error) {
-      console.error('bulkMarkResolved upsert failed:', error.message)
-      continue
-    }
-
-    updatedCount++
-
-    // Record history
-    await supabase.from('admin_review_history').insert({
+    historyRows.push({
       checklist_item_id: item.checklistItemId,
       tester_id: item.testerId,
       field_changed: 'resolution_status',
@@ -175,9 +194,35 @@ export async function bulkMarkResolved(
     })
   }
 
-  revalidatePath(`/admin/projects/${projectSlug}/analytics`)
+  if (upsertRows.length === 0) {
+    return { updated: 0 }
+  }
+
+  // 3. Batch upsert all rows at once
+  const { error: upsertError } = await supabase
+    .from('admin_reviews')
+    .upsert(upsertRows, { onConflict: 'checklist_item_id,tester_id' })
+
+  if (upsertError) {
+    console.error('bulkMarkResolved upsert failed:', upsertError.message)
+    return { updated: 0, error: upsertError.message }
+  }
+
+  // 4. Batch insert all history rows at once (non-critical — log but don't fail)
+  if (historyRows.length > 0) {
+    const { error: historyError } = await supabase
+      .from('admin_review_history')
+      .insert(historyRows)
+
+    if (historyError) {
+      console.error('bulkMarkResolved history insert failed:', historyError.message)
+    }
+  }
+
   revalidatePath(`/admin/projects/${projectSlug}/review`)
-  return { updated: updatedCount }
+  // Also revalidate the public share analytics page
+  revalidatePath(`/share/analytics/${projectSlug}`, 'layout')
+  return { updated: upsertRows.length }
 }
 
 /* ------------------------------------------------------------------ */
@@ -195,17 +240,59 @@ export async function completeAllReviews(
 
   const supabase = createAdminClient()
   const now = new Date().toISOString()
-  let updatedCount = 0
+
+  // Build arrays for the batch lookup
+  const checklistItemIds = items.map((i) => i.checklistItemId)
+  const testerIds = items.map((i) => i.testerId)
+
+  // 1. Batch-fetch all existing reviews in one query instead of N individual fetches
+  const { data: existingRows, error: fetchError } = await supabase
+    .from('admin_reviews')
+    .select('checklist_item_id, tester_id, behavior_type, resolution_status, notes')
+    .in('checklist_item_id', checklistItemIds)
+    .in('tester_id', testerIds)
+
+  if (fetchError) {
+    console.error('completeAllReviews fetch failed:', fetchError.message)
+    return { updated: 0, categorized: 0, error: fetchError.message }
+  }
+
+  // Build a lookup map: "checklistItemId::testerId" → existing row data
+  const existingMap = new Map<
+    string,
+    { behavior_type: string | null; resolution_status: string | null; notes: string | null }
+  >()
+  for (const row of existingRows ?? []) {
+    existingMap.set(`${row.checklist_item_id}::${row.tester_id}`, {
+      behavior_type: row.behavior_type,
+      resolution_status: row.resolution_status,
+      notes: row.notes,
+    })
+  }
+
+  // 2. Build upsert + history payloads, skipping items already fully complete
+  const upsertRows: {
+    checklist_item_id: string
+    tester_id: string
+    behavior_type: string
+    resolution_status: string
+    notes: string | null
+    updated_at: string
+  }[] = []
+
+  const historyRows: {
+    checklist_item_id: string
+    tester_id: string
+    field_changed: string
+    old_value: string | null
+    new_value: string | null
+  }[] = []
+
   let categorizedCount = 0
 
   for (const item of items) {
-    // Fetch current row to compare
-    const { data: existing } = await supabase
-      .from('admin_reviews')
-      .select('behavior_type, resolution_status, notes')
-      .eq('checklist_item_id', item.checklistItemId)
-      .eq('tester_id', item.testerId)
-      .maybeSingle()
+    const key = `${item.checklistItemId}::${item.testerId}`
+    const existing = existingMap.get(key)
 
     const oldBehavior = existing?.behavior_type ?? null
     const oldResolution = existing?.resolution_status ?? null
@@ -217,38 +304,18 @@ export async function completeAllReviews(
     // Skip if already fully complete
     if (oldBehavior !== null && oldResolution === 'Done') continue
 
-    // Upsert with both behavior_type and resolution_status
-    const { error } = await supabase
-      .from('admin_reviews')
-      .upsert(
-        {
-          checklist_item_id: item.checklistItemId,
-          tester_id: item.testerId,
-          behavior_type: newBehavior,
-          resolution_status: newResolution,
-          notes: existing?.notes ?? null,
-          updated_at: now,
-        },
-        { onConflict: 'checklist_item_id,tester_id' }
-      )
+    upsertRows.push({
+      checklist_item_id: item.checklistItemId,
+      tester_id: item.testerId,
+      behavior_type: newBehavior,
+      resolution_status: newResolution,
+      notes: existing?.notes ?? null,
+      updated_at: now,
+    })
 
-    if (error) {
-      console.error('completeAllReviews upsert failed:', error.message)
-      continue
-    }
-
-    updatedCount++
     if (oldBehavior === null) categorizedCount++
 
-    // Record history for each changed field
-    const historyRows: {
-      checklist_item_id: string
-      tester_id: string
-      field_changed: string
-      old_value: string | null
-      new_value: string | null
-    }[] = []
-
+    // Track history for each changed field
     if (oldBehavior !== newBehavior) {
       historyRows.push({
         checklist_item_id: item.checklistItemId,
@@ -268,13 +335,35 @@ export async function completeAllReviews(
         new_value: newResolution,
       })
     }
+  }
 
-    if (historyRows.length > 0) {
-      await supabase.from('admin_review_history').insert(historyRows)
+  if (upsertRows.length === 0) {
+    return { updated: 0, categorized: 0 }
+  }
+
+  // 3. Batch upsert all rows at once
+  const { error: upsertError } = await supabase
+    .from('admin_reviews')
+    .upsert(upsertRows, { onConflict: 'checklist_item_id,tester_id' })
+
+  if (upsertError) {
+    console.error('completeAllReviews upsert failed:', upsertError.message)
+    return { updated: 0, categorized: 0, error: upsertError.message }
+  }
+
+  // 4. Batch insert all history rows at once (non-critical — log but don't fail)
+  if (historyRows.length > 0) {
+    const { error: historyError } = await supabase
+      .from('admin_review_history')
+      .insert(historyRows)
+
+    if (historyError) {
+      console.error('completeAllReviews history insert failed:', historyError.message)
     }
   }
 
-  revalidatePath(`/admin/projects/${projectSlug}/analytics`)
   revalidatePath(`/admin/projects/${projectSlug}/review`)
-  return { updated: updatedCount, categorized: categorizedCount }
+  // Also revalidate the public share analytics page
+  revalidatePath(`/share/analytics/${projectSlug}`, 'layout')
+  return { updated: upsertRows.length, categorized: categorizedCount }
 }

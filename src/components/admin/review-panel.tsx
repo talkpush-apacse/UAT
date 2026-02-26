@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X } from "lucide-react"
 import { saveAdminReview, bulkMarkResolved } from "@/lib/actions/admin-reviews"
@@ -157,10 +157,17 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Refs to hold the latest values — prevents stale closures in the debounced
+  // notes save from overwriting behavior_type or resolution_status with old values.
+  const behaviorTypeRef = useRef(behaviorType)
+  const resolutionStatusRef = useRef(resolutionStatus)
+  behaviorTypeRef.current = behaviorType
+  resolutionStatusRef.current = resolutionStatus
+
   const selectionKey = `${testerId}::${step.checklistItemId}`
   const showCheckbox = resolutionStatus !== "Done"
 
-  const saveReview = async (
+  const saveReview = useCallback(async (
     newBehavior: string | null,
     newResolution: string,
     newNotes: string
@@ -176,16 +183,22 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
     })
     setSaveStatus(result.error ? "error" : "saved")
     setTimeout(() => setSaveStatus("idle"), 2000)
-  }
+  }, [step.checklistItemId, testerId, projectSlug])
 
   const handleBehaviorClick = (opt: string) => {
+    // Clear any pending notes debounce to prevent stale closure from overwriting
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     const next = opt === behaviorType ? null : opt
     setBehaviorType(next)
+    behaviorTypeRef.current = next
     saveReview(next, resolutionStatus, notes)
   }
 
   const handleResolutionClick = (opt: string) => {
+    // Clear any pending notes debounce to prevent stale closure from overwriting
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     setResolutionStatus(opt)
+    resolutionStatusRef.current = opt
     saveReview(behaviorType, opt, notes)
   }
 
@@ -193,7 +206,8 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
     setNotes(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      saveReview(behaviorType, resolutionStatus, value)
+      // Use refs instead of closure values to avoid stale data
+      saveReview(behaviorTypeRef.current, resolutionStatusRef.current, value)
     }, 500)
   }
 

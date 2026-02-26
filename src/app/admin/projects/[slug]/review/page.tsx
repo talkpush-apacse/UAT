@@ -57,25 +57,34 @@ export default async function ReviewPage({
 
   if (!project) notFound()
 
-  const { data: testers } = await supabase
-    .from("testers")
-    .select("id, name, email")
-    .eq("project_id", project.id)
-    .order("created_at", { ascending: true })
+  // Group A: testers + checklist_items are independent — fetch in parallel
+  const [testersResult, checklistItemsResult] = await Promise.all([
+    supabase
+      .from("testers")
+      .select("id, name, email")
+      .eq("project_id", project.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("checklist_items")
+      .select("id, step_number, path, actor, action, crm_module, sort_order")
+      .eq("project_id", project.id)
+      .order("sort_order"),
+  ])
 
-  const { data: checklistItems } = await supabase
-    .from("checklist_items")
-    .select("id, step_number, path, actor, action, crm_module, sort_order")
-    .eq("project_id", project.id)
-    .order("sort_order")
+  if (testersResult.error) {
+    console.error("Failed to fetch testers:", testersResult.error.message)
+  }
+  if (checklistItemsResult.error) {
+    console.error("Failed to fetch checklist items:", checklistItemsResult.error.message)
+  }
 
-  const testerList = testers || []
-  const itemList = checklistItems || []
+  const testerList = testersResult.data || []
+  const itemList = checklistItemsResult.data || []
 
   const testerIds = testerList.map((t) => t.id)
   const itemIds = itemList.map((ci) => ci.id)
 
-  // Fetch all responses for this project's testers scoped to this project's items
+  // Group B: responses + admin_reviews + review_history are independent — fetch in parallel
   let responses: {
     id: string
     tester_id: string
@@ -84,16 +93,6 @@ export default async function ReviewPage({
     comment: string | null
   }[] = []
 
-  if (testerIds.length > 0 && itemIds.length > 0) {
-    const { data } = await supabase
-      .from("responses")
-      .select("id, tester_id, checklist_item_id, status, comment")
-      .in("tester_id", testerIds)
-      .in("checklist_item_id", itemIds)
-    responses = data || []
-  }
-
-  // Fetch all admin reviews for these testers, scoped to this project's items
   let adminReviews: {
     checklist_item_id: string
     tester_id: string
@@ -102,16 +101,6 @@ export default async function ReviewPage({
     notes: string | null
   }[] = []
 
-  if (testerIds.length > 0 && itemIds.length > 0) {
-    const { data } = await supabase
-      .from("admin_reviews")
-      .select("checklist_item_id, tester_id, behavior_type, resolution_status, notes")
-      .in("tester_id", testerIds)
-      .in("checklist_item_id", itemIds) // scope to this project's items only
-    adminReviews = data || []
-  }
-
-  // Fetch admin review history for activity timeline
   let reviewHistory: {
     checklist_item_id: string
     tester_id: string
@@ -122,13 +111,38 @@ export default async function ReviewPage({
   }[] = []
 
   if (testerIds.length > 0 && itemIds.length > 0) {
-    const { data } = await supabase
-      .from("admin_review_history")
-      .select("checklist_item_id, tester_id, field_changed, old_value, new_value, changed_at")
-      .in("tester_id", testerIds)
-      .in("checklist_item_id", itemIds)
-      .order("changed_at", { ascending: false })
-    reviewHistory = data || []
+    const [responsesResult, adminReviewsResult, reviewHistoryResult] = await Promise.all([
+      supabase
+        .from("responses")
+        .select("id, tester_id, checklist_item_id, status, comment")
+        .in("tester_id", testerIds)
+        .in("checklist_item_id", itemIds),
+      supabase
+        .from("admin_reviews")
+        .select("checklist_item_id, tester_id, behavior_type, resolution_status, notes")
+        .in("tester_id", testerIds)
+        .in("checklist_item_id", itemIds),
+      supabase
+        .from("admin_review_history")
+        .select("checklist_item_id, tester_id, field_changed, old_value, new_value, changed_at")
+        .in("tester_id", testerIds)
+        .in("checklist_item_id", itemIds)
+        .order("changed_at", { ascending: false }),
+    ])
+
+    if (responsesResult.error) {
+      console.error("Failed to fetch responses:", responsesResult.error.message)
+    }
+    if (adminReviewsResult.error) {
+      console.error("Failed to fetch admin reviews:", adminReviewsResult.error.message)
+    }
+    if (reviewHistoryResult.error) {
+      console.error("Failed to fetch review history:", reviewHistoryResult.error.message)
+    }
+
+    responses = responsesResult.data || []
+    adminReviews = adminReviewsResult.data || []
+    reviewHistory = reviewHistoryResult.data || []
   }
 
   // Build history lookup: key = "testerId:checklistItemId" → HistoryEntry[]

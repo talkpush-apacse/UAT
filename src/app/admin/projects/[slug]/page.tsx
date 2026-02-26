@@ -65,25 +65,37 @@ export default async function ProjectDetailPage({
   let initialTesters: TesterProgress[] = []
 
   try {
-    const checklistResult = await supabase
-      .from("checklist_items")
-      .select("id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample")
-      .eq("project_id", project.id)
-      .order("sort_order")
+    // Group A: checklist_items + signoffs + testers are independent — fetch in parallel
+    const [checklistResult, signoffResult, testersResult] = await Promise.all([
+      supabase
+        .from("checklist_items")
+        .select("id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample")
+        .eq("project_id", project.id)
+        .order("sort_order"),
+      supabase
+        .from("signoffs")
+        .select("id, project_id, signoff_name, signoff_date, created_at")
+        .eq("project_id", project.id)
+        .order("signoff_date", { ascending: false }),
+      supabase
+        .from("testers")
+        .select("id, name, email, mobile")
+        .eq("project_id", project.id),
+    ])
+
+    if (checklistResult.error) {
+      console.error("Failed to fetch checklist items:", checklistResult.error.message)
+    }
+    if (signoffResult.error) {
+      console.error("Failed to fetch signoffs:", signoffResult.error.message)
+    }
+    if (testersResult.error) {
+      console.error("Failed to fetch testers:", testersResult.error.message)
+    }
+
     checklistItems = checklistResult.data
-
-    const signoffResult = await supabase
-      .from("signoffs")
-      .select("id, project_id, signoff_name, signoff_date, created_at")
-      .eq("project_id", project.id)
-      .order("signoff_date", { ascending: false })
     signoffs = signoffResult.data
-
-    // Query testers and their responses server-side for initial render
-    const { data: testers } = await supabase
-      .from("testers")
-      .select("id, name, email, mobile")
-      .eq("project_id", project.id)
+    const testers = testersResult.data
 
     if (testers && testers.length > 0) {
       // Scope responses to only checklist items belonging to this project

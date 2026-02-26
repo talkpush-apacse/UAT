@@ -83,9 +83,11 @@ const ACTOR_BADGE: Record<string, string> = {
 }
 
 const RESOLUTION_BADGE: Record<string, string> = {
+  "Not Yet Started": "bg-amber-100 text-amber-700",
+  "In Progress": "bg-blue-100 text-blue-700",
+  "Done": "bg-green-100 text-green-700",
+  // Legacy values (from database default)
   pending: "bg-amber-100 text-amber-700",
-  "in-progress": "bg-blue-100 text-blue-700",
-  resolved: "bg-green-100 text-green-700",
 }
 
 /* ------------------------------------------------------------------ */
