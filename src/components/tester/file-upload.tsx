@@ -164,7 +164,7 @@ export default function FileUpload({
           type="button"
           variant="outline"
           size="sm"
-          className="text-xs h-7 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+          className="text-xs h-7 text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
         >

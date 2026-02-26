@@ -80,11 +80,11 @@ export function AddStepForm({
   }
 
   return (
-    <div className="bg-white rounded-xl border-2 border-dashed border-emerald-300 shadow-sm transition-all duration-200">
-      <div className="flex items-center justify-between px-5 py-3 bg-emerald-50 rounded-t-xl border-b border-emerald-100">
+    <div className="bg-white rounded-xl border-2 border-dashed border-brand-sage-lighter shadow-sm transition-all duration-200">
+      <div className="flex items-center justify-between px-5 py-3 bg-brand-sage-lightest rounded-t-xl border-b border-brand-sage-lighter">
         <div className="flex items-center gap-2">
-          <Plus className="h-4 w-4 text-emerald-700" />
-          <span className="text-sm font-semibold text-emerald-800">
+          <Plus className="h-4 w-4 text-brand-sage-darker" />
+          <span className="text-sm font-semibold text-brand-sage-darker">
             Add New Step
           </span>
         </div>
@@ -204,7 +204,7 @@ export function AddStepForm({
           <Button
             size="sm"
             onClick={handleAdd}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             <Plus className="h-4 w-4 mr-1" />
             Add Step

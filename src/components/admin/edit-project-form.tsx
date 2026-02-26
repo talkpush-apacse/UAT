@@ -40,7 +40,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
     <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
       <CardHeader className="px-5 py-4 bg-gray-50/50 rounded-t-xl border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <Pencil className="h-4 w-4 text-emerald-700" />
+          <Pencil className="h-4 w-4 text-brand-sage-darker" />
           <CardTitle className="text-base font-semibold text-gray-900">Edit Project</CardTitle>
         </div>
       </CardHeader>
@@ -50,7 +50,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
             <Label htmlFor="companyName" className="text-xs text-gray-500">Client Name *</Label>
             <input type="hidden" name="companyName" value={companyName} />
             <Select value={companyName} onValueChange={setCompanyName}>
-              <SelectTrigger className="border border-gray-300 bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+              <SelectTrigger className="border border-gray-300 bg-white focus:ring-2 focus:ring-brand-lavender-darker focus:border-brand-lavender-darker">
                 <SelectValue placeholder="Select a client..." />
               </SelectTrigger>
               <SelectContent>

@@ -19,7 +19,7 @@ export default async function TesterRegistrationPage({
   if (!project) notFound()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-gray-50 flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-brand-sage-lightest to-gray-50 flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-md space-y-5">
 
         {/* Talkpush Logo */}
@@ -34,10 +34,10 @@ export default async function TesterRegistrationPage({
 
         {/* Test Scenario Card */}
         {project.test_scenario && (
-          <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm px-5 py-4">
+          <div className="bg-white rounded-2xl border border-brand-sage-lighter shadow-sm px-5 py-4">
             <div className="flex items-center gap-2 mb-2">
-              <ClipboardList className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+              <ClipboardList className="h-4 w-4 text-brand-sage-darker flex-shrink-0" />
+              <p className="text-xs font-semibold text-brand-sage-darker uppercase tracking-wide">
                 Test Scenario
               </p>
             </div>

@@ -30,7 +30,7 @@ export default function NewProjectPage() {
     <div className="max-w-2xl">
       <Link
         href="/admin"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-700 transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors mb-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to UAT Checklists
@@ -39,7 +39,7 @@ export default function NewProjectPage() {
       <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
         <CardHeader className="px-5 py-4 bg-gray-50/50 rounded-t-xl border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Plus className="h-4 w-4 text-emerald-700" />
+            <Plus className="h-4 w-4 text-brand-sage-darker" />
             <CardTitle className="text-base font-semibold text-gray-900">Create New UAT Checklist</CardTitle>
           </div>
         </CardHeader>
@@ -50,7 +50,7 @@ export default function NewProjectPage() {
               {/* Hidden input to submit the select value with the form */}
               <input type="hidden" name="companyName" value={companyName} />
               <Select value={companyName} onValueChange={setCompanyName}>
-                <SelectTrigger className="border border-gray-300 bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                <SelectTrigger className="border border-gray-300 bg-white focus:ring-2 focus:ring-brand-lavender-darker focus:border-brand-lavender-darker">
                   <SelectValue placeholder="Select a client..." />
                 </SelectTrigger>
                 <SelectContent>

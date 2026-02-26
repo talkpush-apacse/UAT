@@ -124,8 +124,8 @@ export default function AISummaryPanel({ slug }: { slug: string }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
               <CardContent className="pt-4 pb-3 flex items-center gap-3 px-4">
-                <div className="h-9 w-9 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                  <Users className="h-4.5 w-4.5 text-emerald-700" />
+                <div className="h-9 w-9 rounded-lg bg-brand-sage-lightest flex items-center justify-center flex-shrink-0">
+                  <Users className="h-4.5 w-4.5 text-brand-sage-darker" />
                 </div>
                 <div>
                   <p className="text-xl font-bold text-gray-900">{stats.totalTesters}</p>

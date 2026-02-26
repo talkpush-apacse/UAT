@@ -83,7 +83,7 @@ export default async function AdminDashboard() {
           <p className="text-sm font-medium text-gray-500">No projects yet</p>
           <p className="text-xs text-gray-400 mt-1 mb-4">Create your first UAT checklist to get started</p>
           <Link href="/admin/projects/new">
-            <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+            <Button variant="outline" size="sm" className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
               <Plus className="h-4 w-4 mr-1" />
               Create UAT Checklist
             </Button>

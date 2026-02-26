@@ -50,7 +50,7 @@ const STATUS_OPTIONS = [
 /** Color scheme for actor chips shown in the step card header */
 const ACTOR_CHIP_STYLES: Record<string, string> = {
   Candidate: "bg-sky-50 text-sky-800 border-sky-200",
-  Talkpush: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
   Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
 }
 
@@ -115,7 +115,7 @@ function extractGoogleDriveFileId(url: string): string | null {
 /** Get card styling based on completion status */
 function getCardStyles(status: string | null): string {
   if (!status) {
-    return "border-l-4 border-l-emerald-200 bg-white"
+    return "border-l-4 border-l-brand-sage-lighter bg-white"
   }
   switch (status) {
     case "Pass":
@@ -127,7 +127,7 @@ function getCardStyles(status: string | null): string {
     case "Blocked":
       return "border-l-4 border-l-amber-500 bg-amber-50/50"
     default:
-      return "border-l-4 border-l-emerald-200 bg-white"
+      return "border-l-4 border-l-brand-sage-lighter bg-white"
   }
 }
 
@@ -147,7 +147,7 @@ function AutoLink({ text }: { text: string }) {
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-emerald-700 underline underline-offset-2 hover:text-emerald-900 break-all"
+            className="text-brand-sage-darker underline underline-offset-2 hover:text-primary break-all"
           >
             {part}
           </a>
@@ -287,7 +287,7 @@ export default function ChecklistItem({
 
           {/* === LEFT: Teal "Step N" pill badge === */}
           <div className="flex-shrink-0 pt-0.5">
-            <div className="rounded-full bg-teal-600 text-white text-xs font-bold px-3 py-1.5 shadow-sm select-none whitespace-nowrap">
+            <div className="rounded-full bg-primary text-white text-xs font-bold px-3 py-1.5 shadow-sm select-none whitespace-nowrap">
               Step {item.step_number}
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function ChecklistItem({
         {/* === INSTRUCTION ZONE — Issue #6: URLs auto-linked via prose-a styles === */}
         <div className="prose prose-sm prose-gray max-w-none mb-4 text-base leading-relaxed text-gray-800
           prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
-          prose-strong:text-gray-900 prose-a:text-emerald-700 prose-a:no-underline hover:prose-a:underline">
+          prose-strong:text-gray-900 prose-a:text-brand-sage-darker prose-a:no-underline hover:prose-a:underline">
           <ReactMarkdown
             rehypePlugins={[rehypeSanitize]}
             components={{
@@ -360,10 +360,10 @@ export default function ChecklistItem({
 
         {/* === VISUAL REFERENCE (image preview) — Issue #1: only rendered when viewSample is valid === */}
         {hasImageSample && (
-          <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
+          <div className="mb-4 p-3 bg-brand-pink-lightest border-2 border-brand-pink-lighter rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-emerald-700" />
-              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+              <Eye className="h-4 w-4 text-brand-pink-darker" />
+              <p className="text-xs font-bold text-brand-pink-darker uppercase tracking-wide">
                 Review this before testing
               </p>
             </div>
@@ -377,10 +377,10 @@ export default function ChecklistItem({
               <img
                 src={viewSample!}
                 alt={`Reference for Step ${item.step_number}`}
-                className="max-h-[280px] rounded-md border border-emerald-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer object-contain w-full"
+                className="max-h-[280px] rounded-md border border-brand-pink-lighter shadow-md hover:shadow-lg transition-shadow cursor-pointer object-contain w-full"
                 loading="lazy"
               />
-              <span className="text-xs text-emerald-700 mt-1.5 inline-block hover:underline font-medium">
+              <span className="text-xs text-brand-pink-darker mt-1.5 inline-block hover:underline font-medium">
                 Click to view full size
               </span>
             </a>
@@ -389,14 +389,14 @@ export default function ChecklistItem({
 
         {/* === DESCRIPT EMBED — Issue #1: only rendered when viewSample is valid === */}
         {isDescriptSample && (
-          <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
+          <div className="mb-4 p-3 bg-brand-pink-lightest border-2 border-brand-pink-lighter rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-emerald-700" />
-              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+              <Eye className="h-4 w-4 text-brand-pink-darker" />
+              <p className="text-xs font-bold text-brand-pink-darker uppercase tracking-wide">
                 Review this before testing
               </p>
             </div>
-            <div className="rounded-md overflow-hidden border border-emerald-200 shadow-sm">
+            <div className="rounded-md overflow-hidden border border-brand-pink-lighter shadow-sm">
               <iframe
                 src={viewSample!}
                 className="w-full"
@@ -409,7 +409,7 @@ export default function ChecklistItem({
               href={viewSample!}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-emerald-700 mt-1.5 inline-block hover:underline font-medium"
+              className="text-xs text-brand-pink-darker mt-1.5 inline-block hover:underline font-medium"
             >
               Open in new tab
             </a>
@@ -418,14 +418,14 @@ export default function ChecklistItem({
 
         {/* === GOOGLE DRIVE EMBED — Issue #1: only rendered when viewSample is valid === */}
         {isGoogleDriveSample && (
-          <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
+          <div className="mb-4 p-3 bg-brand-pink-lightest border-2 border-brand-pink-lighter rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-emerald-700" />
-              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+              <Eye className="h-4 w-4 text-brand-pink-darker" />
+              <p className="text-xs font-bold text-brand-pink-darker uppercase tracking-wide">
                 Review this before testing
               </p>
             </div>
-            <div className="rounded-md overflow-hidden border border-emerald-200 shadow-sm">
+            <div className="rounded-md overflow-hidden border border-brand-pink-lighter shadow-sm">
               <iframe
                 src={`https://drive.google.com/file/d/${driveFileId}/preview`}
                 className="w-full"
@@ -439,7 +439,7 @@ export default function ChecklistItem({
               href={viewSample!}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-emerald-700 mt-1.5 inline-block hover:underline font-medium"
+              className="text-xs text-brand-pink-darker mt-1.5 inline-block hover:underline font-medium"
             >
               Open in new tab
             </a>
@@ -448,10 +448,10 @@ export default function ChecklistItem({
 
         {/* === PLAIN LINK (fallback for other non-image URLs) — Issue #1: only rendered when viewSample is valid === */}
         {hasPlainLinkSample && (
-          <div className="mb-4 p-3 bg-emerald-50 border-2 border-emerald-300 rounded-lg">
+          <div className="mb-4 p-3 bg-brand-pink-lightest border-2 border-brand-pink-lighter rounded-lg">
             <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-emerald-700" />
-              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+              <Eye className="h-4 w-4 text-brand-pink-darker" />
+              <p className="text-xs font-bold text-brand-pink-darker uppercase tracking-wide">
                 Review this before testing
               </p>
             </div>
@@ -459,7 +459,7 @@ export default function ChecklistItem({
               href={viewSample!}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-emerald-300 rounded-md text-sm font-medium text-emerald-800 hover:bg-emerald-100 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-brand-pink-lighter rounded-md text-sm font-medium text-brand-pink-darker hover:bg-brand-pink-lightest transition-colors shadow-sm"
             >
               <ExternalLink className="h-4 w-4" />
               <span>View Guide/Sample</span>
@@ -469,13 +469,13 @@ export default function ChecklistItem({
 
         {/* === TALKPUSH LOGIN LINK === */}
         {talkpushLoginLink && isValidGuideUrl(talkpushLoginLink) && (
-          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <p className="text-xs font-medium text-emerald-900 mb-1">Talkpush Login Link:</p>
+          <div className="mb-4 p-3 bg-brand-amber-lightest border border-brand-amber-lighter rounded-lg">
+            <p className="text-xs font-medium text-brand-amber-darker mb-1">Talkpush Login Link:</p>
             <a
               href={talkpushLoginLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-emerald-700 hover:underline break-all"
+              className="text-sm text-brand-amber-darker hover:underline break-all"
             >
               {talkpushLoginLink}
             </a>
@@ -496,6 +496,7 @@ export default function ChecklistItem({
                 className={`
                   px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
                   min-h-[44px] flex-1
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2
                   ${isActive ? styles.active : styles.inactive}
                 `}
               >
@@ -510,7 +511,7 @@ export default function ChecklistItem({
           <button
             type="button"
             onClick={() => setShowComment(true)}
-            className="text-xs text-gray-400 hover:text-emerald-700 transition-colors"
+            className="text-xs text-gray-400 hover:text-brand-sage-darker transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2 rounded"
           >
             + Add comment
           </button>
@@ -535,7 +536,7 @@ export default function ChecklistItem({
           <button
             type="button"
             onClick={() => setShowComment(true)}
-            className="text-xs text-gray-400 hover:text-emerald-700 transition-colors"
+            className="text-xs text-gray-400 hover:text-brand-sage-darker transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2 rounded"
           >
             + Add comment
           </button>

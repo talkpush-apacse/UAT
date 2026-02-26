@@ -61,7 +61,7 @@ export default function SignoffForm({
       <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
         <CardHeader className="px-5 py-4 bg-gray-50/50 rounded-t-xl border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <FileCheck className="h-4 w-4 text-emerald-700" />
+            <FileCheck className="h-4 w-4 text-brand-sage-darker" />
             <CardTitle className="text-base font-semibold text-gray-900">UAT Sign-Off</CardTitle>
           </div>
         </CardHeader>

@@ -322,7 +322,7 @@ export default function TrainingPlanGenerator({ companyName }: TrainingPlanGener
                         readOnly
                       />
                       {checked ? (
-                        <CheckSquare className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <CheckSquare className="h-4 w-4 text-brand-sage-darker shrink-0" />
                       ) : (
                         <Square className="h-4 w-4 text-gray-300 group-hover:text-gray-400 shrink-0" />
                       )}
@@ -350,7 +350,7 @@ export default function TrainingPlanGenerator({ companyName }: TrainingPlanGener
                 className="font-mono text-xs resize-none h-24"
               />
               {workflowValid === true && (
-                <div className="flex items-center gap-1 text-xs text-emerald-600">
+                <div className="flex items-center gap-1 text-xs text-brand-sage-darker">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Workflow loaded — scenarios will be personalized
                 </div>
@@ -396,7 +396,7 @@ export default function TrainingPlanGenerator({ companyName }: TrainingPlanGener
             {/* Actions */}
             <div className="space-y-2 pt-1">
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full bg-primary hover:bg-primary/90 text-white"
                 onClick={handleGenerate}
                 disabled={isGenerating}
               >
@@ -463,7 +463,7 @@ export default function TrainingPlanGenerator({ companyName }: TrainingPlanGener
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                        className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest"
                       >
                         <Download className="h-3.5 w-3.5 mr-1.5" />
                         Export
@@ -506,7 +506,7 @@ export default function TrainingPlanGenerator({ companyName }: TrainingPlanGener
                   <Badge
                     key={mod}
                     variant="outline"
-                    className="text-xs text-emerald-700 border-emerald-200 bg-emerald-50"
+                    className="text-xs text-brand-sage-darker border-brand-sage-lighter bg-brand-sage-lightest"
                   >
                     {mod}
                   </Badge>

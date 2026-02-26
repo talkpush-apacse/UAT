@@ -28,7 +28,7 @@ export default function CopyAnalyticsLinkButton({ slug }: { slug: string }) {
       size="sm"
       onClick={handleCopy}
       disabled={loading}
-      className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 transition-colors"
+      className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest transition-colors"
     >
       {loading ? (
         <>

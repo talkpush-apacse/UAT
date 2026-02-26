@@ -113,7 +113,7 @@ export function SortableStepCard({
   if (editing) {
     return (
       <div ref={setNodeRef} style={style}>
-        <div className="bg-white rounded-xl border-2 border-emerald-200 shadow-md transition-all duration-200">
+        <div className="bg-white rounded-xl border-2 border-brand-sage-lighter shadow-md transition-all duration-200">
           <div className="flex items-center justify-between px-5 py-3 bg-gray-50 rounded-t-xl border-b border-gray-100">
             <span className="text-sm font-semibold text-gray-700">
               Editing Step {item.step_number}
@@ -234,7 +234,7 @@ export function SortableStepCard({
               <Button
                 size="sm"
                 onClick={handleSave}
-                className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                className="bg-primary hover:bg-primary/90 text-white"
               >
                 Save Changes
               </Button>
@@ -252,7 +252,7 @@ export function SortableStepCard({
       style={style}
       className={`transition-all duration-200 ${isDragging ? "z-10 opacity-70" : ""}`}
     >
-      <div className={`group bg-white rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 ${isSelected ? "border-emerald-400 bg-emerald-50/30" : "border-gray-100 hover:border-gray-200"}`}>
+      <div className={`group bg-white rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 ${isSelected ? "border-brand-sage bg-brand-sage-lightest/30" : "border-gray-100 hover:border-gray-200"}`}>
         <div className="flex items-start gap-3 p-4">
           {/* Drag handle or checkbox */}
           {bulkMode ? (
@@ -261,7 +261,7 @@ export function SortableStepCard({
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => onSelectToggle(item.id)}
-                className="h-4 w-4 rounded border-gray-300 text-emerald-600 cursor-pointer"
+                className="h-4 w-4 rounded border-gray-300 text-brand-sage-darker cursor-pointer"
               />
             </div>
           ) : (
@@ -322,7 +322,7 @@ export function SortableStepCard({
                     href={item.view_sample}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-emerald-700 hover:text-emerald-800 hover:underline"
+                    className="inline-flex items-center gap-1 text-xs text-brand-sage-darker hover:text-primary hover:underline"
                   >
                     <LinkIcon className="h-3 w-3" />
                     Reference
@@ -338,7 +338,7 @@ export function SortableStepCard({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50"
+                className="h-8 w-8 p-0 text-gray-400 hover:text-brand-sage-darker hover:bg-brand-sage-lightest"
                 onClick={() => setEditing(true)}
                 title="Edit step"
               >
@@ -348,7 +348,7 @@ export function SortableStepCard({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50"
+                className="h-8 w-8 p-0 text-gray-400 hover:text-brand-sage-darker hover:bg-brand-sage-lightest"
                 onClick={() => onDuplicate(item.id)}
                 title="Duplicate step"
               >

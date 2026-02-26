@@ -26,7 +26,7 @@ export default function PublishReviewButton({ slug }: { slug: string }) {
       size="sm"
       onClick={handlePublish}
       disabled={state === "loading"}
-      className="bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-60"
+      className="bg-primary hover:bg-primary/90 text-white transition-colors disabled:opacity-60"
     >
       {state === "loading" ? (
         <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Publishing…</>

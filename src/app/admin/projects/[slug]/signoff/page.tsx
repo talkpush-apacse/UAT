@@ -32,9 +32,9 @@ export default async function SignoffPage({
   return (
     <div className="max-w-2xl">
       <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-6">
-        <Link href="/admin" className="hover:text-emerald-700 transition-colors">UAT Admin</Link>
+        <Link href="/admin" className="hover:text-brand-sage-darker transition-colors">UAT Admin</Link>
         <span>/</span>
-        <Link href={`/admin/projects/${params.slug}`} className="hover:text-emerald-700 transition-colors">
+        <Link href={`/admin/projects/${params.slug}`} className="hover:text-brand-sage-darker transition-colors">
           {project.company_name}
         </Link>
         <span>/</span>

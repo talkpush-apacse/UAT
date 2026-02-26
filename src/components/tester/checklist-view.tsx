@@ -136,7 +136,7 @@ export default function ChecklistView({
             <p className="text-sm text-gray-500">Hi {tester.name}</p>
           </div>
           {/* Issue #5: keep fraction counter only; removed "X% complete" text */}
-          <p className="text-sm sm:text-base font-semibold text-emerald-700 flex-shrink-0 ml-4">
+          <p className="text-sm sm:text-base font-semibold text-brand-sage-darker flex-shrink-0 ml-4">
             {completedCount} / {totalCount}
           </p>
         </div>
@@ -153,7 +153,7 @@ export default function ChecklistView({
 
       {/* Before You Begin — collapsible guide */}
       <div className="mt-4">
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-brand-lavender-lighter bg-brand-lavender-lightest shadow-sm overflow-hidden">
           {/* Issue #8: aria-expanded, aria-label, aria-controls on toggle button */}
           <button
             onClick={toggleGuide}
@@ -163,15 +163,15 @@ export default function ChecklistView({
             className="w-full flex items-center justify-between px-4 py-3 text-left"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-4 h-4 text-emerald-700" />
+              <div className="w-7 h-7 rounded-lg bg-brand-lavender-lighter flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-4 h-4 text-brand-lavender-darker" />
               </div>
-              <span className="text-sm font-medium text-emerald-800">Before You Begin</span>
+              <span className="text-sm font-medium text-brand-lavender-darker">Before You Begin</span>
             </div>
             {isGuideOpen ? (
-              <ChevronUp className="w-4 h-4 text-emerald-400" />
+              <ChevronUp className="w-4 h-4 text-brand-lavender" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-emerald-400" />
+              <ChevronDown className="w-4 h-4 text-brand-lavender" />
             )}
           </button>
 
@@ -188,27 +188,27 @@ export default function ChecklistView({
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">How to use this checklist</p>
                 <ul className="space-y-1.5 text-sm text-gray-600">
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-400 mt-0.5">&#8226;</span>
+                    <span className="text-brand-lavender mt-0.5">&#8226;</span>
                     Follow each step in order from top to bottom
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-400 mt-0.5">&#8226;</span>
+                    <span className="text-brand-lavender mt-0.5">&#8226;</span>
                     Mark each step as <span className="font-medium text-green-600">Pass</span>, <span className="font-medium text-red-500">Fail</span>, <span className="font-medium text-gray-500">N/A</span>, or <span className="font-medium text-amber-600">Up For Review</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-400 mt-0.5">&#8226;</span>
+                    <span className="text-brand-lavender mt-0.5">&#8226;</span>
                     Add comments or attach screenshots when something fails
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-400 mt-0.5">&#8226;</span>
+                    <span className="text-brand-lavender mt-0.5">&#8226;</span>
                     Your progress is saved automatically
                   </li>
                 </ul>
               </div>
 
               {/* Troubleshooting */}
-              <div className="border-t border-emerald-100 pt-3">
-                <p className="text-xs font-medium text-emerald-600 uppercase tracking-wide mb-2">Troubleshooting</p>
+              <div className="border-t border-brand-lavender-lighter pt-3">
+                <p className="text-xs font-medium text-brand-lavender-darker uppercase tracking-wide mb-2">Troubleshooting</p>
                 <div className="space-y-2">
                   <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
                     <Search className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
@@ -217,7 +217,7 @@ export default function ChecklistView({
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
-                    <LogIn className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <LogIn className="w-4 h-4 text-brand-sage mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-gray-600">
                       If unable to login, please check you have activated your account through an invitation email from Talkpush.
                     </p>
@@ -266,7 +266,7 @@ export default function ChecklistView({
                 </div>
                 <Link
                   href={`/test/${project.slug}/results?tester=${tester.id}`}
-                  className="flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-200 bg-white py-3.5 px-6 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-colors"
+                  className="flex items-center justify-center gap-2 rounded-xl border-2 border-brand-sage-lighter bg-white py-3.5 px-6 text-sm font-semibold text-brand-sage-darker hover:bg-brand-sage-lightest hover:border-brand-sage transition-colors"
                 >
                   View My Results
                   <ArrowRight className="h-4 w-4" />
@@ -282,7 +282,7 @@ export default function ChecklistView({
                     flex items-center justify-center gap-2 shadow-sm
                     ${
                       allStepsCompleted && !isMarkingComplete
-                        ? "bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white cursor-pointer"
+                        ? "bg-primary hover:bg-primary/90 active:bg-primary/80 text-white cursor-pointer"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
                     }
                   `}

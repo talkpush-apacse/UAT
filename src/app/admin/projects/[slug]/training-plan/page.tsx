@@ -29,7 +29,7 @@ export default async function TrainingPlanPage({
     <div>
       <Link
         href={`/admin/projects/${project.slug}`}
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-700 transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors mb-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to {project.company_name}

@@ -147,7 +147,7 @@ export default function CompleteReviewButton({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleComplete}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
             Complete Review

@@ -51,7 +51,7 @@ export default function UploadForm({
     <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
       <CardHeader className="px-5 py-4 bg-gray-50/50 rounded-t-xl border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <Upload className="h-4 w-4 text-emerald-700" />
+          <Upload className="h-4 w-4 text-brand-sage-darker" />
           <CardTitle className="text-base font-semibold text-gray-900">Upload Checklist</CardTitle>
         </div>
         <p className="text-xs text-gray-400 mt-1 leading-relaxed">
@@ -63,7 +63,7 @@ export default function UploadForm({
         <form ref={formRef} action={formAction} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="file" className="text-xs text-gray-500">Checklist File</Label>
-            <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-emerald-300 hover:bg-emerald-50/50 transition-all duration-200">
+            <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-brand-lavender-lighter hover:bg-brand-lavender-lightest transition-all duration-200">
               <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
               <p className="text-sm font-medium text-gray-600 mb-1">Drop your file here or click to browse</p>
               <p className="text-xs text-gray-400 mb-3">XLSX or CSV format</p>

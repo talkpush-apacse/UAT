@@ -27,9 +27,9 @@ const TYPE_STYLES: Record<
   },
   demo: {
     label: 'Demo',
-    bg: 'bg-teal-50',
-    text: 'text-teal-700',
-    border: 'border-teal-200',
+    bg: 'bg-brand-sage-lightest',
+    text: 'text-brand-sage-darker',
+    border: 'border-brand-sage-lighter',
   },
   guided_exercise: {
     label: 'Guided Exercise',
@@ -76,7 +76,7 @@ export default function SegmentCard({ segment }: SegmentCardProps) {
             {segment.title}
           </span>
           {segment.isPersonalized && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-brand-sage-lightest text-brand-sage-darker border border-brand-sage-lighter">
               ✨ Personalized
             </span>
           )}

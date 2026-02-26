@@ -79,7 +79,7 @@ const FINDING_COLORS: Record<string, string> = {
 const ACTOR_BADGE: Record<string, string> = {
   Candidate: "bg-sky-100 text-sky-800 border-sky-200",
   Recruiter: "bg-violet-100 text-violet-800 border-violet-200",
-  Talkpush: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
 }
 
 const RESOLUTION_BADGE: Record<string, string> = {
@@ -432,7 +432,7 @@ export default function AnalyticsCharts({
       {/*  UAT Summary Report                                 */}
       {/* ════════════════════════════════════════════════════ */}
       <div className="flex items-center gap-3 pt-2">
-        <ClipboardList className="h-5 w-5 text-emerald-700" />
+        <ClipboardList className="h-5 w-5 text-brand-sage-darker" />
         <h2 className="text-base font-semibold text-gray-900">UAT Summary Report</h2>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
@@ -442,10 +442,10 @@ export default function AnalyticsCharts({
         {/* Registered */}
         <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <CardContent className="pt-6 pb-5 flex flex-col items-center text-center">
-            <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-              <Users className="h-6 w-6 text-emerald-700" />
+            <div className="h-12 w-12 rounded-full bg-brand-sage-lightest flex items-center justify-center mb-3">
+              <Users className="h-6 w-6 text-brand-sage-darker" />
             </div>
-            <p className="text-4xl font-bold text-emerald-700">{completionStats.registered}</p>
+            <p className="text-4xl font-bold text-brand-sage-darker">{completionStats.registered}</p>
             <p className="text-sm font-medium text-gray-700 mt-1">Registered</p>
             <p className="text-xs text-gray-400 mt-0.5">Testers who signed up</p>
           </CardContent>
@@ -793,7 +793,7 @@ export default function AnalyticsCharts({
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-emerald-700" />
+                <Users className="h-4 w-4 text-brand-sage-darker" />
                 <CardTitle className="text-sm font-semibold text-gray-700">Tester Participation Summary</CardTitle>
               </div>
               <span className="text-xs text-gray-500">
@@ -834,7 +834,7 @@ export default function AnalyticsCharts({
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden w-20">
                               <div
-                                className="h-full bg-emerald-500 rounded-full"
+                                className="h-full bg-brand-sage rounded-full"
                                 style={{ width: t.total === 0 ? "0%" : `${Math.round((t.answered / t.total) * 100)}%` }}
                               />
                             </div>

@@ -29,7 +29,7 @@ import {
 
 const ACTOR_STYLES: Record<string, string> = {
   Candidate: "bg-sky-50 text-sky-800 border-sky-200",
-  Talkpush: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
   Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
 }
 
@@ -178,7 +178,7 @@ export default async function ProjectDetailPage({
     <div>
       <Link
         href="/admin"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-700 transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors mb-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to UAT Checklists
@@ -194,7 +194,7 @@ export default async function ProjectDetailPage({
               href={`/test/${project.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-emerald-700 underline hover:text-emerald-900"
+              className="text-brand-sage-darker underline hover:text-primary"
             >
               /test/{project.slug}
             </a>
@@ -236,8 +236,8 @@ export default async function ProjectDetailPage({
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
         {actionCards.map((card) => (
           <Link key={card.href} href={card.href}>
-            <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 hover:bg-gray-50 transition-all duration-200 cursor-pointer p-5 text-center">
-              <card.icon className="h-5 w-5 text-gray-400 group-hover:text-emerald-700 mx-auto mb-2 transition-colors" />
+            <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-sage-lighter hover:bg-gray-50 transition-all duration-200 cursor-pointer p-5 text-center">
+              <card.icon className="h-5 w-5 text-gray-400 group-hover:text-brand-sage-darker mx-auto mb-2 transition-colors" />
               <p className="text-sm font-medium text-gray-700">{card.label}</p>
               <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
             </div>
@@ -247,7 +247,7 @@ export default async function ProjectDetailPage({
 
       <div className="flex gap-2 mb-8">
         <a href={`/admin/projects/${project.slug}/export-steps`}>
-          <Button variant="outline" size="sm" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+          <Button variant="outline" size="sm" className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
             <Download className="h-3.5 w-3.5 mr-1.5" />
             Export Steps (.xlsx)
           </Button>

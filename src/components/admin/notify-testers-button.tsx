@@ -116,7 +116,7 @@ export default function NotifyTestersButton({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleSend}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
             >
               <Mail className="h-3.5 w-3.5 mr-1.5" />
               Send Emails

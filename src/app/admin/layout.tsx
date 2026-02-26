@@ -11,14 +11,14 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50/50">
       <nav className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="h-1 bg-gradient-to-r from-emerald-800 to-emerald-600" />
+        <div className="h-1.5 bg-gradient-to-r from-[hsl(36,86%,64%)] via-[hsl(298,72%,85%)] via-60% to-[hsl(139,28%,74%)]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-14 items-center">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <LayoutDashboard className="h-4 w-4 text-white" />
               </div>
-              <Link href="/admin" className="font-semibold text-lg text-gray-900 hover:text-emerald-700 transition-colors">
+              <Link href="/admin" className="font-semibold text-lg text-gray-900 hover:text-brand-sage-darker transition-colors">
                 UAT Admin
               </Link>
             </div>

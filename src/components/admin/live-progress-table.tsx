@@ -157,7 +157,7 @@ export default function LiveProgressTable({
           variant="outline"
           size="sm"
           onClick={handleRefresh}
-          className="h-7 text-xs gap-1 text-gray-600 hover:text-emerald-700 hover:border-emerald-300"
+          className="h-7 text-xs gap-1 text-gray-600 hover:text-brand-sage-darker hover:border-brand-sage-lighter"
         >
           <RefreshCw className="h-3 w-3" />
           Refresh
@@ -218,7 +218,7 @@ export default function LiveProgressTable({
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <Link href={`/test/${slug}/checklist?tester=${tester.id}`} target="_blank">
-                          <Button variant="outline" size="sm" className="h-7 px-2 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+                          <Button variant="outline" size="sm" className="h-7 px-2 text-xs text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
                             <ExternalLink className="h-3 w-3 mr-1" />
                             View
                           </Button>

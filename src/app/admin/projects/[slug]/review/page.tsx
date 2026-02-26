@@ -216,13 +216,13 @@ export default async function ReviewPage({
     <div>
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-6">
-        <Link href="/admin" className="hover:text-emerald-700 transition-colors">
+        <Link href="/admin" className="hover:text-brand-sage-darker transition-colors">
           UAT Admin
         </Link>
         <span>/</span>
         <Link
           href={`/admin/projects/${project.slug}`}
-          className="hover:text-emerald-700 transition-colors"
+          className="hover:text-brand-sage-darker transition-colors"
         >
           {project.company_name}
         </Link>
@@ -233,7 +233,7 @@ export default async function ReviewPage({
       <div className="flex items-center gap-3 mb-8">
         <Link
           href={`/admin/projects/${project.slug}`}
-          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-700 transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Project

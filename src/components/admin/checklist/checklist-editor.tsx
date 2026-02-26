@@ -244,7 +244,7 @@ export default function ChecklistEditor({
               />
               <Button
                 onClick={() => setAdding(true)}
-                className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                className="bg-primary hover:bg-primary/90 text-white"
                 disabled={adding}
               >
                 <Plus className="h-4 w-4 mr-1.5" />
@@ -275,7 +275,7 @@ export default function ChecklistEditor({
               variant="outline"
               size="sm"
               onClick={() => setAdding(true)}
-              className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+              className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest"
             >
               <Plus className="h-4 w-4 mr-1" />
               Add your first step

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import defaultTheme from "tailwindcss/defaultTheme";
 
 const config: Config = {
     darkMode: ["class"],
@@ -9,6 +10,9 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['var(--font-dm-sans)', ...defaultTheme.fontFamily.sans],
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -49,7 +53,33 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+  			brand: {
+  				sage: {
+  					lightest: 'hsl(var(--brand-sage-lightest))',
+  					lighter: 'hsl(var(--brand-sage-lighter))',
+  					DEFAULT: 'hsl(var(--brand-sage))',
+  					darker: 'hsl(var(--brand-sage-darker))',
+  				},
+  				lavender: {
+  					lightest: 'hsl(var(--brand-lavender-lightest))',
+  					lighter: 'hsl(var(--brand-lavender-lighter))',
+  					DEFAULT: 'hsl(var(--brand-lavender))',
+  					darker: 'hsl(var(--brand-lavender-darker))',
+  				},
+  				pink: {
+  					lightest: 'hsl(var(--brand-pink-lightest))',
+  					lighter: 'hsl(var(--brand-pink-lighter))',
+  					DEFAULT: 'hsl(var(--brand-pink))',
+  					darker: 'hsl(var(--brand-pink-darker))',
+  				},
+  				amber: {
+  					lightest: 'hsl(var(--brand-amber-lightest))',
+  					lighter: 'hsl(var(--brand-amber-lighter))',
+  					DEFAULT: 'hsl(var(--brand-amber))',
+  					darker: 'hsl(var(--brand-amber-darker))',
+  				},
+  			},
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

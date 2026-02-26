@@ -23,7 +23,7 @@ const PATH_STYLES: Record<string, string> = {
 
 const ACTOR_STYLES: Record<string, string> = {
   Candidate: "bg-sky-50 text-sky-800 border-sky-200",
-  Talkpush: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
   Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
 }
 
@@ -222,7 +222,7 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
               type="checkbox"
               checked={selected}
               onChange={() => onToggle(selectionKey)}
-              className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 flex-shrink-0 cursor-pointer"
+              className="h-4 w-4 rounded border-gray-300 text-brand-sage-darker focus:ring-brand-lavender-darker flex-shrink-0 cursor-pointer"
               aria-label={`Select step ${step.stepNumber} for bulk action`}
             />
           )}
@@ -472,7 +472,7 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
                         if (el) el.indeterminate = someTesterSelected
                       }}
                       onChange={() => toggleAllForTester(tester.id, steps)}
-                      className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      className="h-4 w-4 rounded border-gray-300 text-brand-sage-darker focus:ring-brand-lavender-darker cursor-pointer"
                       aria-label={`Select all unresolved steps for ${tester.name}`}
                     />
                   )}
@@ -535,7 +535,7 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
                   type="button"
                   onClick={handleBulkResolve}
                   disabled={bulkLoading}
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {bulkLoading ? (
                     <span className="animate-pulse">Resolving...</span>

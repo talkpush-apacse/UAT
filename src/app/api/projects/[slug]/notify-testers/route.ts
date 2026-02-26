@@ -192,7 +192,7 @@ function buildEmailHtml({
   <div style="max-width: 520px; margin: 0 auto; padding: 40px 20px;">
     <!-- Logo / Header -->
     <div style="text-align: center; margin-bottom: 32px;">
-      <div style="display: inline-block; background-color: #00BFA5; color: white; font-weight: 700; font-size: 14px; padding: 8px 16px; border-radius: 8px; letter-spacing: 0.5px;">
+      <div style="display: inline-block; background-color: #6B9E7A; color: white; font-weight: 700; font-size: 14px; padding: 8px 16px; border-radius: 8px; letter-spacing: 0.5px;">
         TALKPUSH UAT
       </div>
     </div>
@@ -232,7 +232,7 @@ function buildEmailHtml({
 
       <!-- CTA Button -->
       <div style="text-align: center;">
-        <a href="${resultsUrl}" style="display: inline-block; background-color: #00BFA5; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 32px; border-radius: 8px;">
+        <a href="${resultsUrl}" style="display: inline-block; background-color: #6B9E7A; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 32px; border-radius: 8px;">
           View My Results
         </a>
       </div>

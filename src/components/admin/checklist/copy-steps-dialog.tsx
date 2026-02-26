@@ -50,7 +50,7 @@ function groupSteps(steps: StepPreview[]): StepGroup[] {
 
 const ACTOR_CHIP: Record<string, string> = {
   Candidate: "bg-sky-50 text-sky-800 border-sky-200",
-  Talkpush: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
   Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
 }
 
@@ -216,7 +216,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                     value={selectedId}
                     onChange={(e) => setSelectedId(e.target.value)}
                     className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 pr-9 text-sm text-gray-800
-                      focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+                      focus:outline-none focus:ring-2 focus:ring-brand-lavender-darker focus:border-brand-lavender-darker
                       disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">— Select a project —</option>
@@ -259,7 +259,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                 <button
                   type="button"
                   onClick={handleSelectAll}
-                  className="text-xs font-medium text-teal-700 hover:text-teal-900 transition-colors"
+                  className="text-xs font-medium text-brand-sage-darker hover:text-primary transition-colors"
                 >
                   Select All
                 </button>
@@ -312,7 +312,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                           type="checkbox"
                           checked={selectedStepIds.has(step.id)}
                           onChange={() => handleToggleStep(step.id)}
-                          className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-teal-600 accent-teal-600 cursor-pointer"
+                          className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-brand-sage-darker accent-brand-sage-darker cursor-pointer"
                         />
                         {/* Step number badge */}
                         <span className="flex-shrink-0 w-6 h-6 rounded-md bg-gray-100 text-xs font-semibold text-gray-600 flex items-center justify-center">
@@ -356,7 +356,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                   loadingSteps ||
                   (selectedProject?.itemCount ?? 0) === 0
                 }
-                className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                className="bg-primary hover:bg-primary/90 text-white"
               >
                 {loadingSteps ? (
                   <>
@@ -381,7 +381,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
               <Button
                 onClick={handleCopy}
                 disabled={selectedStepIds.size === 0 || copying}
-                className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                className="bg-primary hover:bg-primary/90 text-white"
               >
                 {copying ? (
                   <>

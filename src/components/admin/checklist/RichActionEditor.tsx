@@ -151,7 +151,7 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
           type="button"
           onClick={handleOpenLinkDialog}
           title="Insert hyperlink"
-          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-gray-200 bg-white text-gray-600 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-colors"
+          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-gray-200 bg-white text-gray-600 hover:bg-brand-sage-lightest hover:border-brand-sage-lighter hover:text-brand-sage-darker transition-colors"
         >
           <LinkIcon />
           Link
@@ -162,7 +162,7 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
           type="button"
           onClick={() => { setShowLinkDialog(false); setShowColorPicker(p => !p) }}
           title="Add text color"
-          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-gray-200 bg-white text-gray-600 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-colors"
+          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-gray-200 bg-white text-gray-600 hover:bg-brand-sage-lightest hover:border-brand-sage-lighter hover:text-brand-sage-darker transition-colors"
         >
           <ColorIcon />
           Color
@@ -205,7 +205,7 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
                   onChange={e => setLinkText(e.target.value)}
                   onKeyDown={handleLinkKeyDown}
                   placeholder="e.g. Click here"
-                  className="w-full text-sm border border-gray-200 rounded px-2.5 py-1.5 outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                  className="w-full text-sm border border-gray-200 rounded px-2.5 py-1.5 outline-none focus:border-brand-lavender focus:ring-1 focus:ring-brand-lavender-lighter"
                 />
               </div>
               <div>
@@ -216,14 +216,14 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
                   onChange={e => setLinkUrl(e.target.value)}
                   onKeyDown={handleLinkKeyDown}
                   placeholder="https://example.com"
-                  className="w-full text-sm border border-gray-200 rounded px-2.5 py-1.5 outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                  className="w-full text-sm border border-gray-200 rounded px-2.5 py-1.5 outline-none focus:border-brand-lavender focus:ring-1 focus:ring-brand-lavender-lighter"
                 />
               </div>
               <div className="flex gap-2 pt-0.5">
                 <button
                   type="button"
                   onClick={handleInsertLink}
-                  className="flex-1 py-1.5 text-xs font-medium rounded bg-emerald-700 text-white hover:bg-emerald-800 transition-colors"
+                  className="flex-1 py-1.5 text-xs font-medium rounded bg-primary text-white hover:bg-primary/90 transition-colors"
                 >
                   Insert
                 </button>

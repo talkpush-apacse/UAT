@@ -46,7 +46,7 @@ interface AdminReview {
 const ACTOR_BADGE: Record<string, string> = {
   Candidate: "bg-sky-100 text-sky-800 border-sky-200",
   Recruiter: "bg-violet-100 text-violet-800 border-violet-200",
-  Talkpush: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
 }
 
 const RESOLUTION_CONFIG: Record<string, { label: string; className: string; icon: typeof Clock }> = {
@@ -141,7 +141,7 @@ export default function TesterResultsView({
       {/* Back to checklist */}
       <Link
         href={`/test/${project.slug}/checklist?tester=${testerId}`}
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-emerald-700 transition-colors mb-6"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors mb-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to Checklist
@@ -182,7 +182,7 @@ export default function TesterResultsView({
         </Card>
         <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <CardContent className="pt-4 pb-3 text-center">
-            <p className="text-2xl font-bold text-emerald-600">{stats.resolvedCount}</p>
+            <p className="text-2xl font-bold text-brand-sage-darker">{stats.resolvedCount}</p>
             <p className="text-xs text-gray-500 mt-0.5">Resolved</p>
           </CardContent>
         </Card>
