@@ -15,6 +15,7 @@ export const ACTOR_STYLES: Record<string, string> = {
   Candidate: "bg-sky-50 text-sky-800 border-sky-200",
   Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
   Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
+  "Referrer/Vendor": "bg-amber-50 text-amber-800 border-amber-200",
 }
 
 export const PATH_STYLES: Record<string, string> = {

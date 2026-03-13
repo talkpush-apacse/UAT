@@ -89,7 +89,7 @@ export function SortableStepCard({
     const result = await updateChecklistItem(slug, {
       id: item.id,
       path: editData.path as "Happy" | "Non-Happy" | null,
-      actor: editData.actor as "Candidate" | "Talkpush" | "Recruiter",
+      actor: editData.actor as "Candidate" | "Talkpush" | "Recruiter" | "Referrer/Vendor",
       action: editData.action,
       viewSample: editData.view_sample || "",
       crmModule: editData.crm_module || "",
@@ -162,6 +162,7 @@ export function SortableStepCard({
                     <SelectItem value="Candidate">Candidate</SelectItem>
                     <SelectItem value="Talkpush">Talkpush</SelectItem>
                     <SelectItem value="Recruiter">Recruiter</SelectItem>
+                    <SelectItem value="Referrer/Vendor">Referrer/Vendor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

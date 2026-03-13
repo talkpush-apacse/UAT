@@ -52,7 +52,7 @@ export function AddStepForm({
     const result = await addChecklistItem(slug, {
       projectId,
       path: newItem.path as "Happy" | "Non-Happy" | null,
-      actor: newItem.actor as "Candidate" | "Talkpush" | "Recruiter",
+      actor: newItem.actor as "Candidate" | "Talkpush" | "Recruiter" | "Referrer/Vendor",
       action: newItem.action,
       viewSample: newItem.viewSample,
       crmModule: newItem.crmModule,
@@ -132,6 +132,7 @@ export function AddStepForm({
                 <SelectItem value="Candidate">Candidate</SelectItem>
                 <SelectItem value="Talkpush">Talkpush</SelectItem>
                 <SelectItem value="Recruiter">Recruiter</SelectItem>
+                <SelectItem value="Referrer/Vendor">Referrer/Vendor</SelectItem>
               </SelectContent>
             </Select>
           </div>

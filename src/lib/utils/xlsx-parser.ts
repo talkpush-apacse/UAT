@@ -16,7 +16,7 @@ interface ParseResult {
   errors: string[]
 }
 
-const VALID_ACTORS = ['Candidate', 'Talkpush', 'Recruiter']
+const VALID_ACTORS = ['Candidate', 'Talkpush', 'Recruiter', 'Referrer/Vendor']
 
 function normalizePath(value: string): string | null {
   const cleaned = value.trim().toLowerCase().replace(/[\s_-]+/g, '')

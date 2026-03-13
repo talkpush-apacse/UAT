@@ -1,0 +1,119 @@
+[
+  {
+    "version": "1.9.0",
+    "codename": "Amber Gate",
+    "changes": [
+      "Added About dialog with full version history",
+      "Added Referrer/Vendor actor type for checklist steps",
+      "Created CHANGELOG.json with 9 retroactive versions"
+    ],
+    "deployed_at": "2026-03-13"
+  },
+  {
+    "version": "1.8.0",
+    "codename": "Rising Spark",
+    "changes": [
+      "Applied Talkpush Sign multi-chromatic pastel palette",
+      "Switched to DM Sans font across all pages",
+      "Added StatusBadge component with focus rings",
+      "Replaced Export Results with Export Steps button"
+    ],
+    "deployed_at": "2026-02-26"
+  },
+  {
+    "version": "1.7.0",
+    "codename": "Iron Ledger",
+    "changes": [
+      "Added Complete Review button for admin workflow",
+      "Added XLSX export for Steps Requiring Attention",
+      "Parallelized queries and batched N+1 loops",
+      "Added loading skeletons and lazy-loaded Recharts",
+      "Fixed stale data with cache no-store on Supabase clients"
+    ],
+    "deployed_at": "2026-02-26"
+  },
+  {
+    "version": "1.6.0",
+    "codename": "Open Gate",
+    "changes": [
+      "Replaced free-text company name with fixed dropdown",
+      "Added UAT title field to projects",
+      "Added PWA support for iOS home screen installation",
+      "Grouped admin dashboard checklists by client",
+      "Expanded dashboard filter to match names and slugs"
+    ],
+    "deployed_at": "2026-02-25"
+  },
+  {
+    "version": "1.5.0",
+    "codename": "Swift Current",
+    "changes": [
+      "Added AI-powered UAT summary tool (GPT-5.1)",
+      "Added tester results page and review notification emails",
+      "Added activity timeline and bulk mark-as-resolved",
+      "Added training plan generator with rule-based engine",
+      "Consolidated project detail buttons into single row"
+    ],
+    "deployed_at": "2026-02-24"
+  },
+  {
+    "version": "1.4.0",
+    "codename": "Amber Dusk",
+    "changes": [
+      "Unified analytics page with publish-to-client button",
+      "Redesigned Steps Requiring Attention as 3-column cards",
+      "Added copy-for-AI clipboard button on analytics",
+      "Renamed tester comments and updated step labels"
+    ],
+    "deployed_at": "2026-02-23"
+  },
+  {
+    "version": "1.3.0",
+    "codename": "Quiet Tide",
+    "changes": [
+      "10 UI/UX polish fixes across tester and admin pages",
+      "Added Talkpush Findings Breakdown donut chart",
+      "Selective step copy and modern step number display",
+      "Fixed admin review saves and analytics score accuracy"
+    ],
+    "deployed_at": "2026-02-22"
+  },
+  {
+    "version": "1.2.0",
+    "codename": "Stone Path",
+    "changes": [
+      "Added 4 client-facing report sections to analytics",
+      "Added public share link for analytics page",
+      "Added For Retesting finding with score exclusion",
+      "Recalibrated UAT readiness score with admin findings",
+      "Security hardening and code quality sweep",
+      "Optimized PDF compression and scoping"
+    ],
+    "deployed_at": "2026-02-20"
+  },
+  {
+    "version": "1.1.0",
+    "codename": "Silver Bloom",
+    "changes": [
+      "Added admin-only review panel with findings/comments",
+      "Added UAT Summary Report with 4 analytics sections",
+      "Redesigned tester registration with scenario card",
+      "Added hyperlink dialog and text color picker to editor",
+      "Added Mark Test Complete button for testers"
+    ],
+    "deployed_at": "2026-02-19"
+  },
+  {
+    "version": "1.0.0",
+    "codename": "First Light",
+    "changes": [
+      "Complete UAT Checklist Web App — initial release",
+      "Admin dashboard with project management",
+      "Tester checklist with inline image previews",
+      "Card-based checklist editor with drag and reorder",
+      "Site-wide SaaS redesign with dark green branding",
+      "Before You Begin guide for testers"
+    ],
+    "deployed_at": "2026-02-18"
+  }
+]

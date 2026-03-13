@@ -80,6 +80,7 @@ const ACTOR_BADGE: Record<string, string> = {
   Candidate: "bg-sky-100 text-sky-800 border-sky-200",
   Recruiter: "bg-violet-100 text-violet-800 border-violet-200",
   Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
+  "Referrer/Vendor": "bg-amber-100 text-amber-800 border-amber-200",
 }
 
 const RESOLUTION_BADGE: Record<string, string> = {

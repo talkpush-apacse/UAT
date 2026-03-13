@@ -2,6 +2,7 @@ import Link from "next/link"
 import { logoutAdmin } from "@/lib/actions/auth"
 import { Button } from "@/components/ui/button"
 import { LogOut, LayoutDashboard } from "lucide-react"
+import { AboutDialog } from "@/components/about/AboutDialog"
 
 export default function AdminLayout({
   children,
@@ -22,12 +23,15 @@ export default function AdminLayout({
                 UAT Admin
               </Link>
             </div>
-            <form action={logoutAdmin}>
-              <Button variant="ghost" size="sm" type="submit" className="text-gray-500 hover:text-gray-700">
-                <LogOut className="h-4 w-4 mr-1.5" />
-                Logout
-              </Button>
-            </form>
+            <div className="flex items-center gap-1">
+              <AboutDialog />
+              <form action={logoutAdmin}>
+                <Button variant="ghost" size="sm" type="submit" className="text-gray-500 hover:text-gray-700">
+                  <LogOut className="h-4 w-4 mr-1.5" />
+                  Logout
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </nav>
