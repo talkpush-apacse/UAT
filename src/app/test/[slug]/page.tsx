@@ -62,10 +62,6 @@ export default async function TesterRegistrationPage({
           />
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-500">
-          Powered by Talkpush UAT
-        </p>
       </div>
     </div>
   )
