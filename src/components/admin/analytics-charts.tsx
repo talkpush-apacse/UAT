@@ -76,12 +76,7 @@ const FINDING_COLORS: Record<string, string> = {
   "Not Yet Reviewed": "#d1d5db",
 }
 
-const ACTOR_BADGE: Record<string, string> = {
-  Candidate: "bg-sky-100 text-sky-800 border-sky-200",
-  Recruiter: "bg-violet-100 text-violet-800 border-violet-200",
-  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
-  "Referrer/Vendor": "bg-amber-100 text-amber-800 border-amber-200",
-}
+import { ACTOR_COLORS_MEDIUM as ACTOR_BADGE } from "@/lib/constants"
 
 const RESOLUTION_BADGE: Record<string, string> = {
   "Not Yet Started": "bg-amber-100 text-amber-700",

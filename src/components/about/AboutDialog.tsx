@@ -1,6 +1,6 @@
 "use client"
 
-import { Info } from "lucide-react"
+import { CircleHelp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -20,8 +20,8 @@ export function AboutDialog() {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
-          <Info className="h-4 w-4 mr-1.5" />
-          About
+          <CircleHelp className="h-4 w-4 mr-1.5" />
+          Help
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

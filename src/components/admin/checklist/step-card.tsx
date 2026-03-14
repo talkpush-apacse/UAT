@@ -44,6 +44,7 @@ import ReactMarkdown from "react-markdown"
 import rehypeRaw from "rehype-raw"
 import RichActionEditor from "./RichActionEditor"
 import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES } from "./types"
+import type { Actor } from "@/lib/constants"
 
 /* ------------------------------------------------------------------ */
 /*  SortableStepCard                                                   */
@@ -89,7 +90,7 @@ export function SortableStepCard({
     const result = await updateChecklistItem(slug, {
       id: item.id,
       path: editData.path as "Happy" | "Non-Happy" | null,
-      actor: editData.actor as "Candidate" | "Talkpush" | "Recruiter" | "Referrer/Vendor",
+      actor: editData.actor as Actor,
       action: editData.action,
       viewSample: editData.view_sample || "",
       crmModule: editData.crm_module || "",

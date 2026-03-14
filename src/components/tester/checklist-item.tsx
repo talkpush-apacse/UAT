@@ -47,13 +47,7 @@ const STATUS_OPTIONS = [
   { value: "Blocked", label: "Up For Review" },
 ] as const
 
-/** Color scheme for actor chips shown in the step card header */
-const ACTOR_CHIP_STYLES: Record<string, string> = {
-  Candidate: "bg-sky-50 text-sky-800 border-sky-200",
-  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
-  Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
-  "Referrer/Vendor": "bg-amber-50 text-amber-800 border-amber-200",
-}
+import { ACTOR_COLORS as ACTOR_CHIP_STYLES } from "@/lib/constants"
 
 const STATUS_STYLES: Record<string, { active: string; inactive: string }> = {
   Pass: {

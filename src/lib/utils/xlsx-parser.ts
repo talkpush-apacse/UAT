@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs'
+import { ACTORS } from '@/lib/constants'
 
 export interface ParsedChecklistItem {
   stepNumber: number
@@ -16,7 +17,7 @@ interface ParseResult {
   errors: string[]
 }
 
-const VALID_ACTORS = ['Candidate', 'Talkpush', 'Recruiter', 'Referrer/Vendor']
+const VALID_ACTORS: readonly string[] = ACTORS
 
 function normalizePath(value: string): string | null {
   const cleaned = value.trim().toLowerCase().replace(/[\s_-]+/g, '')

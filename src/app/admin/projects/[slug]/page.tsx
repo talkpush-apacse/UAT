@@ -12,10 +12,8 @@ import type { TesterProgress } from "@/components/admin/live-progress-table"
 import CopyLinkButton from "@/components/admin/copy-link-button"
 import CopyAnalyticsLinkButton from "@/components/admin/copy-analytics-link-button"
 import { generateShareToken } from "@/lib/utils/share-token"
-import DeleteProjectButton from "@/components/admin/delete-project-button"
-import DuplicateProjectButton from "@/components/admin/duplicate-project-button"
+import MoreActionsDropdown from "@/components/admin/more-actions-dropdown"
 import {
-  ArrowLeft,
   Pencil,
   Upload,
   ListChecks,
@@ -25,14 +23,10 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Sparkles,
+  ChevronRight,
 } from "lucide-react"
 
-const ACTOR_STYLES: Record<string, string> = {
-  Candidate: "bg-sky-50 text-sky-800 border-sky-200",
-  Talkpush: "bg-brand-sage-lightest text-brand-sage-darker border-brand-sage-lighter",
-  Recruiter: "bg-violet-50 text-violet-800 border-violet-200",
-  "Referrer/Vendor": "bg-amber-50 text-amber-800 border-amber-200",
-}
+import { ACTOR_COLORS as ACTOR_STYLES } from "@/lib/constants"
 
 const PATH_STYLES: Record<string, string> = {
   Happy: "bg-green-50 text-green-700 border-green-200",
@@ -177,20 +171,19 @@ export default async function ProjectDetailPage({
 
   return (
     <div>
-      <Link
-        href="/admin"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors mb-6"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Back to UAT Checklists
-      </Link>
-
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{project.title || project.company_name}</h1>
-          <p className="text-xs text-gray-500 mt-0.5">{project.company_name}</p>
-          <p className="text-xs text-gray-400 font-mono mt-0.5">
-            Tester URL:{" "}
+          {/* P3 — Client name as meta overline */}
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">
+            {project.company_name}
+          </p>
+          {/* P3 — Page title at 28px/700 */}
+          <h1 className="text-[28px] font-bold text-gray-900 leading-tight mb-1">
+            {project.title || project.company_name}
+          </h1>
+          {/* P3 — Tester URL as monospace meta */}
+          <p className="text-xs text-gray-400 font-mono">
+            <span className="text-gray-500 not-italic">Tester URL:</span>{" "}
             <a
               href={`/test/${project.slug}`}
               target="_blank"
@@ -215,8 +208,7 @@ export default async function ProjectDetailPage({
               Edit Project
             </Button>
           </Link>
-          <DuplicateProjectButton projectId={project.id} slug={project.slug} />
-          <DeleteProjectButton projectId={project.id} companyName={project.company_name} />
+          <MoreActionsDropdown projectId={project.id} slug={project.slug} companyName={project.company_name} />
         </div>
       </div>
 
@@ -234,32 +226,27 @@ export default async function ProjectDetailPage({
         </div>
       )}
 
+      {/* P2 — Action cards with top-border accent, hover lift, right-arrow affordance */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
         {actionCards.map((card) => (
           <Link key={card.href} href={card.href}>
-            <div className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-sage-lighter hover:bg-gray-50 transition-all duration-200 cursor-pointer p-5 text-center">
+            <div className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-sage-lighter hover:bg-brand-sage-lightest transition-all duration-200 cursor-pointer p-5 text-center border-t-4 border-t-brand-sage-darker">
+              {/* Right-arrow affordance — appears on hover */}
+              <ChevronRight className="absolute top-2.5 right-2.5 h-3.5 w-3.5 text-gray-300 group-hover:text-brand-sage-darker transition-colors" />
               <card.icon className="h-5 w-5 text-gray-400 group-hover:text-brand-sage-darker mx-auto mb-2 transition-colors" />
-              <p className="text-sm font-medium text-gray-700">{card.label}</p>
+              <p className="text-[15px] font-semibold text-gray-800 leading-tight">{card.label}</p>
               <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
             </div>
           </Link>
         ))}
       </div>
 
-      <div className="flex gap-2 mb-8">
-        <a href={`/admin/projects/${project.slug}/export-steps`}>
-          <Button variant="outline" size="sm" className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
-            <Download className="h-3.5 w-3.5 mr-1.5" />
-            Export Steps (.xlsx)
-          </Button>
-        </a>
-      </div>
-
       <Separator className="mb-8" />
 
       {itemCount > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Checklist Summary</h2>
+          {/* P3 — Section header at 16px/600 */}
+          <h2 className="text-base font-semibold text-gray-900 mb-3">Checklist Summary</h2>
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -268,7 +255,8 @@ export default async function ProjectDetailPage({
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Path</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Actor</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Action</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Module</th>
+                  {/* P3 — Module column: left separator + medium gray/500 weight */}
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide border-l border-gray-200">Module</th>
                 </tr>
               </thead>
               <tbody>
@@ -292,7 +280,8 @@ export default async function ProjectDetailPage({
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700 leading-relaxed">{item.action}</td>
-                    <td className="px-4 py-3 text-xs text-gray-400">{item.crm_module || "—"}</td>
+                    {/* P3 — Module: medium gray, 500 weight, left border separator */}
+                    <td className="px-4 py-3 text-sm font-medium text-[#6B7280] border-l border-gray-200">{item.crm_module || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -301,7 +290,16 @@ export default async function ProjectDetailPage({
         </div>
       )}
 
-      <h2 className="text-lg font-semibold text-gray-900 mb-3">Tester Progress</h2>
+      {/* P3 — Tester Progress section: Export Steps button moved here (right-aligned) */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-semibold text-gray-900">Tester Progress</h2>
+        <a href={`/admin/projects/${project.slug}/export-steps`}>
+          <Button variant="outline" size="sm" className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Export Steps (.xlsx)
+          </Button>
+        </a>
+      </div>
       <LiveProgressTable
         slug={project.slug}
         totalItems={itemCount}

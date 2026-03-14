@@ -5,17 +5,6 @@ import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 import { deleteTester } from "@/lib/actions/testers"
 import { Users, ExternalLink, Trash2, RefreshCw, AlertTriangle } from "lucide-react"
@@ -49,6 +38,7 @@ export default function LiveProgressTable({
   )
   const [fetchError, setFetchError] = useState(false)
   const [secondsSince, setSecondsSince] = useState(0)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchProgress = useCallback(async () => {
@@ -196,59 +186,72 @@ export default function LiveProgressTable({
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      {tester.pass > 0 && (
+                      {tester.pass > 0 ? (
                         <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">{tester.pass}</Badge>
+                      ) : (
+                        <span className="text-xs text-gray-300">0</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {tester.fail > 0 && (
+                      {tester.fail > 0 ? (
                         <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">{tester.fail}</Badge>
+                      ) : (
+                        <span className="text-xs text-gray-300">0</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {tester.na > 0 && (
+                      {tester.na > 0 ? (
                         <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600 border-gray-200">{tester.na}</Badge>
+                      ) : (
+                        <span className="text-xs text-gray-300">0</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {tester.blocked > 0 && (
+                      {tester.blocked > 0 ? (
                         <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">{tester.blocked}</Badge>
+                      ) : (
+                        <span className="text-xs text-gray-300">0</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <Link href={`/test/${slug}/checklist?tester=${tester.id}`} target="_blank">
-                          <Button variant="outline" size="sm" className="h-7 px-2 text-xs text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            View
+                      {pendingDeleteId === tester.id ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-gray-600 whitespace-nowrap">Remove {tester.name}?</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-gray-500 hover:text-gray-700"
+                            onClick={() => setPendingDeleteId(null)}
+                          >
+                            Cancel
                           </Button>
-                        </Link>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-7 px-2 text-gray-400 hover:text-red-600 hover:bg-red-50">
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Tester</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will permanently delete {tester.name} and all their responses.
-                                  This cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(tester.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                      </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => { setPendingDeleteId(null); handleDelete(tester.id) }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Link href={`/test/${slug}/checklist?tester=${tester.id}`} target="_blank">
+                            <Button variant="outline" size="sm" className="h-7 px-2 text-xs text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              View
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => setPendingDeleteId(tester.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 )

@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { addChecklistItem } from "@/lib/actions/checklist"
+import type { Actor } from "@/lib/constants"
 import { toast } from "sonner"
 import { Plus, X, ExternalLink } from "lucide-react"
 import { type ChecklistItem } from "./types"
@@ -52,7 +53,7 @@ export function AddStepForm({
     const result = await addChecklistItem(slug, {
       projectId,
       path: newItem.path as "Happy" | "Non-Happy" | null,
-      actor: newItem.actor as "Candidate" | "Talkpush" | "Recruiter" | "Referrer/Vendor",
+      actor: newItem.actor as Actor,
       action: newItem.action,
       viewSample: newItem.viewSample,
       crmModule: newItem.crmModule,

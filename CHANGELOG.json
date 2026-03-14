@@ -1,5 +1,66 @@
 [
   {
+    "version": "2.3.1",
+    "codename": "True Path",
+    "changes": [
+      "Breadcrumbs now show actual client name + project title instead of URL slug",
+      "Added lightweight /api/projects/[slug]/info endpoint for breadcrumb metadata"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
+    "version": "2.3.0",
+    "codename": "Hollow Frame",
+    "changes": [
+      "Consolidated Duplicate + Delete into a single ⋯ More Actions dropdown",
+      "Replaced tester delete modal with inline row confirmation",
+      "Fixed 0% progress bar track from mint to gray-200",
+      "Empty Pass/Fail/N/A/For Review cells now show muted '0'",
+      "Removed decorative rainbow gradient bar from admin nav"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
+    "version": "2.2.0",
+    "codename": "Steady Ledger",
+    "changes": [
+      "Upgraded project title to 28px/700 weight page-level heading",
+      "Added client name as muted uppercase overline above project title",
+      "Tester URL rendered in monospace meta style",
+      "Section headers standardized to 16px/600 (h2s)",
+      "Moved Export Steps button to Tester Progress section header row",
+      "Module column in Checklist Summary: medium gray, 500 weight, left border",
+      "Single-item card groups constrained to first column of 3-col grid"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
+    "version": "2.1.0",
+    "codename": "Open Path",
+    "changes": [
+      "Added breadcrumb trail in the nav bar for all admin sub-pages",
+      "Renamed About nav item to Help with a question-mark icon",
+      "Removed redundant Back link from project detail page",
+      "Improved search empty state with icon, message, and Clear/New CTAs",
+      "Styled Expand/Collapse as a compact button group in card view"
+    ],
+    "deployed_at": "2026-03-14"
+  },
+  {
+    "version": "2.0.0",
+    "codename": "Clear Table",
+    "changes": [
+      "Added dense table view as default on admin list page",
+      "Added Table/Cards view toggle with persistent mode",
+      "Added unified ProjectStatusBadge with semantic color system",
+      "Flattened single-checklist client groups in card view",
+      "Added aggregate status summary to multi-checklist group headers",
+      "Added top-border accent and right-arrow affordance to action cards",
+      "Strengthened action card labels to 15px/600 weight"
+    ],
+    "deployed_at": "2026-03-14"
+  },
+  {
     "version": "1.9.0",
     "codename": "Amber Gate",
     "changes": [
