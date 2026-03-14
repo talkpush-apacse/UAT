@@ -208,7 +208,7 @@ export default async function ProjectDetailPage({
               Edit Project
             </Button>
           </Link>
-          <MoreActionsDropdown projectId={project.id} slug={project.slug} companyName={project.company_name} />
+          <MoreActionsDropdown projectId={project.id} slug={project.slug} companyName={project.company_name} title={project.title} />
         </div>
       </div>
 

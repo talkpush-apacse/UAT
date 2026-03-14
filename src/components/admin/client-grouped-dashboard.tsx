@@ -324,9 +324,12 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                         {project.company_name}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-medium text-gray-900 group-hover:text-brand-sage-darker transition-colors">
-                          {project.title || project.company_name}
-                        </span>
+                        <div>
+                          <span className="font-medium text-gray-900 group-hover:text-brand-sage-darker transition-colors">
+                            {project.title || project.company_name}
+                          </span>
+                          <span className="block text-xs text-gray-400 font-mono mt-0.5">/test/{project.slug}</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <ProjectStatusBadge status={status} />
@@ -407,7 +410,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                 <Link
                   href={`/admin/projects/${project.slug}`}
                 >
-                  <Card className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 cursor-pointer">
+                  <Card className="group bg-white rounded-xl border border-gray-100 border-l-[3px] border-l-brand-sage-darker shadow-sm hover:shadow-md hover:border-gray-200 hover:border-l-brand-sage-darker transition-all duration-200 cursor-pointer">
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -511,7 +514,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                             key={project.id}
                             href={`/admin/projects/${project.slug}`}
                           >
-                            <Card className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 cursor-pointer h-full">
+                            <Card className="group bg-white rounded-xl border border-gray-100 border-l-[3px] border-l-brand-sage-darker shadow-sm hover:shadow-md hover:border-gray-200 hover:border-l-brand-sage-darker transition-all duration-200 cursor-pointer h-full">
                               <CardHeader className="pb-2">
                                 <div className="flex items-start justify-between gap-3">
                                   <CardTitle

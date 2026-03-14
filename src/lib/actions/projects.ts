@@ -132,6 +132,7 @@ export async function deleteProject(
 export async function duplicateProject(
   projectId: string,
   slug: string,
+  newTitle?: string,
 ): Promise<{ error?: string; newSlug?: string }> {
   const isAdmin = await verifyAdminSession()
   if (!isAdmin) return { error: 'Unauthorized' }
@@ -168,7 +169,7 @@ export async function duplicateProject(
     .from('projects')
     .insert({
       company_name: orig.company_name,
-      title: orig.title ? `${orig.title} (Copy)` : `${orig.company_name} (Copy)`,
+      title: newTitle ?? (orig.title ? `${orig.title} (Copy)` : `${orig.company_name} (Copy)`),
       slug: newSlug,
       test_scenario: orig.test_scenario,
       talkpush_login_link: orig.talkpush_login_link,

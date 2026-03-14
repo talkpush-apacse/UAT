@@ -11,6 +11,7 @@ const SECTION_LABELS: Record<string, string> = {
   review: "Review",
   signoff: "Sign Off",
   "ai-summary": "AI Summary",
+  "training-plan": "Training Plan",
   edit: "Edit Project",
   new: "New Project",
 }

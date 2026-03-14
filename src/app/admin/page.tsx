@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">UAT Checklists</h1>
+          <h1 className="text-[28px] font-bold text-gray-900 leading-tight">UAT Checklists</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {projectsWithCounts.length} {projectsWithCounts.length === 1 ? "checklist" : "checklists"}
           </p>
