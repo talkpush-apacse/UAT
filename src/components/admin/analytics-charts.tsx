@@ -304,11 +304,11 @@ export default function AnalyticsCharts({
       const html2canvas = (await import("html2canvas")).default
       const jsPDF = (await import("jspdf")).default
       const canvas = await html2canvas(reportRef.current, {
-        scale: 1,
+        scale: 2,
         useCORS: true,
         logging: false,
       })
-      const imgData = canvas.toDataURL("image/jpeg", 0.7)
+      const imgData = canvas.toDataURL("image/png")
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" })
       const pageWidth = pdf.internal.pageSize.getWidth()
       const pageHeight = pdf.internal.pageSize.getHeight()
@@ -316,12 +316,12 @@ export default function AnalyticsCharts({
       const imgHeight = (canvas.height * imgWidth) / canvas.width
       let heightLeft = imgHeight
       let position = 20
-      pdf.addImage(imgData, "JPEG", 20, position, imgWidth, imgHeight)
+      pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight)
       heightLeft -= pageHeight - 40
       while (heightLeft > 0) {
         position = heightLeft - imgHeight + 20
         pdf.addPage()
-        pdf.addImage(imgData, "JPEG", 20, position, imgWidth, imgHeight)
+        pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight)
         heightLeft -= pageHeight - 40
       }
       pdf.save("UAT-Analytics-Report.pdf")
@@ -424,6 +424,11 @@ export default function AnalyticsCharts({
         </button>
       </div>
 
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* PDF capture area — all report sections captured together       */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div ref={reportRef} className="space-y-6">
+
       {/* ════════════════════════════════════════════════════ */}
       {/*  UAT Summary Report                                 */}
       {/* ════════════════════════════════════════════════════ */}
@@ -481,8 +486,8 @@ export default function AnalyticsCharts({
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-gray-700">Overall Status Breakdown</CardTitle>
-            {/* Scope pill toggle */}
-            <div className="flex items-center rounded-full bg-gray-100 p-0.5 text-xs font-medium">
+            {/* Scope pill toggle — hidden in PDF via html2canvas ignore */}
+            <div data-html2canvas-ignore="true" className="flex items-center rounded-full bg-gray-100 p-0.5 text-xs font-medium">
               <button
                 onClick={() => setFilterScope("all")}
                 className={`px-3 py-1 rounded-full transition-all ${
@@ -621,8 +626,6 @@ export default function AnalyticsCharts({
         </Card>
       )}
 
-      <div ref={reportRef} className="space-y-6">
-
         {/* ══════════════════════════════════════════════════════════════ */}
         {/*  CLIENT REPORT: Steps Requiring Attention                     */}
         {/* ══════════════════════════════════════════════════════════════ */}
@@ -639,6 +642,7 @@ export default function AnalyticsCharts({
               </div>
               {failedStepsRows.length > 0 && (
                 <button
+                  data-html2canvas-ignore="true"
                   onClick={handleDownloadXLSX}
                   disabled={isExporting}
                   className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex-shrink-0"
@@ -751,7 +755,7 @@ export default function AnalyticsCharts({
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                    <div data-html2canvas-ignore="true" className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
                       <span className="text-xs text-gray-400">
                         Showing {pageStart + 1}–{Math.min(pageStart + ATTENTION_PAGE_SIZE, failedStepsRows.length)} of {failedStepsRows.length} issues
                       </span>
@@ -871,7 +875,7 @@ export default function AnalyticsCharts({
           </CardContent>
         </Card>
 
-      </div>{/* end reportRef */}
+      </div>{/* end PDF capture area (reportRef) */}
 
     </div>
   )

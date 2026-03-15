@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.4.1",
+    "codename": "Full Frame",
+    "changes": [
+      "Fixed PDF export missing KPI cards and donut charts (sections 1–3 now captured)",
+      "Hidden interactive controls (scope toggle, Export XLSX, pagination) from PDF output",
+      "Improved PDF render quality: scale 2x, PNG instead of JPEG"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
     "version": "2.4.0",
     "codename": "Teal Ledge",
     "changes": [
