@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.6.0",
+    "codename": "Defect Open",
+    "changes": [
+      "Migrated email sending from Resend to Brevo",
+      "Notify Testers: added checkbox UI to select specific testers",
+      "Notify Testers: removed non-pass filter — any tester can now be notified",
+      "Fixed error messages not showing after partial send failures"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
     "version": "2.5.2",
     "codename": "Vector Frame",
     "changes": [

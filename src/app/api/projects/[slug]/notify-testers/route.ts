@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic"
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/projects/[slug]/notify-testers                           */
-/*  Sends a one-time "review complete" email to each tester who        */
-/*  reported at least one non-pass step.                               */
+/*  Sends a "review complete" email to each specified tester.          */
+/*  Accepts an optional testerIds array to target specific testers.    */
 /* ------------------------------------------------------------------ */
 
 export async function POST(
@@ -30,8 +30,10 @@ export async function POST(
       )
     }
 
-    // Parse the origin from the request so we can build tester result URLs
-    const { origin } = await request.json().catch(() => ({ origin: null }))
+    // Parse the origin and optional testerIds from the request body
+    const body = await request.json().catch(() => ({}))
+    const origin: string | null = body.origin ?? null
+    const testerIds: string[] | null = Array.isArray(body.testerIds) ? body.testerIds : null
     const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app"
 
     const brevo = new BrevoClient({ apiKey: brevoKey })
@@ -55,12 +57,17 @@ export async function POST(
       .eq("project_id", project.id)
       .order("created_at", { ascending: true })
 
-    const testerList = testers || []
+    // Filter to only the requested tester IDs (if provided)
+    const allTesters = testers || []
+    const testerList = testerIds
+      ? allTesters.filter((t) => testerIds.includes(t.id))
+      : allTesters
+
     if (testerList.length === 0) {
       return NextResponse.json({ sent: 0, errors: [] })
     }
 
-    const testerIds = testerList.map((t) => t.id)
+    const filteredTesterIds = testerList.map((t) => t.id)
 
     // 3. Fetch checklist items
     const { data: checklistItems } = await supabase
@@ -77,14 +84,14 @@ export async function POST(
     const { data: responses } = await supabase
       .from("responses")
       .select("tester_id, checklist_item_id, status")
-      .in("tester_id", testerIds)
+      .in("tester_id", filteredTesterIds)
       .in("checklist_item_id", itemIds)
 
     // 5. Fetch admin reviews
     const { data: adminReviews } = await supabase
       .from("admin_reviews")
       .select("tester_id, checklist_item_id, resolution_status")
-      .in("tester_id", testerIds)
+      .in("tester_id", filteredTesterIds)
       .in("checklist_item_id", itemIds)
 
     const responseList = responses || []
@@ -97,27 +104,19 @@ export async function POST(
 
     let sentCount = 0
     const errors: string[] = []
-    // Temporary debug info
-    const debugInfo = {
-      testerCount: testerList.length,
-      responseCount: responseList.length,
-      allStatuses: responseList.map((r) => r.status),
-    }
 
     for (const tester of testerList) {
-      // Only email testers who reported at least one non-pass step
-      const testerResponses = responseList.filter(
+      // Count non-pass responses for this tester
+      const nonPassResponses = responseList.filter(
         (r) => r.tester_id === tester.id && r.status !== null && r.status !== "Pass" && r.status !== "N/A"
       )
 
-      if (testerResponses.length === 0) continue
-
-      // Count resolution statuses for this tester
+      // Count resolution statuses
       let resolvedCount = 0
       let inProgressCount = 0
       let pendingCount = 0
 
-      for (const resp of testerResponses) {
+      for (const resp of nonPassResponses) {
         const review = reviewMap.get(`${tester.id}::${resp.checklist_item_id}`)
         if (review?.resolution_status === "Done") {
           resolvedCount++
@@ -128,7 +127,7 @@ export async function POST(
         }
       }
 
-      const totalIssues = testerResponses.length
+      const totalIssues = nonPassResponses.length
       const resultsUrl = `${baseUrl}/test/${project.slug}/results?tester=${tester.id}`
       const firstName = tester.name.split(" ")[0]
 
@@ -158,7 +157,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ sent: sentCount, errors, debug: debugInfo })
+    return NextResponse.json({ sent: sentCount, errors })
   } catch (err) {
     console.error("Notify testers API - unexpected error:", err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 })

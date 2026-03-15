@@ -249,7 +249,7 @@ export default async function ReviewPage({
           </p>
         </div>
         <div className="flex-shrink-0 pt-1 flex items-center gap-2">
-          <NotifyTestersButton slug={project.slug} testerCount={testerSections.length} />
+          <NotifyTestersButton slug={project.slug} testers={testerSections.map((s) => s.tester)} />
           <CompleteReviewButton slug={project.slug} testerSections={testerSections} />
           <PublishReviewButton slug={project.slug} />
         </div>
