@@ -139,7 +139,7 @@ export async function POST(
 
       try {
         await brevo.transactionalEmails.sendTransacEmail({
-          sender: { name: "Talkpush UAT", email: "noreply@updates.talkpush.com" },
+          sender: { name: "Talkpush UAT", email: "noreply@updates.se-talkpush.com" },
           to: [{ email: tester.email, name: tester.name }],
           subject: `Your UAT results for ${project.company_name} have been reviewed`,
           htmlContent: html,
