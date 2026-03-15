@@ -1,5 +1,18 @@
 [
   {
+    "version": "2.5.0",
+    "codename": "Vector Frame",
+    "changes": [
+      "Switched PDF export to @react-pdf/renderer — true vector PDF",
+      "PDF file size reduced from ~26MB to under 1MB",
+      "PDF now includes all 5 sections: KPI cards, donut charts, steps, table",
+      "All Steps Requiring Attention rows exported (no pagination limit in PDF)",
+      "Added company name and generated date to PDF header",
+      "Added page numbers to PDF footer"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
     "version": "2.4.1",
     "codename": "Full Frame",
     "changes": [

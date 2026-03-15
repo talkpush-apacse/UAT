@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo } from "react"
 import {
   PieChart,
   Pie,
@@ -110,17 +110,18 @@ export default function AnalyticsCharts({
   testers,
   responses,
   adminReviews,
+  companyName,
 }: {
   checklistItems: ChecklistItem[]
   testers: Tester[]
   responses: Response[]
   adminReviews: AdminReview[]
+  companyName?: string
 }) {
   const [filterScope, setFilterScope] = useState<"all" | "completed">("all")
   const [isGenerating, setIsGenerating] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [attentionPage, setAttentionPage] = useState(0)
-  const reportRef = useRef<HTMLDivElement>(null)
 
   const ATTENTION_PAGE_SIZE = 10
 
@@ -298,36 +299,38 @@ export default function AnalyticsCharts({
 
   /* ---------- PDF Download ---------- */
   const handleDownloadPDF = async () => {
-    if (!reportRef.current) return
     setIsGenerating(true)
     try {
-      const html2canvas = (await import("html2canvas")).default
-      const jsPDF = (await import("jspdf")).default
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
+      // Dynamic imports keep @react-pdf/renderer out of the initial bundle
+      const { pdf } = await import("@react-pdf/renderer")
+      const { default: AnalyticsPDFDocument } = await import(
+        "@/components/admin/AnalyticsPDFDocument"
+      )
+      const generatedAt = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       })
-      const imgData = canvas.toDataURL("image/png")
-      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" })
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = pageWidth - 40
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      let heightLeft = imgHeight
-      let position = 20
-      pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight - 40
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + 20
-        pdf.addPage()
-        pdf.addImage(imgData, "PNG", 20, position, imgWidth, imgHeight)
-        heightLeft -= pageHeight - 40
-      }
-      pdf.save("UAT-Analytics-Report.pdf")
+      const blob = await pdf(
+        <AnalyticsPDFDocument
+          companyName={companyName}
+          generatedAt={generatedAt}
+          completionStats={completionStats}
+          overallBreakdown={overallBreakdown}
+          findingsBreakdown={findingsBreakdown}
+          failedStepsRows={failedStepsRows}
+          testerParticipation={testerParticipation}
+        />
+      ).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "UAT-Analytics-Report.pdf"
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (err) {
-      // PDF generation failed — surface the error in the console for debugging
-      // without exposing raw error objects to the user.
       console.error("PDF generation failed:", err instanceof Error ? err.message : String(err))
     } finally {
       setIsGenerating(false)
@@ -424,11 +427,6 @@ export default function AnalyticsCharts({
         </button>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* PDF capture area — all report sections captured together       */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      <div ref={reportRef} className="space-y-6">
-
       {/* ════════════════════════════════════════════════════ */}
       {/*  UAT Summary Report                                 */}
       {/* ════════════════════════════════════════════════════ */}
@@ -486,8 +484,8 @@ export default function AnalyticsCharts({
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-gray-700">Overall Status Breakdown</CardTitle>
-            {/* Scope pill toggle — hidden in PDF via html2canvas ignore */}
-            <div data-html2canvas-ignore="true" className="flex items-center rounded-full bg-gray-100 p-0.5 text-xs font-medium">
+            {/* Scope pill toggle */}
+            <div className="flex items-center rounded-full bg-gray-100 p-0.5 text-xs font-medium">
               <button
                 onClick={() => setFilterScope("all")}
                 className={`px-3 py-1 rounded-full transition-all ${
@@ -642,7 +640,6 @@ export default function AnalyticsCharts({
               </div>
               {failedStepsRows.length > 0 && (
                 <button
-                  data-html2canvas-ignore="true"
                   onClick={handleDownloadXLSX}
                   disabled={isExporting}
                   className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex-shrink-0"
@@ -755,7 +752,7 @@ export default function AnalyticsCharts({
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div data-html2canvas-ignore="true" className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
                       <span className="text-xs text-gray-400">
                         Showing {pageStart + 1}–{Math.min(pageStart + ATTENTION_PAGE_SIZE, failedStepsRows.length)} of {failedStepsRows.length} issues
                       </span>
@@ -874,8 +871,6 @@ export default function AnalyticsCharts({
             )}
           </CardContent>
         </Card>
-
-      </div>{/* end PDF capture area (reportRef) */}
 
     </div>
   )

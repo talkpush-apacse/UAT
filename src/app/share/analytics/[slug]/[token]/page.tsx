@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyShareToken } from "@/lib/utils/share-token"
 
-// Lazy-load AnalyticsCharts (includes Recharts, html2canvas, jspdf, exceljs)
+// Lazy-load AnalyticsCharts (includes Recharts, @react-pdf/renderer, exceljs)
 // to reduce the initial server-rendered bundle size.
 const AnalyticsCharts = nextDynamic(
   () => import("@/components/admin/analytics-charts"),
@@ -136,6 +136,7 @@ export default async function PublicAnalyticsPage({
           testers={testers || []}
           responses={responses}
           adminReviews={adminReviews}
+          companyName={project.company_name}
         />
 
       </div>
