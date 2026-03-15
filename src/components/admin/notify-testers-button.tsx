@@ -125,8 +125,8 @@ export default function NotifyTestersButton({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Error tooltip */}
-      {errorMsg && state === "error" && (
+      {/* Error/partial failure message */}
+      {errorMsg && (state === "error" || state === "done") && (
         <p className="text-xs text-red-500 mt-1">{errorMsg}</p>
       )}
     </>
