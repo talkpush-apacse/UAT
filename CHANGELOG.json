@@ -3,9 +3,11 @@
     "version": "2.4.0",
     "codename": "Teal Ledge",
     "changes": [
-      "Added /test/slug tooltip beneath project title in admin table view",
-      "Duplicate Project now shows a rename dialog before creating the copy",
+      "Slug now fades in on row hover in table view (hidden at rest, no clutter)",
+      "3px left-border accent added to table rows on hover for spatial orientation",
       "Added 3px left-border accent to project cards for visual hierarchy",
+      "Duplicate Project now shows a rename dialog before creating the copy",
+      "Added focus-visible rings to view toggle and expand/collapse buttons",
       "Added Training Plan breadcrumb label to admin nav"
     ],
     "deployed_at": "2026-03-15"

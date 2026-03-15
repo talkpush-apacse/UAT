@@ -212,14 +212,14 @@ export default function ClientGroupedDashboard({ groups }: Props) {
           <div className="flex items-center border border-gray-200 rounded-md overflow-hidden">
             <button
               onClick={expandAll}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors whitespace-nowrap"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset"
             >
               <ChevronsUpDown className="h-3 w-3" />
               Expand
             </button>
             <button
               onClick={collapseAll}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors border-l border-gray-200 whitespace-nowrap"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors border-l border-gray-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset"
             >
               Collapse
             </button>
@@ -230,7 +230,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
         <div className="flex items-center border border-gray-200 rounded-md overflow-hidden ml-auto">
           <button
             onClick={() => setViewMode("table")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset ${
               viewMode === "table"
                 ? "bg-gray-800 text-white"
                 : "bg-white text-gray-500 hover:bg-gray-50"
@@ -241,7 +241,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
           </button>
           <button
             onClick={() => setViewMode("cards")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors border-l border-gray-200 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors border-l border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset ${
               viewMode === "cards"
                 ? "bg-gray-800 text-white"
                 : "bg-white text-gray-500 hover:bg-gray-50"
@@ -320,7 +320,8 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                       }
                       className="group border-t border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
                     >
-                      <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                      {/* 3px left-border spatial accent — appears on hover */}
+                      <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap border-l-[3px] border-l-transparent group-hover:border-l-brand-sage-darker transition-colors">
                         {project.company_name}
                       </td>
                       <td className="px-4 py-3">
@@ -328,7 +329,10 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                           <span className="font-medium text-gray-900 group-hover:text-brand-sage-darker transition-colors">
                             {project.title || project.company_name}
                           </span>
-                          <span className="block text-xs text-gray-400 font-mono mt-0.5">/test/{project.slug}</span>
+                          {/* Slug shown only on row hover — not persistent clutter */}
+                          <span className="block text-xs text-gray-400 font-mono mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                            /test/{project.slug}
+                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
