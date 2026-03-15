@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
+import { BrevoClient } from "@getbrevo/brevo"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 
@@ -22,10 +22,10 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const resendKey = process.env.RESEND_API_KEY
-    if (!resendKey) {
+    const brevoKey = process.env.BREVO_API_KEY
+    if (!brevoKey) {
       return NextResponse.json(
-        { error: "RESEND_API_KEY is not configured. Add it to your environment variables." },
+        { error: "BREVO_API_KEY is not configured. Add it to your environment variables." },
         { status: 500 }
       )
     }
@@ -34,7 +34,7 @@ export async function POST(
     const { origin } = await request.json().catch(() => ({ origin: null }))
     const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app"
 
-    const resend = new Resend(resendKey)
+    const brevo = new BrevoClient({ apiKey: brevoKey })
     const supabase = createAdminClient()
 
     // 1. Fetch project
@@ -138,11 +138,11 @@ export async function POST(
       })
 
       try {
-        await resend.emails.send({
-          from: "Talkpush UAT <noreply@updates.talkpush.com>",
-          to: tester.email,
+        await brevo.transactionalEmails.sendTransacEmail({
+          sender: { name: "Talkpush UAT", email: "noreply@updates.talkpush.com" },
+          to: [{ email: tester.email, name: tester.name }],
           subject: `Your UAT results for ${project.company_name} have been reviewed`,
-          html,
+          htmlContent: html,
         })
         sentCount++
       } catch (emailErr) {
