@@ -97,6 +97,12 @@ export async function POST(
 
     let sentCount = 0
     const errors: string[] = []
+    // Temporary debug info
+    const debugInfo = {
+      testerCount: testerList.length,
+      responseCount: responseList.length,
+      allStatuses: responseList.map((r) => r.status),
+    }
 
     for (const tester of testerList) {
       // Only email testers who reported at least one non-pass step
@@ -152,7 +158,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ sent: sentCount, errors })
+    return NextResponse.json({ sent: sentCount, errors, debug: debugInfo })
   } catch (err) {
     console.error("Notify testers API - unexpected error:", err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 })
