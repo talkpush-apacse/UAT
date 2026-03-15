@@ -53,10 +53,25 @@ export default async function ProjectDetailPage({
 
   const shareToken = await generateShareToken(project.slug)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let checklistItems: any[] | null = null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let signoffs: any[] | null = null
+  let checklistItems: Array<{
+    id: string
+    step_number: number
+    path: string | null
+    actor: string
+    action: string
+    crm_module: string | null
+    tip: string | null
+    sort_order: number
+    view_sample: string | null
+  }> | null = null
+
+  let signoffs: Array<{
+    id: string
+    project_id: string
+    signoff_name: string
+    signoff_date: string
+    created_at: string | null
+  }> | null = null
   let initialTesters: TesterProgress[] = []
 
   try {
@@ -95,7 +110,7 @@ export default async function ProjectDetailPage({
     if (testers && testers.length > 0) {
       // Scope responses to only checklist items belonging to this project
       // so that testers who participated in other projects aren't double-counted.
-      const itemIds = (checklistItems || []).map((ci: { id: string }) => ci.id)
+      const itemIds = (checklistItems || []).map((ci) => ci.id)
 
       const { data: responses } = itemIds.length > 0
         ? await supabase

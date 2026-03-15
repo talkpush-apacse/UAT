@@ -282,20 +282,13 @@ export async function reorderChecklistItems(
 
     const supabase = createAdminClient()
 
-    // Update each item's sort_order
-    const updates = parsed.data.items.map((item) =>
-      supabase
-        .from('checklist_items')
-        .update({ sort_order: item.sortOrder })
-        .eq('id', item.id)
-    )
+    // Single RPC call: updates sort_order + renumbers step_numbers in one round-trip
+    const { error } = await supabase.rpc('reorder_checklist_steps', {
+      p_project_id: parsed.data.projectId,
+      p_items: parsed.data.items.map((item) => ({ id: item.id, sort_order: item.sortOrder })),
+    })
 
-    const results = await Promise.all(updates)
-    const firstError = results.find((r) => r.error)
-    if (firstError?.error) return { error: firstError.error.message }
-
-    // Renumber step_numbers to match new sort_order
-    await renumberSteps(parsed.data.projectId, supabase)
+    if (error) return { error: error.message }
 
     revalidatePath(`/admin/projects/${slug}`)
     return {}

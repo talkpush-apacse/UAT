@@ -1,5 +1,21 @@
 [
   {
+    "version": "2.5.2",
+    "codename": "Vector Frame",
+    "changes": [
+      "Fixed info API now requires admin auth (was unauthenticated)",
+      "Share tokens now use a dedicated SHARE_TOKEN_SECRET env var",
+      "Replaced any[] types in project detail page with explicit interfaces",
+      "Analytics share page now uses 60s ISR cache instead of force-dynamic",
+      "Tester checklist page: explicit column selects + parallelized fetches",
+      "Duplicate slug check replaced N sequential queries with one ILIKE",
+      "Fixed React key={index} in ActivityTimeline with stable composite key",
+      "markTestComplete now validates tester existence before updating",
+      "Reorder checklist steps now uses a single RPC (was N parallel UPDATEs)"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
     "version": "2.5.1",
     "codename": "Vector Frame",
     "changes": [

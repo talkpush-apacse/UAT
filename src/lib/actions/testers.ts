@@ -96,6 +96,16 @@ export async function markTestComplete(
   testerId: string
 ): Promise<{ error?: string }> {
   const supabase = createServerSupabaseClient()
+
+  // Verify the tester exists before updating
+  const { data: tester } = await supabase
+    .from('testers')
+    .select('id')
+    .eq('id', testerId)
+    .single()
+
+  if (!tester) return { error: 'Tester not found' }
+
   const { error } = await supabase
     .from('testers')
     .update({ test_completed: 'Yes' })

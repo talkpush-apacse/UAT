@@ -149,16 +149,15 @@ export async function duplicateProject(
   if (!original) return { error: 'Project not found' }
 
   // Generate unique slug: "{slug}-copy", then "{slug}-copy-2", etc.
+  // Fetch all matching slugs in one query instead of a while-loop of individual checks.
+  const { data: existingSlugs } = await supabase
+    .from('projects')
+    .select('slug')
+    .ilike('slug', `${slug}-copy%`)
+  const taken = new Set((existingSlugs || []).map((r) => r.slug))
   let newSlug = `${slug}-copy`
   let suffix = 2
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const { data: existing } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('slug', newSlug)
-      .maybeSingle()
-    if (!existing) break
+  while (taken.has(newSlug)) {
     newSlug = `${slug}-copy-${suffix++}`
   }
 

@@ -107,8 +107,8 @@ function ActivityTimeline({ history }: { history: HistoryEntry[] }) {
 
       {expanded && (
         <div className="mt-2 ml-1.5 border-l-2 border-violet-100 pl-3 space-y-2">
-          {history.map((entry, i) => (
-            <div key={i} className="relative">
+          {history.map((entry) => (
+            <div key={`${entry.fieldChanged}-${entry.changedAt}`} className="relative">
               {/* Timeline dot */}
               <div className="absolute -left-[17px] top-1 w-2 h-2 rounded-full bg-violet-300" />
               <div className="text-xs">

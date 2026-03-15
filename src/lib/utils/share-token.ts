@@ -1,7 +1,9 @@
 import { timingSafeEqual } from 'crypto'
 
 export async function generateShareToken(slug: string): Promise<string> {
-  const secret = process.env.ADMIN_SESSION_SECRET!
+  // Prefer a dedicated share token secret; fall back to the admin session secret
+  // for backwards compatibility with tokens already in the wild.
+  const secret = process.env.SHARE_TOKEN_SECRET ?? process.env.ADMIN_SESSION_SECRET!
   const encoder = new TextEncoder()
   const key = await crypto.subtle.importKey(
     "raw",

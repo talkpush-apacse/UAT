@@ -365,6 +365,10 @@ export type Database = {
     }
     Functions: {
       renumber_steps: { Args: { p_project_id: string }; Returns: undefined }
+      reorder_checklist_steps: {
+        Args: { p_items: Json; p_project_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

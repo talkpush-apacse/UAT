@@ -34,18 +34,21 @@ export default async function ChecklistPage({
     redirect(`/test/${params.slug}`)
   }
 
-  // Fetch checklist items
-  const { data: checklistItems } = await supabase
-    .from("checklist_items")
-    .select("*")
-    .eq("project_id", project.id)
-    .order("sort_order")
+  // Fetch checklist items and existing responses in parallel
+  const [checklistResult, responsesResult] = await Promise.all([
+    supabase
+      .from("checklist_items")
+      .select("id, step_number, path, actor, action, view_sample, crm_module, tip, sort_order")
+      .eq("project_id", project.id)
+      .order("sort_order"),
+    supabase
+      .from("responses")
+      .select("id, tester_id, checklist_item_id, status, comment")
+      .eq("tester_id", tester.id),
+  ])
 
-  // Fetch existing responses
-  const { data: responses } = await supabase
-    .from("responses")
-    .select("*")
-    .eq("tester_id", tester.id)
+  const checklistItems = checklistResult.data
+  const responses = responsesResult.data
 
   // Fetch attachments for existing responses
   const responseIds = (responses || []).map((r) => r.id)
