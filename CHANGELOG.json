@@ -1,5 +1,22 @@
 [
   {
+    "version": "2.7.0",
+    "codename": "Edge Case Crisp",
+    "changes": [
+      "Analytics report: sticky anchor nav (Summary / Failures / Charts / Participation)",
+      "Analytics report: page header now shows project title, test scenario, and created date",
+      "Analytics report: Download PDF button inlined into header row (was orphaned)",
+      "Analytics report: section order changed — Steps Requiring Attention moved above charts",
+      "Analytics report: stat card accent colors unified to brand sage",
+      "Analytics report: single-category Findings replaced with a callout card",
+      "Analytics report: donut charts resized 40% smaller; zero-value legend rows dimmed",
+      "Analytics report: donut chart tooltips show value + percentage",
+      "Analytics report: progress bar is now ARIA-labeled for screen readers",
+      "Analytics report: card borders, typography, and contrast polished throughout"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
     "version": "2.6.0",
     "codename": "Defect Open",
     "changes": [

@@ -50,7 +50,7 @@ export default async function PublicAnalyticsPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug, company_name")
+    .select("id, slug, company_name, title, test_scenario, created_at")
     .eq("slug", params.slug)
     .single()
 
@@ -127,16 +127,15 @@ export default async function PublicAnalyticsPage({
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="mb-8">
-          <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">UAT Analytics Report</p>
-          <h1 className="text-2xl font-semibold text-gray-900 mt-1">{project.company_name}</h1>
-        </div>
         <AnalyticsCharts
           checklistItems={checklistItems || []}
           testers={testers || []}
           responses={responses}
           adminReviews={adminReviews}
           companyName={project.company_name}
+          projectTitle={project.title ?? undefined}
+          testScenario={project.test_scenario ?? undefined}
+          projectCreatedAt={project.created_at ?? undefined}
         />
 
       </div>
