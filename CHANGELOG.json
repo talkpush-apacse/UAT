@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.5.1",
+    "codename": "Vector Frame",
+    "changes": [
+      "Fixed security: progress API now requires admin authentication (was publicly accessible)",
+      "Fixed email stats in tester notifications (resolved/in-progress counts were always 0)",
+      "Replaced N×2 per-item DB writes in checklist operations with a single Supabase RPC",
+      "Regenerated Supabase types; fixed created_at nullability across admin and export files"
+    ],
+    "deployed_at": "2026-03-15"
+  },
+  {
     "version": "2.5.0",
     "codename": "Vector Frame",
     "changes": [

@@ -32,44 +32,16 @@ export interface StepPreview {
 }
 
 /* ------------------------------------------------------------------ */
-/*  renumberSteps — keeps step_number = 1,2,3,...,N in sort_order      */
+/*  renumberSteps — delegates to a server-side RPC                     */
+/*  The RPC performs 2 bulk UPDATEs inside Postgres (vs. the former    */
+/*  2N individual UPDATE calls from the application layer).            */
 /* ------------------------------------------------------------------ */
 
 async function renumberSteps(
   projectId: string,
   supabase: SupabaseClient<Database>
 ) {
-  const { data: items } = await supabase
-    .from('checklist_items')
-    .select('id, step_number')
-    .eq('project_id', projectId)
-    .order('sort_order')
-
-  if (!items || items.length === 0) return
-
-  // Skip if already sequential
-  const needsRenumber = items.some((item, idx) => item.step_number !== idx + 1)
-  if (!needsRenumber) return
-
-  // Pass 1: Set to negative values to avoid UNIQUE constraint collisions
-  await Promise.all(
-    items.map((item, idx) =>
-      supabase
-        .from('checklist_items')
-        .update({ step_number: -(idx + 1) })
-        .eq('id', item.id)
-    )
-  )
-
-  // Pass 2: Set to correct positive values
-  await Promise.all(
-    items.map((item, idx) =>
-      supabase
-        .from('checklist_items')
-        .update({ step_number: idx + 1 })
-        .eq('id', item.id)
-    )
-  )
+  await supabase.rpc('renumber_steps', { p_project_id: projectId })
 }
 
 /* ------------------------------------------------------------------ */

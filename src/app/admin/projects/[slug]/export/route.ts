@@ -72,7 +72,7 @@ export async function GET(
   summarySheet.addRow({ field: "Test Scenario", value: project.test_scenario || "" })
   summarySheet.addRow({ field: "Total Steps", value: checklistItems?.length || 0 })
   summarySheet.addRow({ field: "Total Testers", value: testers?.length || 0 })
-  summarySheet.addRow({ field: "Created", value: new Date(project.created_at).toLocaleString() })
+  summarySheet.addRow({ field: "Created", value: project.created_at ? new Date(project.created_at).toLocaleString() : "" })
 
   // Bold the header row
   summarySheet.getRow(1).font = { bold: true }

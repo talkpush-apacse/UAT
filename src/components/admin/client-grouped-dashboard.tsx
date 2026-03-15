@@ -41,7 +41,7 @@ export interface ProjectWithCounts {
   company_name: string
   title: string | null
   test_scenario: string | null
-  created_at: string
+  created_at: string | null
   testerCount: number
   signoffCount: number
 }
@@ -345,7 +345,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                         </span>
                       </td>
                       <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-400">
-                        {new Date(project.created_at).toLocaleDateString()}
+                        {project.created_at ? new Date(project.created_at).toLocaleDateString() : "—"}
                       </td>
                       {/* Stop row-click from firing inside the actions cell */}
                       <td
@@ -442,7 +442,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                           {project.testerCount !== 1 ? "s" : ""}
                         </span>
                         <span>
-                          {new Date(project.created_at).toLocaleDateString()}
+                          {project.created_at ? new Date(project.created_at).toLocaleDateString() : "—"}
                         </span>
                       </div>
                     </CardContent>
@@ -543,9 +543,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                                     {project.testerCount !== 1 ? "s" : ""}
                                   </span>
                                   <span>
-                                    {new Date(
-                                      project.created_at
-                                    ).toLocaleDateString()}
+                                    {project.created_at ? new Date(project.created_at).toLocaleDateString() : "—"}
                                   </span>
                                 </div>
                               </CardContent>

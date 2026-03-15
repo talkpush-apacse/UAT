@@ -27,7 +27,7 @@ interface Signoff {
   project_id: string
   signoff_name: string
   signoff_date: string
-  created_at: string
+  created_at: string | null
 }
 
 export default function SignoffForm({

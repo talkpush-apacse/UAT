@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { verifyAdminSession } from "@/lib/utils/admin-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -8,6 +9,11 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const supabase = createAdminClient()
 
     const { data: project, error: projectError } = await supabase

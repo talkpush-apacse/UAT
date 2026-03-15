@@ -113,9 +113,9 @@ export async function POST(
 
       for (const resp of testerResponses) {
         const review = reviewMap.get(`${tester.id}::${resp.checklist_item_id}`)
-        if (review?.resolution_status === "resolved") {
+        if (review?.resolution_status === "Done") {
           resolvedCount++
-        } else if (review?.resolution_status === "in-progress") {
+        } else if (review?.resolution_status === "In Progress") {
           inProgressCount++
         } else {
           pendingCount++
