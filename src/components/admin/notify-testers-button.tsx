@@ -75,7 +75,7 @@ export default function NotifyTestersButton({
 
       if (data.errors && data.errors.length > 0) {
         setState("done")
-        setErrorMsg(`Sent ${data.sent} email${data.sent !== 1 ? "s" : ""}, but ${data.errors.length} failed.`)
+        setErrorMsg(`${data.errors.length} failed: ${data.errors[0]}`)
       } else {
         setState("done")
       }
