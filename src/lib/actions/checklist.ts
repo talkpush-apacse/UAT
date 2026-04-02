@@ -375,7 +375,7 @@ export async function listProjectsForCopy(
 
     const { data: projects, error } = await supabase
       .from('projects')
-      .select('id, slug, company_name')
+      .select('id, slug, company_name, title')
       .neq('id', currentProjectId)
       .order('company_name')
 
@@ -398,6 +398,7 @@ export async function listProjectsForCopy(
         id: p.id,
         slug: p.slug,
         company_name: p.company_name,
+        title: p.title,
         itemCount: countMap[p.id] || 0,
       })),
     }
