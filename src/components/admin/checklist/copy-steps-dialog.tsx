@@ -219,7 +219,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                     <option value="">— Select a project —</option>
                     {projects.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.company_name}{p.title ? ` — ${p.title}` : ''} ({p.itemCount} {p.itemCount === 1 ? "step" : "steps"})
+                        {p.company_name} — {p.title || p.slug} ({p.itemCount} {p.itemCount === 1 ? "step" : "steps"})
                       </option>
                     ))}
                   </select>
