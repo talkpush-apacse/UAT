@@ -366,7 +366,7 @@ export async function duplicateChecklistItem(
 
 export async function listProjectsForCopy(
   currentProjectId: string
-): Promise<{ error?: string; projects?: { id: string; slug: string; company_name: string; itemCount: number }[] }> {
+): Promise<{ error?: string; projects?: { id: string; slug: string; company_name: string; title: string | null; itemCount: number }[] }> {
   try {
     const isAdmin = await verifyAdminSession()
     if (!isAdmin) return { error: 'Unauthorized' }
