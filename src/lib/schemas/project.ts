@@ -1,10 +1,7 @@
 import { z } from 'zod'
-import { CLIENT_NAMES } from '@/lib/constants'
 
 export const createProjectSchema = z.object({
-  companyName: z.enum(CLIENT_NAMES, {
-    error: 'Please select a client',
-  }),
+  companyName: z.string().min(1, 'Please select a client').max(200),
   title: z.string().min(1, 'Title is required').max(300),
   slug: z
     .string()
@@ -19,9 +16,7 @@ export const createProjectSchema = z.object({
 })
 
 export const updateProjectSchema = z.object({
-  companyName: z.enum(CLIENT_NAMES, {
-    error: 'Please select a client',
-  }).optional(),
+  companyName: z.string().min(1, 'Please select a client').max(200).optional(),
   title: z.string().min(1, 'Title is required').max(300).optional(),
   slug: z
     .string()

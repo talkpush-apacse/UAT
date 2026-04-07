@@ -1,9 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useFormState } from "react-dom"
 import { createProject, type ProjectActionState } from "@/lib/actions/projects"
-import { CLIENT_NAMES } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -25,6 +24,16 @@ const initialState: ProjectActionState = {}
 export default function NewProjectPage() {
   const [state, formAction] = useFormState(createProject, initialState)
   const [companyName, setCompanyName] = useState("")
+  const [clientNames, setClientNames] = useState<string[]>([])
+
+  useEffect(() => {
+    fetch("/api/clients")
+      .then((r) => r.json())
+      .then((data: { id: string; name: string }[]) =>
+        setClientNames(data.map((c) => c.name))
+      )
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="max-w-2xl">
@@ -54,7 +63,7 @@ export default function NewProjectPage() {
                   <SelectValue placeholder="Select a client..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {CLIENT_NAMES.map((name) => (
+                  {clientNames.map((name) => (
                     <SelectItem key={name} value={name}>
                       {name}
                     </SelectItem>

@@ -1,9 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useFormState } from "react-dom"
 import { updateProject, type ProjectActionState } from "@/lib/actions/projects"
-import { CLIENT_NAMES } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -35,6 +34,16 @@ export default function EditProjectForm({ project }: { project: Project }) {
     {}
   )
   const [companyName, setCompanyName] = useState(project.company_name)
+  const [clientNames, setClientNames] = useState<string[]>([])
+
+  useEffect(() => {
+    fetch("/api/clients")
+      .then((r) => r.json())
+      .then((data: { id: string; name: string }[]) =>
+        setClientNames(data.map((c) => c.name))
+      )
+      .catch(() => {})
+  }, [])
 
   return (
     <Card className="bg-white rounded-xl border border-gray-100 shadow-sm">
@@ -54,7 +63,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
                 <SelectValue placeholder="Select a client..." />
               </SelectTrigger>
               <SelectContent>
-                {CLIENT_NAMES.map((name) => (
+                {clientNames.map((name) => (
                   <SelectItem key={name} value={name}>
                     {name}
                   </SelectItem>

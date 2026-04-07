@@ -51,8 +51,24 @@ export function AdminBreadcrumbs() {
     return () => { cancelled = true }
   }, [slug])
 
-  // Root dashboard or non-project pages — no trail needed
+  // Root dashboard — no trail needed
   if (!pathname || pathname === "/admin") return null
+
+  // Top-level admin pages (e.g. /admin/clients)
+  const TOP_LEVEL_LABELS: Record<string, string> = {
+    clients: "Manage Clients",
+  }
+  if (segments.length === 2 && TOP_LEVEL_LABELS[segments[1]]) {
+    return (
+      <div className="flex items-center gap-1 text-sm min-w-0">
+        <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-gray-300" />
+        <span className="text-gray-600 font-medium">
+          {TOP_LEVEL_LABELS[segments[1]]}
+        </span>
+      </div>
+    )
+  }
+
   if (segments.length < 3) return null
 
   // While loading, fall back to the slug so the breadcrumb doesn't flash empty

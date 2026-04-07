@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.8.0",
+    "codename": "Flaky Fresh",
+    "changes": [
+      "Added Manage Clients page — add and remove client names dynamically",
+      "Client names now stored in Supabase (replaces hardcoded list)",
+      "New/Edit project forms fetch client names from database",
+      "Breadcrumb support for /admin/clients page"
+    ],
+    "deployed_at": "2026-04-07"
+  },
+  {
     "version": "2.7.0",
     "codename": "Edge Case Crisp",
     "changes": [
