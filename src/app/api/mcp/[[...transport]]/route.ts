@@ -549,7 +549,7 @@ const handler = createMcpHandler(
     capabilities: {},
   },
   {
-    basePath: "/api/mcp",
+    basePath: "/api",
     maxDuration: 60,
     verboseLogs: true,
   }
