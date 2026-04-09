@@ -560,7 +560,8 @@ async function withApiKeyAuth(
   req: Request,
   handlerFn: (req: Request) => Promise<Response>
 ): Promise<Response> {
-  const apiKey = req.headers.get("x-api-key");
+  const url = new URL(req.url);
+  const apiKey = req.headers.get("x-api-key") || url.searchParams.get("api_key");
   const expectedKey = process.env.MCP_API_KEY;
 
   if (expectedKey && apiKey !== expectedKey) {
