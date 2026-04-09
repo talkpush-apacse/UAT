@@ -57,7 +57,7 @@ interface Props {
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
-type ProjectStatus = "Signed Off" | "In Progress" | "Not Started"
+export type ProjectStatus = "Signed Off" | "In Progress" | "Not Started"
 
 function getProjectStatus(project: ProjectWithCounts): ProjectStatus {
   if (project.signoffCount > 0) return "Signed Off"
