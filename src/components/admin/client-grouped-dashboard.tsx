@@ -35,6 +35,8 @@ import {
 import { deleteProject } from "@/lib/actions/projects"
 import { toast } from "sonner"
 
+export type ProjectStatus = "Signed Off" | "In Progress" | "Not Started"
+
 export interface ProjectWithCounts {
   id: string
   slug: string
@@ -44,20 +46,24 @@ export interface ProjectWithCounts {
   created_at: string | null
   testerCount: number
   signoffCount: number
+  stepCount?: number
+  status?: ProjectStatus
+  lastActivityAt?: string | null
 }
 
 export interface ClientGroup {
   clientName: string
+  activeCount?: number
+  completedCount?: number
   projects: ProjectWithCounts[]
 }
 
 interface Props {
   groups: ClientGroup[]
+  recentlyAccessed?: ProjectWithCounts[]
 }
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
-
-type ProjectStatus = "Signed Off" | "In Progress" | "Not Started"
 
 function getProjectStatus(project: ProjectWithCounts): ProjectStatus {
   if (project.signoffCount > 0) return "Signed Off"
