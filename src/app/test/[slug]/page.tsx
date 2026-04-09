@@ -12,7 +12,7 @@ export default async function TesterRegistrationPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug, company_name, test_scenario")
+    .select("id, slug, company_name, title, test_scenario")
     .eq("slug", params.slug)
     .single()
 
@@ -41,6 +41,11 @@ export default async function TesterRegistrationPage({
                 Test Scenario
               </p>
             </div>
+            {project.title && (
+              <h2 className="text-base font-semibold text-gray-900 mb-1.5">
+                {project.title}
+              </h2>
+            )}
             <p className="text-sm text-gray-700 leading-relaxed">
               {project.test_scenario}
             </p>

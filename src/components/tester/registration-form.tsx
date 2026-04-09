@@ -45,7 +45,7 @@ export default function RegistrationForm({
         {companyName && (
           <h2 className="text-lg font-semibold text-gray-900">{companyName}</h2>
         )}
-        <p className="text-sm text-gray-500 mt-1">UAT Checklist Registration</p>
+        <p className="text-sm text-gray-500 mt-1">User Acceptance Testing</p>
       </div>
 
       <form
