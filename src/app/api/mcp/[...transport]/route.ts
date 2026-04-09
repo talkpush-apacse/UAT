@@ -2,10 +2,7 @@ import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const dynamic = "force-dynamic";
-
-// --- Helpers ---
-
+// --- Helper ---
 async function getProjectBySlug(slug: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
@@ -18,19 +15,7 @@ async function getProjectBySlug(slug: string) {
   return data;
 }
 
-function textResult(data: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: typeof data === "string" ? data : JSON.stringify(data, null, 2),
-      },
-    ],
-  };
-}
-
 // --- MCP Handler ---
-
 const handler = createMcpHandler(
   (server) => {
     // =====================
@@ -41,29 +26,38 @@ const handler = createMcpHandler(
       {
         title: "List Projects",
         description:
-          "List all UAT projects. Optionally filter by company name (exact match).",
+          "List all UAT projects. Optionally filter by company name.",
         inputSchema: {
-          company_name: z
+          company: z
             .string()
             .optional()
-            .describe("Filter by company name (exact match)"),
+            .describe("Filter by company name (partial match)"),
         },
       },
-      async ({ company_name }) => {
+      async ({ company }) => {
         const supabase = createAdminClient();
         let query = supabase
           .from("projects")
-          .select(
-            "id, slug, company_name, title, test_scenario, talkpush_login_link, created_at"
-          )
+          .select("id, slug, company_name, title, test_scenario, created_at")
           .order("created_at", { ascending: false });
 
-        if (company_name) query = query.eq("company_name", company_name);
+        if (company) query = query.ilike("company_name", `%${company}%`);
 
         const { data, error } = await query;
         if (error) throw new Error(error.message);
 
-        return textResult({ count: data.length, projects: data });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                { count: data.length, projects: data },
+                null,
+                2
+              ),
+            },
+          ],
+        };
       }
     );
 
@@ -75,62 +69,66 @@ const handler = createMcpHandler(
       {
         title: "Create Project",
         description:
-          "Create a new UAT project. Slug must be lowercase alphanumeric with hyphens.",
+          "Create a new UAT project. Generates a URL-friendly slug from the title automatically.",
         inputSchema: {
           company_name: z
             .string()
-            .min(1)
-            .max(200)
             .describe("The client/company name (e.g., 'Accenture')"),
           title: z
             .string()
-            .min(1)
-            .max(300)
             .describe("The project title (e.g., 'ERP Link Generator UAT')"),
-          slug: z
-            .string()
-            .min(1)
-            .max(100)
-            .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
-            .describe(
-              "URL-friendly identifier, lowercase alphanumeric with hyphens (e.g., 'acme-erp-uat')"
-            ),
           test_scenario: z
             .string()
-            .max(2000)
             .optional()
             .describe("Description of what is being tested (optional)"),
           talkpush_login_link: z
             .string()
-            .url()
-            .max(500)
             .optional()
-            .describe("Talkpush login URL (optional)"),
+            .describe("Talkpush login link for the project (optional)"),
         },
       },
-      async ({ company_name, title, slug, test_scenario, talkpush_login_link }) => {
+      async ({ company_name, title, test_scenario, talkpush_login_link }) => {
         const supabase = createAdminClient();
+
+        // Generate slug from title
+        const baseSlug = title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
+
+        // Check for slug collision and append suffix if needed
+        const { data: existing } = await supabase
+          .from("projects")
+          .select("slug")
+          .ilike("slug", `${baseSlug}%`);
+
+        const slug =
+          existing && existing.length > 0
+            ? `${baseSlug}-${existing.length + 1}`
+            : baseSlug;
 
         const { data, error } = await supabase
           .from("projects")
           .insert({
             company_name,
             title,
-            slug,
             test_scenario: test_scenario ?? null,
             talkpush_login_link: talkpush_login_link ?? null,
+            slug,
           })
           .select()
           .single();
 
-        if (error) {
-          if (error.code === "23505") {
-            throw new Error("A project with this slug already exists");
-          }
-          throw new Error(error.message);
-        }
+        if (error) throw new Error(error.message);
 
-        return textResult({ created: true, project: data });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ created: true, project: data }, null, 2),
+            },
+          ],
+        };
       }
     );
 
@@ -141,33 +139,18 @@ const handler = createMcpHandler(
       "get_project",
       {
         title: "Get Project Details",
-        description:
-          "Get full details of a UAT project by slug, including checklist items and testers.",
+        description: "Get full details of a UAT project by its slug.",
         inputSchema: {
-          slug: z.string().min(1).describe("The project slug (URL identifier)"),
+          slug: z.string().describe("The project slug (URL identifier)"),
         },
       },
       async ({ slug }) => {
-        const supabase = createAdminClient();
         const project = await getProjectBySlug(slug);
-
-        const { data: items } = await supabase
-          .from("checklist_items")
-          .select("*")
-          .eq("project_id", project.id)
-          .order("sort_order", { ascending: true });
-
-        const { data: testers } = await supabase
-          .from("testers")
-          .select("*")
-          .eq("project_id", project.id)
-          .order("created_at", { ascending: true });
-
-        return textResult({
-          project,
-          checklist_items: items ?? [],
-          testers: testers ?? [],
-        });
+        return {
+          content: [
+            { type: "text" as const, text: JSON.stringify(project, null, 2) },
+          ],
+        };
       }
     );
 
@@ -181,27 +164,38 @@ const handler = createMcpHandler(
         description:
           "Get all checklist steps for a project, ordered by sort_order.",
         inputSchema: {
-          project_slug: z.string().min(1).describe("The project slug"),
+          slug: z.string().describe("The project slug"),
         },
       },
-      async ({ project_slug }) => {
-        const project = await getProjectBySlug(project_slug);
+      async ({ slug }) => {
         const supabase = createAdminClient();
+        const project = await getProjectBySlug(slug);
 
         const { data, error } = await supabase
           .from("checklist_items")
-          .select("*")
+          .select("id, actor, action, path, crm_module, tip, view_sample, sort_order, step_number")
           .eq("project_id", project.id)
           .order("sort_order", { ascending: true });
 
         if (error) throw new Error(error.message);
 
-        return textResult({
-          project_slug,
-          project_title: project.title,
-          total_steps: data.length,
-          items: data,
-        });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  project_slug: slug,
+                  project_title: project.title,
+                  total_steps: data.length,
+                  items: data,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
       }
     );
 
@@ -213,9 +207,9 @@ const handler = createMcpHandler(
       {
         title: "Create Checklist Items",
         description:
-          "Add new checklist steps to a project. Step numbers are auto-renumbered after insertion.",
+          "Add new checklist steps to a project. Auto-increments sort_order and step_number after existing items.",
         inputSchema: {
-          project_id: z.string().uuid().describe("The project UUID"),
+          slug: z.string().describe("The project slug"),
           items: z
             .array(
               z.object({
@@ -229,67 +223,53 @@ const handler = createMcpHandler(
                   .describe("Who performs this step"),
                 action: z
                   .string()
-                  .min(1)
-                  .max(2000)
                   .describe("What the actor does in this step"),
                 path: z
-                  .enum(["Happy", "Non-Happy"])
-                  .nullable()
+                  .string()
                   .optional()
-                  .describe("Test path type: 'Happy' or 'Non-Happy' (optional)"),
+                  .describe("URL path or location in the app (optional)"),
                 crm_module: z
                   .string()
-                  .max(200)
                   .optional()
                   .describe("CRM module name (optional)"),
                 tip: z
                   .string()
-                  .max(500)
                   .optional()
-                  .describe("Tip or hint for the tester (optional)"),
+                  .describe("Helpful tip for the tester (optional)"),
                 view_sample: z
                   .string()
-                  .max(2000)
                   .optional()
-                  .describe("Sample view or reference (optional)"),
+                  .describe("URL to a sample/screenshot (optional)"),
               })
             )
-            .min(1)
             .describe("Array of checklist items to create"),
         },
       },
-      async ({ project_id, items }) => {
+      async ({ slug, items }) => {
         const supabase = createAdminClient();
+        const project = await getProjectBySlug(slug);
 
-        // Verify project exists
-        const { data: project, error: projErr } = await supabase
-          .from("projects")
-          .select("id")
-          .eq("id", project_id)
-          .single();
-
-        if (projErr || !project) throw new Error("Project not found");
-
-        // Get current max sort_order
+        // Get current max sort_order and step_number
         const { data: existing } = await supabase
           .from("checklist_items")
-          .select("sort_order")
-          .eq("project_id", project_id)
+          .select("sort_order, step_number")
+          .eq("project_id", project.id)
           .order("sort_order", { ascending: false })
           .limit(1);
 
         let nextOrder = (existing?.[0]?.sort_order ?? 0) + 1;
+        let nextStep = (existing?.[0]?.step_number ?? 0) + 1;
 
         const rows = items.map((item) => ({
-          project_id,
-          step_number: nextOrder,
-          sort_order: nextOrder++,
+          project_id: project.id,
           actor: item.actor,
           action: item.action,
           path: item.path ?? null,
           crm_module: item.crm_module ?? null,
           tip: item.tip ?? null,
           view_sample: item.view_sample ?? null,
+          sort_order: nextOrder++,
+          step_number: nextStep++,
         }));
 
         const { data, error } = await supabase
@@ -299,14 +279,22 @@ const handler = createMcpHandler(
 
         if (error) throw new Error(error.message);
 
-        // Renumber steps to ensure sequential step_numbers
-        await supabase.rpc("renumber_steps", { p_project_id: project_id });
-
-        return textResult({
-          created: data.length,
-          project_id,
-          items: data,
-        });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  created: data.length,
+                  project_slug: slug,
+                  items: data,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
       }
     );
 
@@ -324,55 +312,23 @@ const handler = createMcpHandler(
             .enum(["Candidate", "Talkpush", "Recruiter", "Referrer/Vendor"])
             .optional()
             .describe("Updated actor"),
-          action: z
-            .string()
-            .min(1)
-            .max(2000)
-            .optional()
-            .describe("Updated action text"),
-          path: z
-            .enum(["Happy", "Non-Happy"])
-            .nullable()
-            .optional()
-            .describe("Updated path type"),
-          step_number: z
-            .number()
-            .int()
-            .positive()
-            .optional()
-            .describe("Updated step number"),
-          crm_module: z
-            .string()
-            .max(200)
-            .nullable()
-            .optional()
-            .describe("Updated CRM module"),
-          tip: z
-            .string()
-            .max(500)
-            .nullable()
-            .optional()
-            .describe("Updated tip"),
-          view_sample: z
-            .string()
-            .max(2000)
-            .nullable()
-            .optional()
-            .describe("Updated sample view"),
+          action: z.string().optional().describe("Updated action text"),
+          path: z.string().optional().describe("Updated path"),
+          crm_module: z.string().optional().describe("Updated CRM module"),
+          tip: z.string().optional().describe("Updated tip"),
+          view_sample: z.string().optional().describe("Updated sample URL"),
         },
       },
       async ({ id, ...updates }) => {
         const supabase = createAdminClient();
+        // Remove undefined values
+        const cleanUpdates = Object.fromEntries(
+          Object.entries(updates).filter(([, v]) => v !== undefined)
+        );
 
-        // Build update object from provided fields only
-        const cleanUpdates: Record<string, unknown> = {};
-        if (updates.actor !== undefined) cleanUpdates.actor = updates.actor;
-        if (updates.action !== undefined) cleanUpdates.action = updates.action;
-        if (updates.path !== undefined) cleanUpdates.path = updates.path;
-        if (updates.step_number !== undefined) cleanUpdates.step_number = updates.step_number;
-        if (updates.crm_module !== undefined) cleanUpdates.crm_module = updates.crm_module;
-        if (updates.tip !== undefined) cleanUpdates.tip = updates.tip;
-        if (updates.view_sample !== undefined) cleanUpdates.view_sample = updates.view_sample;
+        if (Object.keys(cleanUpdates).length === 0) {
+          throw new Error("No fields provided to update");
+        }
 
         const { data, error } = await supabase
           .from("checklist_items")
@@ -383,12 +339,14 @@ const handler = createMcpHandler(
 
         if (error) throw new Error(error.message);
 
-        // Renumber if step_number changed
-        if (updates.step_number !== undefined && data) {
-          await supabase.rpc("renumber_steps", { p_project_id: data.project_id });
-        }
-
-        return textResult({ updated: true, item: data });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ updated: true, item: data }, null, 2),
+            },
+          ],
+        };
       }
     );
 
@@ -399,27 +357,15 @@ const handler = createMcpHandler(
       "delete_checklist_items",
       {
         title: "Delete Checklist Items",
-        description:
-          "Delete one or more checklist items by ID. Step numbers are automatically renumbered.",
+        description: "Delete one or more checklist items by their IDs.",
         inputSchema: {
           ids: z
             .array(z.string().uuid())
-            .min(1)
             .describe("Array of checklist item UUIDs to delete"),
         },
       },
       async ({ ids }) => {
         const supabase = createAdminClient();
-
-        // Look up project_id from first item for renumbering
-        const { data: first } = await supabase
-          .from("checklist_items")
-          .select("project_id")
-          .eq("id", ids[0])
-          .single();
-
-        if (!first) throw new Error("Checklist items not found");
-
         const { error } = await supabase
           .from("checklist_items")
           .delete()
@@ -427,12 +373,14 @@ const handler = createMcpHandler(
 
         if (error) throw new Error(error.message);
 
-        // Renumber remaining steps
-        await supabase.rpc("renumber_steps", {
-          p_project_id: first.project_id,
-        });
-
-        return textResult({ deleted: ids.length, ids });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ deleted: ids.length, ids }),
+            },
+          ],
+        };
       }
     );
 
@@ -444,40 +392,34 @@ const handler = createMcpHandler(
       {
         title: "Reorder Checklist",
         description:
-          "Reorder checklist items by providing new sort_order values. Step numbers are automatically recalculated.",
+          "Reorder checklist items by providing an array of IDs in the desired order. Updates sort_order values accordingly.",
         inputSchema: {
-          project_id: z.string().uuid().describe("The project UUID"),
-          items: z
-            .array(
-              z.object({
-                id: z.string().uuid().describe("Checklist item UUID"),
-                sort_order: z
-                  .number()
-                  .int()
-                  .min(0)
-                  .describe("New sort order value"),
-              })
-            )
-            .min(1)
+          ids: z
+            .array(z.string().uuid())
             .describe(
-              "Array of {id, sort_order} pairs specifying the new order"
+              "Checklist item UUIDs in the desired order (first = sort_order 1)"
             ),
         },
       },
-      async ({ project_id, items }) => {
+      async ({ ids }) => {
         const supabase = createAdminClient();
+        const updates = ids.map((id, index) =>
+          supabase
+            .from("checklist_items")
+            .update({ sort_order: index + 1 })
+            .eq("id", id)
+        );
 
-        const { error } = await supabase.rpc("reorder_checklist_steps", {
-          p_project_id: project_id,
-          p_items: items.map((item) => ({
-            id: item.id,
-            sort_order: item.sort_order,
-          })),
-        });
+        await Promise.all(updates);
 
-        if (error) throw new Error(error.message);
-
-        return textResult({ reordered: true, count: items.length });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ reordered: true, count: ids.length }),
+            },
+          ],
+        };
       }
     );
 
@@ -489,100 +431,74 @@ const handler = createMcpHandler(
       {
         title: "Get Project Progress",
         description:
-          "Get testing progress for a project — per-tester pass/fail/N-A/blocked counts and overall completion.",
+          "Get testing progress for a project — completion percentage, status breakdown, and tester count.",
         inputSchema: {
-          project_slug: z.string().min(1).describe("The project slug"),
+          slug: z.string().describe("The project slug"),
         },
       },
-      async ({ project_slug }) => {
-        const project = await getProjectBySlug(project_slug);
+      async ({ slug }) => {
         const supabase = createAdminClient();
+        const project = await getProjectBySlug(slug);
 
-        // Get checklist item IDs for this project
         const { data: items } = await supabase
           .from("checklist_items")
           .select("id")
           .eq("project_id", project.id);
 
-        const itemIds = (items ?? []).map((i) => i.id);
-
-        // Get testers for this project
         const { data: testers } = await supabase
           .from("testers")
-          .select("id, name, email, mobile")
-          .eq("project_id", project.id)
-          .order("created_at", { ascending: true });
+          .select("id")
+          .eq("project_id", project.id);
 
-        const totalSteps = itemIds.length;
-        const totalTesters = testers?.length ?? 0;
-
-        if (totalTesters === 0 || totalSteps === 0) {
-          return textResult({
-            project_slug,
-            total_steps: totalSteps,
-            total_testers: totalTesters,
-            total_expected_responses: 0,
-            total_responses: 0,
-            completion_percentage: 0,
-            status_breakdown: {},
-            testers: (testers ?? []).map((t) => ({
-              ...t,
-              pass: 0,
-              fail: 0,
-              na: 0,
-              blocked: 0,
-              total: 0,
-            })),
-          });
+        // Responses are linked via checklist_item_id, so filter by item IDs
+        const itemIds = (items ?? []).map((i) => i.id);
+        let responses: { status: string | null }[] = [];
+        if (itemIds.length > 0) {
+          const { data: resp } = await supabase
+            .from("responses")
+            .select("status")
+            .in("checklist_item_id", itemIds);
+          responses = resp ?? [];
         }
 
-        // Fetch responses filtered by both tester IDs and checklist item IDs
-        const testerIds = testers!.map((t) => t.id);
-        const { data: responses } = await supabase
-          .from("responses")
-          .select("tester_id, status")
-          .in("tester_id", testerIds)
-          .in("checklist_item_id", itemIds);
-
-        const allResponses = responses ?? [];
+        const totalSteps = items?.length ?? 0;
+        const totalTesters = testers?.length ?? 0;
         const totalExpected = totalSteps * totalTesters;
-        const totalResponses = allResponses.filter((r) => r.status !== null).length;
+        const totalResponses = responses.length;
 
-        const statusBreakdown = allResponses.reduce(
+        const statusBreakdown = responses.reduce(
           (acc: Record<string, number>, r) => {
-            if (r.status) acc[r.status] = (acc[r.status] || 0) + 1;
+            const key = r.status ?? "No Status";
+            acc[key] = (acc[key] || 0) + 1;
             return acc;
           },
           {}
         );
 
-        const testerProgress = testers!.map((tester) => {
-          const testerResponses = allResponses.filter(
-            (r) => r.tester_id === tester.id && r.status !== null
-          );
-          return {
-            ...tester,
-            total: testerResponses.length,
-            pass: testerResponses.filter((r) => r.status === "Pass").length,
-            fail: testerResponses.filter((r) => r.status === "Fail").length,
-            na: testerResponses.filter((r) => r.status === "N/A").length,
-            blocked: testerResponses.filter((r) => r.status === "Blocked").length,
-          };
-        });
-
-        return textResult({
-          project_slug,
-          total_steps: totalSteps,
-          total_testers: totalTesters,
-          total_expected_responses: totalExpected,
-          total_responses: totalResponses,
-          completion_percentage:
-            totalExpected > 0
-              ? Math.round((totalResponses / totalExpected) * 100)
-              : 0,
-          status_breakdown: statusBreakdown,
-          testers: testerProgress,
-        });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  project_slug: slug,
+                  project_title: project.title,
+                  total_steps: totalSteps,
+                  total_testers: totalTesters,
+                  total_expected_responses: totalExpected,
+                  total_responses: totalResponses,
+                  completion_percentage:
+                    totalExpected > 0
+                      ? Math.round((totalResponses / totalExpected) * 100)
+                      : 0,
+                  status_breakdown: statusBreakdown,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
       }
     );
 
@@ -595,62 +511,77 @@ const handler = createMcpHandler(
         title: "List Testers",
         description: "List all registered testers for a project.",
         inputSchema: {
-          project_slug: z.string().min(1).describe("The project slug"),
+          slug: z.string().describe("The project slug"),
         },
       },
-      async ({ project_slug }) => {
-        const project = await getProjectBySlug(project_slug);
+      async ({ slug }) => {
         const supabase = createAdminClient();
+        const project = await getProjectBySlug(slug);
 
         const { data, error } = await supabase
           .from("testers")
           .select("id, name, email, mobile, test_completed, created_at")
           .eq("project_id", project.id)
-          .order("created_at", { ascending: true });
+          .order("created_at", { ascending: false });
 
         if (error) throw new Error(error.message);
 
-        return textResult({
-          project_slug,
-          total_testers: data.length,
-          testers: data,
-        });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  project_slug: slug,
+                  total_testers: data.length,
+                  testers: data,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
       }
     );
   },
   {
-    serverInfo: {
-      name: "uat-mcp-server",
-      version: "1.0.0",
-    },
+    capabilities: {},
   },
   {
     basePath: "/api/mcp",
     maxDuration: 60,
-    verboseLogs: process.env.NODE_ENV === "development",
+    verboseLogs: true,
   }
 );
 
-// --- API Key Auth Wrapper ---
-
-function withApiKeyAuth(
+// --- API Key Middleware Wrapper ---
+async function withApiKeyAuth(
+  req: Request,
   handlerFn: (req: Request) => Promise<Response>
-) {
-  return async (req: Request): Promise<Response> => {
-    const apiKey = req.headers.get("x-api-key");
-    const expectedKey = process.env.MCP_API_KEY;
+): Promise<Response> {
+  const apiKey = req.headers.get("x-api-key");
+  const expectedKey = process.env.MCP_API_KEY;
 
-    if (expectedKey && apiKey !== expectedKey) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+  if (expectedKey && apiKey !== expectedKey) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
-    return handlerFn(req);
-  };
+  return handlerFn(req);
 }
 
-const authedHandler = withApiKeyAuth(handler);
+// Export route handlers with auth wrapper
+export async function GET(req: Request) {
+  return withApiKeyAuth(req, handler);
+}
 
-export { authedHandler as GET, authedHandler as POST, authedHandler as DELETE };
+export async function POST(req: Request) {
+  return withApiKeyAuth(req, handler);
+}
+
+export async function DELETE(req: Request) {
+  return withApiKeyAuth(req, handler);
+}

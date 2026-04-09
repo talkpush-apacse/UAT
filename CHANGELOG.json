@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.9.0",
+    "codename": "Gate Open",
+    "changes": [
+      "Added remote MCP server endpoint at /api/mcp for Claude Desktop, Cursor, and other MCP clients",
+      "10 tools available: list/create/get projects, manage checklists, track progress, list testers",
+      "API key authentication via x-api-key header"
+    ],
+    "deployed_at": "2026-04-09"
+  },
+  {
     "version": "2.8.0",
     "codename": "Flaky Fresh",
     "changes": [
