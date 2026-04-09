@@ -88,6 +88,7 @@ export async function GET(
     { header: "CRM Module", key: "crmModule", width: 15 },
     { header: "Action", key: "action", width: 40 },
     { header: "Tip", key: "tip", width: 30 },
+    { header: "View Sample", key: "viewSample", width: 30 },
     { header: "Status", key: "status", width: 10 },
     { header: "Comment", key: "comment", width: 40 },
   ]
@@ -98,7 +99,7 @@ export async function GET(
       const response = responses.find(
         (r) => r.tester_id === tester.id && r.checklist_item_id === item.id
       )
-      detailSheet.addRow({
+      const row = detailSheet.addRow({
         testerName: tester.name,
         testerEmail: tester.email,
         step: item.step_number,
@@ -107,9 +108,19 @@ export async function GET(
         crmModule: item.crm_module || "",
         action: item.action,
         tip: item.tip || "",
+        viewSample: "",
         status: response?.status || "",
         comment: response?.comment || "",
       })
+
+      const sample = (item.view_sample || "").trim()
+      if (sample && /^https?:\/\//i.test(sample)) {
+        const cell = row.getCell("viewSample")
+        cell.value = { text: "View Sample", hyperlink: sample }
+        cell.font = { color: { argb: "FF0000FF" }, underline: true }
+      } else if (sample) {
+        row.getCell("viewSample").value = sample
+      }
     }
   }
 

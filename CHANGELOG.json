@@ -1,5 +1,13 @@
 [
   {
+    "version": "2.9.1",
+    "codename": "Gate Open",
+    "changes": [
+      "Added View Sample column with clickable hyperlinks to Detailed Results Excel export"
+    ],
+    "deployed_at": "2026-04-09"
+  },
+  {
     "version": "2.9.0",
     "codename": "Gate Open",
     "changes": [
