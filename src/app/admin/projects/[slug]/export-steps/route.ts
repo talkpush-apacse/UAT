@@ -52,16 +52,27 @@ export async function GET(
   ]
   sheet.getRow(1).font = { bold: true }
 
+  const isHttpUrl = (value: string) => /^https?:\/\//i.test(value)
+
   for (const item of checklistItems || []) {
-    sheet.addRow({
+    const row = sheet.addRow({
       stepNumber: item.step_number,
       path: item.path || "",
       actor: item.actor,
       action: item.action,
       crmModule: item.crm_module || "",
       tip: item.tip || "",
-      viewSample: item.view_sample || "",
+      viewSample: "",
     })
+
+    const sample = (item.view_sample || "").trim()
+    if (sample && isHttpUrl(sample)) {
+      const cell = row.getCell("viewSample")
+      cell.value = { text: "View Sample", hyperlink: sample }
+      cell.font = { color: { argb: "FF0000FF" }, underline: true }
+    } else if (sample) {
+      row.getCell("viewSample").value = sample
+    }
   }
 
   const buffer = await workbook.xlsx.writeBuffer()
