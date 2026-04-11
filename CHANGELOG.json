@@ -1,5 +1,14 @@
 [
   {
+    "version": "2.9.3",
+    "codename": "Gate Open",
+    "changes": [
+      "Added search and fetch MCP tools for ChatGPT Apps compatibility",
+      "Existing 10 MCP tools unchanged — Claude.ai connection unaffected"
+    ],
+    "deployed_at": "2026-04-11"
+  },
+  {
     "version": "2.9.2",
     "codename": "Gate Open",
     "changes": [

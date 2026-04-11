@@ -18,6 +18,139 @@ async function getProjectBySlug(slug: string) {
 // --- MCP Handler ---
 const handler = createMcpHandler(
   (server) => {
+    // ============================================================
+    // TOOL: search (required by ChatGPT MCP Apps spec)
+    // Returns matching projects as {id, title, url} results.
+    // ChatGPT and Claude.ai both support this; domain-specific tools
+    // below (list_projects, get_project, etc.) still work as before.
+    // ============================================================
+    server.registerTool(
+      "search",
+      {
+        title: "Search Projects",
+        description:
+          "Search UAT projects by query string. Matches against project title and company name. Returns up to 20 results with id, title, and public URL. Use this for quick lookups; use get_project for full detail.",
+        inputSchema: {
+          query: z
+            .string()
+            .describe(
+              "Search query — matches project title or company name (case-insensitive, partial match)"
+            ),
+        },
+      },
+      async ({ query }) => {
+        const supabase = createAdminClient();
+        const baseUrl =
+          process.env.NEXT_PUBLIC_APP_URL || "https://uat.se-talkpush.com";
+
+        const q = query.trim();
+        const { data, error } = await supabase
+          .from("projects")
+          .select("slug, company_name, title, test_scenario")
+          .or(`title.ilike.%${q}%,company_name.ilike.%${q}%`)
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (error) throw new Error(error.message);
+
+        const results = (data ?? []).map((p) => ({
+          id: p.slug,
+          title: `${p.company_name} — ${p.title}`,
+          url: `${baseUrl}/test/${p.slug}`,
+        }));
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ results }, null, 2),
+            },
+          ],
+        };
+      }
+    );
+
+    // ============================================================
+    // TOOL: fetch (required by ChatGPT MCP Apps spec)
+    // Takes an id (project slug) and returns full project detail
+    // including its checklist steps as a structured text document.
+    // ============================================================
+    server.registerTool(
+      "fetch",
+      {
+        title: "Fetch Project Document",
+        description:
+          "Fetch full details of a UAT project by id (the project slug). Returns project metadata, test scenario, and all checklist steps as a single document. Use this after search to retrieve full content.",
+        inputSchema: {
+          id: z
+            .string()
+            .describe(
+              "The project id (slug) returned from the search tool"
+            ),
+        },
+      },
+      async ({ id }) => {
+        const supabase = createAdminClient();
+        const baseUrl =
+          process.env.NEXT_PUBLIC_APP_URL || "https://uat.se-talkpush.com";
+
+        const project = await getProjectBySlug(id);
+
+        const { data: items, error: itemsError } = await supabase
+          .from("checklist_items")
+          .select(
+            "step_number, actor, action, path, crm_module, tip, view_sample"
+          )
+          .eq("project_id", project.id)
+          .order("sort_order", { ascending: true });
+
+        if (itemsError) throw new Error(itemsError.message);
+
+        // Build a readable text document for the LLM
+        const lines: string[] = [];
+        lines.push(`# ${project.company_name} — ${project.title}`);
+        lines.push("");
+        if (project.test_scenario) {
+          lines.push(`## Test Scenario`);
+          lines.push(project.test_scenario);
+          lines.push("");
+        }
+        lines.push(`## Checklist (${items?.length ?? 0} steps)`);
+        (items ?? []).forEach((it) => {
+          lines.push(`### Step ${it.step_number} — ${it.actor}`);
+          lines.push(it.action);
+          if (it.path) lines.push(`- Path: ${it.path}`);
+          if (it.crm_module) lines.push(`- CRM Module: ${it.crm_module}`);
+          if (it.tip) lines.push(`- Tip: ${it.tip}`);
+          if (it.view_sample) lines.push(`- View Sample: ${it.view_sample}`);
+          lines.push("");
+        });
+
+        const document = {
+          id: project.slug,
+          title: `${project.company_name} — ${project.title}`,
+          text: lines.join("\n"),
+          url: `${baseUrl}/test/${project.slug}`,
+          metadata: {
+            company_name: project.company_name,
+            project_title: project.title,
+            slug: project.slug,
+            created_at: project.created_at,
+            total_steps: items?.length ?? 0,
+          },
+        };
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(document, null, 2),
+            },
+          ],
+        };
+      }
+    );
+
     // =====================
     // TOOL 1: list_projects
     // =====================
