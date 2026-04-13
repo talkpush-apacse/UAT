@@ -22,7 +22,6 @@ import {
   Download,
   CheckCircle2,
   ClipboardCheck,
-  Sparkles,
   ChevronRight,
 } from "lucide-react"
 
@@ -176,12 +175,6 @@ export default async function ProjectDetailPage({
       label: "Sign Off",
       sub: `${signoffs?.length || 0} sign-offs`,
     },
-    {
-      href: `/admin/projects/${project.slug}/ai-summary`,
-      icon: Sparkles,
-      label: "AI Summary",
-      sub: "LLM-powered report",
-    },
   ]
 
   return (
@@ -261,7 +254,15 @@ export default async function ProjectDetailPage({
       {itemCount > 0 && (
         <div className="mb-8">
           {/* P3 — Section header at 16px/600 */}
-          <h2 className="text-base font-semibold text-gray-900 mb-3">Checklist Summary</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-gray-900">Checklist Summary</h2>
+            <a href={`/admin/projects/${project.slug}/export-steps`}>
+              <Button size="sm" className="bg-brand-sage-darker hover:opacity-90 text-white">
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Export Steps as Spreadsheet
+              </Button>
+            </a>
+          </div>
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -305,15 +306,8 @@ export default async function ProjectDetailPage({
         </div>
       )}
 
-      {/* P3 — Tester Progress section: Export Steps button moved here (right-aligned) */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-base font-semibold text-gray-900">Tester Progress</h2>
-        <a href={`/admin/projects/${project.slug}/export-steps`}>
-          <Button variant="outline" size="sm" className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
-            <Download className="h-3.5 w-3.5 mr-1.5" />
-            Export Steps (.xlsx)
-          </Button>
-        </a>
       </div>
       <LiveProgressTable
         slug={project.slug}
