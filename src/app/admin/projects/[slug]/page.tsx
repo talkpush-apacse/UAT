@@ -234,16 +234,19 @@ export default async function ProjectDetailPage({
         </div>
       )}
 
-      {/* P2 — Action cards with top-border accent, hover lift, right-arrow affordance */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
+      {/* Action nav cards — clearly clickable tiles */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8">
         {actionCards.map((card) => (
-          <Link key={card.href} href={card.href}>
-            <div className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-sage-lighter hover:bg-brand-sage-lightest transition-all duration-200 cursor-pointer p-5 text-center border-t-4 border-t-brand-sage-darker">
-              {/* Right-arrow affordance — appears on hover */}
-              <ChevronRight className="absolute top-2.5 right-2.5 h-3.5 w-3.5 text-gray-300 group-hover:text-brand-sage-darker transition-colors" />
-              <card.icon className="h-5 w-5 text-gray-400 group-hover:text-brand-sage-darker mx-auto mb-2 transition-colors" />
-              <p className="text-[15px] font-semibold text-gray-800 leading-tight">{card.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
+          <Link key={card.href} href={card.href} className="block">
+            <div className="group relative flex flex-col items-center justify-center bg-white rounded-xl border-t-4 border-t-brand-sage-darker border border-gray-200 shadow hover:shadow-lg hover:border-brand-sage hover:bg-brand-sage-lightest transition-all duration-200 cursor-pointer px-4 py-5 text-center">
+              {/* Arrow affordance — always faintly visible, brightens on hover */}
+              <ChevronRight className="absolute top-3 right-3 h-4 w-4 text-gray-300 group-hover:text-brand-sage-darker transition-colors" />
+              {/* Icon with colored bg bubble */}
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 group-hover:bg-brand-sage-lighter transition-colors">
+                <card.icon className="h-5 w-5 text-gray-500 group-hover:text-brand-sage-darker transition-colors" />
+              </div>
+              <p className="text-sm font-semibold text-gray-800 group-hover:text-brand-sage-darker leading-tight transition-colors">{card.label}</p>
+              <p className="text-xs text-gray-500 mt-1">{card.sub}</p>
             </div>
           </Link>
         ))}
