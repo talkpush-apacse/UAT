@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.9.5",
+    "codename": "Tester Perspective",
+    "changes": [
+      "Renamed 'Actor' label to 'Tester Perspective' across all admin UI",
+      "XLSX import now accepts both 'Actor' and 'Tester Perspective' column headers",
+      "Export files now use 'Tester Perspective' as the column header"
+    ],
+    "deployed_at": "2026-04-14"
+  },
+  {
     "version": "2.9.4",
     "codename": "Client Grid",
     "changes": [

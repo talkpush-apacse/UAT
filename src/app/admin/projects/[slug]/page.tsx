@@ -272,7 +272,7 @@ export default async function ProjectDetailPage({
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">#</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Path</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Actor</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Tester Perspective</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Action</th>
                   {/* P3 — Module column: left separator + medium gray/500 weight */}
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide border-l border-gray-200">Module</th>

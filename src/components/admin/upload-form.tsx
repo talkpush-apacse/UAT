@@ -56,7 +56,7 @@ export default function UploadForm({
         </div>
         <p className="text-xs text-gray-400 mt-1 leading-relaxed">
           Upload an XLSX or CSV file with your test steps. Expected columns:
-          Step Number, Path, Actor, Action, View Sample, CRM Module, Tip
+          Step Number, Path, Tester Perspective, Action, View Sample, CRM Module, Tip
         </p>
       </CardHeader>
       <CardContent className="p-5">

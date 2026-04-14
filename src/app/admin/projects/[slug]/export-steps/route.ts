@@ -44,7 +44,7 @@ export async function GET(
   sheet.columns = [
     { header: "Step #", key: "stepNumber", width: 10 },
     { header: "Path", key: "path", width: 14 },
-    { header: "Actor", key: "actor", width: 14 },
+    { header: "Tester Perspective", key: "actor", width: 20 },
     { header: "Action", key: "action", width: 55 },
     { header: "CRM Module", key: "crmModule", width: 20 },
     { header: "Tip", key: "tip", width: 40 },

@@ -81,7 +81,7 @@ export async function parseChecklistFile(
   // Map columns
   const stepCol = findColumnIndex(headers, 'Step', 'Step Number', 'StepNumber', '#')
   const pathCol = findColumnIndex(headers, 'Path')
-  const actorCol = findColumnIndex(headers, 'Actor')
+  const actorCol = findColumnIndex(headers, 'Actor', 'Tester Perspective')
   const actionCol = findColumnIndex(headers, 'Action', 'Description', 'Test Step')
   const sampleCol = findColumnIndex(headers, 'View Sample', 'Sample', 'ViewSample', 'Link')
   const moduleCol = findColumnIndex(headers, 'CRM Module', 'CRMModule', 'Module')
@@ -90,13 +90,13 @@ export async function parseChecklistFile(
   if (actionCol === null) {
     return {
       items: [],
-      errors: ['Required column "Action" not found. Expected columns: Step, Path, Actor, Action, View Sample, CRM Module'],
+      errors: ['Required column "Action" not found. Expected columns: Step, Path, Tester Perspective, Action, View Sample, CRM Module'],
     }
   }
   if (actorCol === null) {
     return {
       items: [],
-      errors: ['Required column "Actor" not found. Expected columns: Step, Path, Actor, Action, View Sample, CRM Module'],
+      errors: ['Required column "Tester Perspective" not found. Expected columns: Step, Path, Tester Perspective, Action, View Sample, CRM Module'],
     }
   }
 

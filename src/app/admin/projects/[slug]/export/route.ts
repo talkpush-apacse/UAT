@@ -84,7 +84,7 @@ export async function GET(
     { header: "Tester Email", key: "testerEmail", width: 25 },
     { header: "Step #", key: "step", width: 8 },
     { header: "Path", key: "path", width: 12 },
-    { header: "Actor", key: "actor", width: 12 },
+    { header: "Tester Perspective", key: "actor", width: 20 },
     { header: "CRM Module", key: "crmModule", width: 15 },
     { header: "Action", key: "action", width: 40 },
     { header: "Tip", key: "tip", width: 30 },

@@ -151,7 +151,7 @@ export function SortableStepCard({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-gray-500">Actor</Label>
+                <Label className="text-xs text-gray-500">Tester Perspective</Label>
                 <Select
                   value={editData.actor}
                   onValueChange={(v) => setEditData({ ...editData, actor: v })}
