@@ -34,6 +34,7 @@ import {
   reorderChecklistItems,
   duplicateChecklistItem,
   bulkDeleteChecklistItems,
+  type ChecklistSnapshot,
 } from "@/lib/actions/checklist"
 import { toast } from "sonner"
 import { Plus, FileText, Trash2, CheckSquare } from "lucide-react"
@@ -41,6 +42,7 @@ import { type ChecklistItem, renumberItems } from "./types"
 import { SortableStepCard } from "./step-card"
 import { AddStepForm } from "./add-step-form"
 import { CopyStepsDialog } from "./copy-steps-dialog"
+import { VersionHistory } from "./version-history"
 
 /* ------------------------------------------------------------------ */
 /*  ChecklistEditor (default export)                                   */
@@ -50,10 +52,12 @@ export default function ChecklistEditor({
   items: initialItems,
   projectId,
   slug,
+  snapshots: initialSnapshots = [],
 }: {
   items: ChecklistItem[]
   projectId: string
   slug: string
+  snapshots?: ChecklistSnapshot[]
 }) {
   const router = useRouter()
   const [items, setItems] = useState(initialItems)
@@ -344,6 +348,11 @@ export default function ChecklistEditor({
           onCancel={() => setAdding(false)}
         />
       )}
+
+      {/* Version History — save snapshots and revert to previous checklist states */}
+      <div className="pt-4 border-t border-gray-100">
+        <VersionHistory slug={slug} initialSnapshots={initialSnapshots} />
+      </div>
     </div>
   )
 }

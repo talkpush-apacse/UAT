@@ -91,16 +91,24 @@ export default function UploadForm({
             </div>
           )}
           {state.success && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <CheckCircle2 className="h-4 w-4" />
-              Successfully imported {state.itemCount} checklist items. Redirecting...
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle2 className="h-4 w-4" />
+                Successfully imported {state.itemCount} checklist items. Redirecting...
+              </div>
+              {state.autoSnapshotVersion !== undefined && (
+                <p className="text-xs text-gray-500 pl-6">
+                  Previous steps saved as v{state.autoSnapshotVersion} in Version History.
+                </p>
+              )}
             </div>
           )}
           <Alert variant="warning">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Heads up</AlertTitle>
             <AlertDescription>
-              This will permanently replace all existing checklist steps for this project.
+              Existing steps will be replaced. If steps exist, they will be automatically
+              saved as a version snapshot before import so you can restore them later.
             </AlertDescription>
           </Alert>
           <Separator />

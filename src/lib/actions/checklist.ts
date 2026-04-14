@@ -19,6 +19,29 @@ export interface ChecklistActionState {
   errors?: string[]
   success?: boolean
   itemCount?: number
+  autoSnapshotVersion?: number
+}
+
+/** Shape of a snapshot row returned to the UI (snapshot_data excluded) */
+export interface ChecklistSnapshot {
+  id: string
+  project_id: string
+  version_number: number
+  label: string
+  item_count: number
+  created_at: string
+}
+
+/** Shape of one item stored inside snapshot_data JSONB */
+interface SnapshotItem {
+  step_number: number
+  path: string | null
+  actor: string
+  action: string
+  view_sample: string | null
+  crm_module: string | null
+  tip: string | null
+  sort_order: number
 }
 
 /** Minimal step shape used for the "Copy from Project" step-selection dialog */
@@ -81,6 +104,37 @@ export async function importChecklist(
 
     const supabase = createAdminClient()
 
+    // Auto-snapshot existing items before overwriting so admins can revert if needed
+    const { data: existingItems } = await supabase
+      .from('checklist_items')
+      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order')
+      .eq('project_id', projectId)
+      .order('sort_order')
+
+    let autoSnapshotVersion: number | undefined
+
+    if (existingItems && existingItems.length > 0) {
+      const { data: maxRow } = await supabase
+        .from('checklist_snapshots')
+        .select('version_number')
+        .eq('project_id', projectId)
+        .order('version_number', { ascending: false })
+        .limit(1)
+        .single()
+
+      const nextVersion = (maxRow?.version_number ?? 0) + 1
+
+      await supabase.from('checklist_snapshots').insert({
+        project_id: projectId,
+        version_number: nextVersion,
+        label: 'Auto-save before import',
+        item_count: existingItems.length,
+        snapshot_data: existingItems,
+      })
+
+      autoSnapshotVersion = nextVersion
+    }
+
     // Delete existing items for this project
     await supabase.from('checklist_items').delete().eq('project_id', projectId)
 
@@ -108,6 +162,7 @@ export async function importChecklist(
       success: true,
       itemCount: items.length,
       errors: errors.length > 0 ? errors : undefined,
+      autoSnapshotVersion,
     }
   } catch (err) {
     console.error('importChecklist error:', err)
@@ -550,6 +605,227 @@ export async function bulkDeleteChecklistItems(
     return {}
   } catch (err) {
     console.error('bulkDeleteChecklistItems error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  createChecklistSnapshot                                            */
+/* ------------------------------------------------------------------ */
+
+export async function createChecklistSnapshot(
+  slug: string,
+  label: string
+): Promise<{ error?: string; snapshot?: ChecklistSnapshot }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    const trimmed = label.trim()
+    if (!trimmed) return { error: 'Label is required' }
+    if (trimmed.length > 100) return { error: 'Label must be 100 characters or less' }
+
+    const supabase = createAdminClient()
+
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('slug', slug)
+      .single()
+    if (!project) return { error: 'Project not found' }
+
+    // Read all current items for the snapshot payload
+    const { data: items, error: itemsError } = await supabase
+      .from('checklist_items')
+      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order')
+      .eq('project_id', project.id)
+      .order('sort_order')
+
+    if (itemsError) return { error: itemsError.message }
+
+    // Auto-increment version_number per project
+    const { data: maxRow } = await supabase
+      .from('checklist_snapshots')
+      .select('version_number')
+      .eq('project_id', project.id)
+      .order('version_number', { ascending: false })
+      .limit(1)
+      .single()
+
+    const nextVersion = (maxRow?.version_number ?? 0) + 1
+
+    const { data: snapshot, error: insertError } = await supabase
+      .from('checklist_snapshots')
+      .insert({
+        project_id: project.id,
+        version_number: nextVersion,
+        label: trimmed,
+        item_count: items?.length ?? 0,
+        snapshot_data: items ?? [],
+      })
+      .select('id, project_id, version_number, label, item_count, created_at')
+      .single()
+
+    if (insertError) return { error: insertError.message }
+
+    revalidatePath(`/admin/projects/${slug}/checklist`)
+    return { snapshot: snapshot as ChecklistSnapshot }
+  } catch (err) {
+    console.error('createChecklistSnapshot error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  listChecklistSnapshots                                             */
+/* ------------------------------------------------------------------ */
+
+export async function listChecklistSnapshots(
+  slug: string
+): Promise<{ error?: string; snapshots?: ChecklistSnapshot[] }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    const supabase = createAdminClient()
+
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('slug', slug)
+      .single()
+    if (!project) return { error: 'Project not found' }
+
+    // Exclude snapshot_data (can be large) — only metadata needed for the list
+    const { data, error } = await supabase
+      .from('checklist_snapshots')
+      .select('id, project_id, version_number, label, item_count, created_at')
+      .eq('project_id', project.id)
+      .order('version_number', { ascending: false })
+
+    if (error) return { error: error.message }
+
+    return { snapshots: (data ?? []) as ChecklistSnapshot[] }
+  } catch (err) {
+    console.error('listChecklistSnapshots error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  deleteChecklistSnapshot                                            */
+/* ------------------------------------------------------------------ */
+
+export async function deleteChecklistSnapshot(
+  slug: string,
+  snapshotId: string
+): Promise<{ error?: string }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+      .from('checklist_snapshots')
+      .delete()
+      .eq('id', snapshotId)
+
+    if (error) return { error: error.message }
+
+    revalidatePath(`/admin/projects/${slug}/checklist`)
+    return {}
+  } catch (err) {
+    console.error('deleteChecklistSnapshot error:', err)
+    return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  revertToSnapshot                                                   */
+/*  Guard: blocked if any tester responses exist for current items.   */
+/* ------------------------------------------------------------------ */
+
+export async function revertToSnapshot(
+  slug: string,
+  snapshotId: string
+): Promise<{ error?: string; blockedByResponses?: number; itemCount?: number }> {
+  try {
+    const isAdmin = await verifyAdminSession()
+    if (!isAdmin) return { error: 'Unauthorized' }
+
+    const supabase = createAdminClient()
+
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('slug', slug)
+      .single()
+    if (!project) return { error: 'Project not found' }
+
+    // Fetch snapshot including payload
+    const { data: snapshot, error: snapshotError } = await supabase
+      .from('checklist_snapshots')
+      .select('id, version_number, label, snapshot_data')
+      .eq('id', snapshotId)
+      .eq('project_id', project.id)
+      .single()
+
+    if (snapshotError || !snapshot) return { error: 'Snapshot not found' }
+
+    // Guard: count existing responses for this project's current items
+    const { data: currentItems } = await supabase
+      .from('checklist_items')
+      .select('id')
+      .eq('project_id', project.id)
+
+    const currentItemIds = (currentItems ?? []).map((i) => i.id)
+
+    let responseCount = 0
+    if (currentItemIds.length > 0) {
+      const { count, error: countError } = await supabase
+        .from('responses')
+        .select('id', { count: 'exact', head: true })
+        .in('checklist_item_id', currentItemIds)
+
+      if (countError) return { error: countError.message }
+      responseCount = count ?? 0
+    }
+
+    if (responseCount > 0) {
+      // Return blocked — do NOT delete anything
+      return { blockedByResponses: responseCount }
+    }
+
+    // Safe to revert — delete current items (cascades admin_reviews etc.)
+    await supabase.from('checklist_items').delete().eq('project_id', project.id)
+
+    const snapshotItems = snapshot.snapshot_data as unknown as SnapshotItem[]
+
+    if (snapshotItems.length > 0) {
+      const rows = snapshotItems.map((item, idx) => ({
+        project_id: project.id,
+        step_number: item.step_number,
+        path: item.path,
+        actor: item.actor,
+        action: item.action,
+        view_sample: item.view_sample ?? null,
+        crm_module: item.crm_module ?? null,
+        tip: item.tip ?? null,
+        sort_order: item.sort_order ?? idx + 1,
+      }))
+
+      const { error: insertError } = await supabase.from('checklist_items').insert(rows)
+      if (insertError) return { error: insertError.message }
+
+      await renumberSteps(project.id, supabase)
+    }
+
+    revalidatePath(`/admin/projects/${slug}`)
+    revalidatePath(`/admin/projects/${slug}/checklist`)
+    return { itemCount: snapshotItems.length }
+  } catch (err) {
+    console.error('revertToSnapshot error:', err)
     return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
   }
 }

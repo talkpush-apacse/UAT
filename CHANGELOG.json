@@ -1,5 +1,17 @@
 [
   {
+    "version": "2.10.0",
+    "codename": "Safe Revert",
+    "changes": [
+      "Added Version History panel to the checklist editor",
+      "Admins can save named snapshots of checklist steps at any time",
+      "Restore any snapshot to replace current steps (blocked if tester responses exist)",
+      "Import now auto-saves existing steps as a snapshot before overwriting",
+      "Delete individual snapshots without affecting the live checklist"
+    ],
+    "deployed_at": "2026-04-14"
+  },
+  {
     "version": "2.9.5",
     "codename": "Tester Perspective",
     "changes": [

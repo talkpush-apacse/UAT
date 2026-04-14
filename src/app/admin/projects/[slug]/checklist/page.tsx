@@ -24,11 +24,19 @@ export default async function ManageChecklistPage({
 
   if (!project) notFound()
 
-  const { data: items } = await supabase
-    .from("checklist_items")
-    .select("id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample")
-    .eq("project_id", project.id)
-    .order("sort_order")
+  // Fetch checklist items and version snapshots in parallel
+  const [{ data: items }, { data: snapshots }] = await Promise.all([
+    supabase
+      .from("checklist_items")
+      .select("id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample")
+      .eq("project_id", project.id)
+      .order("sort_order"),
+    supabase
+      .from("checklist_snapshots")
+      .select("id, project_id, version_number, label, item_count, created_at")
+      .eq("project_id", project.id)
+      .order("version_number", { ascending: false }),
+  ])
 
   return (
     <div>
@@ -43,6 +51,7 @@ export default async function ManageChecklistPage({
         items={items || []}
         projectId={project.id}
         slug={project.slug}
+        snapshots={snapshots || []}
       />
     </div>
   )

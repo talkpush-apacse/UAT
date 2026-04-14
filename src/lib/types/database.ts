@@ -188,6 +188,44 @@ export type Database = {
         }
         Relationships: []
       }
+      checklist_snapshots: {
+        Row: {
+          id: string
+          project_id: string
+          version_number: number
+          label: string
+          item_count: number
+          snapshot_data: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          version_number: number
+          label: string
+          item_count?: number
+          snapshot_data?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          version_number?: number
+          label?: string
+          item_count?: number
+          snapshot_data?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_snapshots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_items: {
         Row: {
           action: string
