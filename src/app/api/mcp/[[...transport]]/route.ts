@@ -677,6 +677,163 @@ const handler = createMcpHandler(
         };
       }
     );
+
+    // ===========================
+    // TOOL 11: get_admin_reviews
+    // ===========================
+    server.registerTool(
+      "get_admin_reviews",
+      {
+        title: "Get Admin Reviews",
+        description:
+          "Get admin review data for all non-pass checklist items in a project, grouped by tester. Returns behavior type, resolution status, and findings/comments for each flagged item. Used for generating AI summaries of UAT testing results.",
+        inputSchema: {
+          slug: z.string().describe("The project slug"),
+        },
+      },
+      async ({ slug }) => {
+        const supabase = createAdminClient();
+        const project = await getProjectBySlug(slug);
+
+        // Fetch all checklist items for this project
+        const { data: allItems, error: itemsError } = await supabase
+          .from("checklist_items")
+          .select("id, step_number, actor, action")
+          .eq("project_id", project.id)
+          .order("sort_order", { ascending: true });
+
+        if (itemsError) throw new Error(itemsError.message);
+
+        // Fetch all testers for this project
+        const { data: allTesters, error: testersError } = await supabase
+          .from("testers")
+          .select("id, name, email")
+          .eq("project_id", project.id)
+          .order("created_at", { ascending: true });
+
+        if (testersError) throw new Error(testersError.message);
+
+        const itemIds = (allItems ?? []).map((i) => i.id);
+
+        // Fetch ALL responses (needed for summary stats)
+        let allResponses: {
+          tester_id: string;
+          checklist_item_id: string;
+          status: string | null;
+        }[] = [];
+        if (itemIds.length > 0) {
+          const { data: resp, error: respError } = await supabase
+            .from("responses")
+            .select("tester_id, checklist_item_id, status")
+            .in("checklist_item_id", itemIds);
+          if (respError) throw new Error(respError.message);
+          allResponses = resp ?? [];
+        }
+
+        // Fetch all admin reviews for this project's items
+        let allReviews: {
+          checklist_item_id: string;
+          tester_id: string;
+          behavior_type: string | null;
+          resolution_status: string;
+          notes: string | null;
+        }[] = [];
+        if (itemIds.length > 0) {
+          const { data: rev, error: revError } = await supabase
+            .from("admin_reviews")
+            .select(
+              "checklist_item_id, tester_id, behavior_type, resolution_status, notes"
+            )
+            .in("checklist_item_id", itemIds);
+          if (revError) throw new Error(revError.message);
+          allReviews = rev ?? [];
+        }
+
+        // Build lookup maps for O(1) access
+        const itemMap = new Map((allItems ?? []).map((i) => [i.id, i]));
+        const reviewMap = new Map(
+          allReviews.map((r) => [`${r.checklist_item_id}:${r.tester_id}`, r])
+        );
+
+        // Compute summary stats across all responses
+        const totalResponses = allResponses.length;
+        const passCount = allResponses.filter((r) => r.status === "Pass").length;
+        const failCount = allResponses.filter((r) => r.status === "Fail").length;
+        const naCount = allResponses.filter((r) => r.status === "N/A").length;
+        const passRate =
+          totalResponses > 0
+            ? `${((passCount / totalResponses) * 100).toFixed(1)}%`
+            : "0%";
+
+        // Build per-tester review data
+        const adminReviews = (allTesters ?? []).map((tester) => {
+          const testerResponses = allResponses.filter(
+            (r) => r.tester_id === tester.id
+          );
+          // Only include non-pass responses (Fail, N/A, Blocked)
+          const nonPassResponses = testerResponses.filter(
+            (r) => r.status !== "Pass" && r.status !== null
+          );
+
+          const items = nonPassResponses
+            .map((resp) => {
+              const item = itemMap.get(resp.checklist_item_id);
+              const review = reviewMap.get(
+                `${resp.checklist_item_id}:${tester.id}`
+              );
+              return {
+                step_number: item?.step_number ?? null,
+                actor: item?.actor ?? null,
+                action: item?.action ?? null,
+                status: resp.status,
+                behavior_type: review?.behavior_type ?? null,
+                resolution_status: review?.resolution_status ?? null,
+                findings: review?.notes ?? null,
+              };
+            })
+            .sort((a, b) => (a.step_number ?? 0) - (b.step_number ?? 0));
+
+          const resolvedCount = items.filter(
+            (i) => i.resolution_status === "Done"
+          ).length;
+
+          return {
+            tester_name: tester.name,
+            tester_email: tester.email,
+            total_steps_assigned: allItems?.length ?? 0,
+            total_flagged: items.length,
+            resolved_count: resolvedCount,
+            items,
+          };
+        });
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  project_slug: slug,
+                  project_title: project.title,
+                  total_steps: allItems?.length ?? 0,
+                  total_testers: allTesters?.length ?? 0,
+                  summary_stats: {
+                    total_responses: totalResponses,
+                    pass: passCount,
+                    fail: failCount,
+                    na: naCount,
+                    pass_rate: passRate,
+                  },
+                  admin_reviews: adminReviews,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+    );
   },
   {
     capabilities: {},
