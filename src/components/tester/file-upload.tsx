@@ -197,18 +197,14 @@ export default function FileUpload({
   }
 
   return (
-    <div
-      tabIndex={0}
-      onPaste={handlePaste}
-      className="focus:outline-none"
-    >
-      {/* Attachment list */}
+    <div className="space-y-2">
+      {/* Attachment chips */}
       {attachments.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap gap-1.5">
           {attachments.map((att) => (
             <div
               key={att.id}
-              className="group relative flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 rounded-lg border border-gray-100 text-xs hover:bg-gray-100 transition-colors"
+              className="group flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-gray-200 text-xs hover:bg-gray-50 transition-colors"
             >
               {att.mime_type.startsWith("image/") ? (
                 <a
@@ -218,7 +214,7 @@ export default function FileUpload({
                   className="flex items-center gap-1.5"
                 >
                   <span>🖼</span>
-                  <span className="max-w-[120px] truncate text-gray-700">{att.file_name}</span>
+                  <span className="max-w-[140px] truncate text-gray-700">{att.file_name}</span>
                 </a>
               ) : (
                 <a
@@ -228,13 +224,13 @@ export default function FileUpload({
                   className="flex items-center gap-1.5"
                 >
                   <AttachmentIcon mimeType={att.mime_type} />
-                  <span className="max-w-[120px] truncate text-gray-700">{att.file_name}</span>
+                  <span className="max-w-[140px] truncate text-gray-700">{att.file_name}</span>
                 </a>
               )}
               <button
                 type="button"
                 onClick={() => handleDelete(att)}
-                className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 focus-visible:opacity-100 focus-visible:outline-none"
+                className="ml-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-500 focus-visible:opacity-100 focus-visible:outline-none"
                 aria-label={`Remove ${att.file_name}`}
               >
                 <X className="h-3 w-3" />
@@ -244,8 +240,26 @@ export default function FileUpload({
         </div>
       )}
 
-      {/* Upload controls */}
-      <div className="flex items-center gap-2 flex-wrap">
+      {/* Upload zone */}
+      <div
+        tabIndex={0}
+        role="button"
+        aria-label="Attach files or paste a screenshot"
+        onPaste={handlePaste}
+        onClick={() => !uploading && fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click()
+        }}
+        className={`
+          group relative rounded-xl border-2 border-dashed px-4 py-3
+          flex items-center gap-3 transition-all duration-150 cursor-pointer
+          ${uploading
+            ? "border-brand-sage-lighter bg-brand-sage-lightest cursor-default"
+            : "border-gray-200 bg-gray-50 hover:border-brand-sage-lighter hover:bg-brand-sage-lightest"
+          }
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-lighter focus-visible:border-brand-sage-lighter
+        `}
+      >
         <input
           ref={fileInputRef}
           type="file"
@@ -254,23 +268,30 @@ export default function FileUpload({
           onChange={handleFileSelect}
           className="hidden"
         />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="text-xs h-7 text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          <Paperclip className="h-3 w-3 mr-1" />
-          {uploading ? "Uploading..." : "Attach File"}
-        </Button>
-        <span className="text-xs text-gray-400">Max 10MB · or paste from clipboard</span>
+
+        {/* Icon */}
+        <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 group-hover:border-brand-sage-lighter flex items-center justify-center flex-shrink-0 transition-colors">
+          {uploading ? (
+            <div className="h-4 w-4 border-2 border-brand-sage-lighter border-t-brand-sage-darker rounded-full animate-spin" />
+          ) : (
+            <Paperclip className="h-4 w-4 text-gray-400 group-hover:text-brand-sage-darker transition-colors" />
+          )}
+        </div>
+
+        {/* Text */}
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-600 group-hover:text-brand-sage-darker transition-colors leading-tight">
+            {uploading ? "Uploading…" : "Click to attach files"}
+          </p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            PNG, JPG, GIF, PDF, DOCX · Max 10MB · or paste a screenshot
+          </p>
+        </div>
       </div>
 
       {/* Per-file upload errors */}
       {uploadErrors.length > 0 && (
-        <div className="mt-1 space-y-0.5">
+        <div className="space-y-0.5">
           {uploadErrors.map((err, i) => (
             <p key={i} className="text-xs text-red-600">
               {err}
