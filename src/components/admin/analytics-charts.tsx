@@ -72,6 +72,7 @@ const FINDING_COLORS: Record<string, string> = {
   "Bug/Glitch": "#ef4444",
   "Configuration Issue": "#f97316",
   "For Retesting": "#3b82f6",
+  "Blocked": "#6b7280",
   "Not Yet Reviewed": "#d1d5db",
 }
 
@@ -201,6 +202,7 @@ export default function AnalyticsCharts({
       "Bug/Glitch": 0,
       "Configuration Issue": 0,
       "For Retesting": 0,
+      "Blocked": 0,
     }
 
     // Count non-Pass responses with a Talkpush finding

@@ -72,6 +72,7 @@ const PDF_FINDING_COLORS: Record<string, string> = {
   "Bug/Glitch": "#ef4444",
   "Configuration Issue": "#f97316",
   "For Retesting": "#3b82f6",
+  "Blocked": "#6b7280",
   "Not Yet Reviewed": "#d1d5db",
 }
 
@@ -736,6 +737,8 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
               ? "#fee2e2"
               : row.behaviorType === "For Retesting"
               ? "#dbeafe"
+              : row.behaviorType === "Blocked"
+              ? "#f3f4f6"
               : "#ffedd5"
           const findingText =
             row.behaviorType === "Expected Behavior"
@@ -744,6 +747,8 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
               ? "#991b1b"
               : row.behaviorType === "For Retesting"
               ? "#1e40af"
+              : row.behaviorType === "Blocked"
+              ? "#374151"
               : "#9a3412"
 
           return (

@@ -226,7 +226,7 @@ Write a concise executive summary of this UAT in the following structure. Use ma
 2. **Key Findings** — Analyze the steps with issues. Group by recurring patterns (i.e., steps reported by multiple testers or steps with similar findings). For each finding:
    - Mention the step number and what the step does
    - How many testers reported it
-   - What the Talkpush finding/classification is (Bug/Glitch, Configuration Issue, Expected Behavior, For Retesting)
+   - What the Talkpush finding/classification is (Bug/Glitch, Configuration Issue, Expected Behavior, For Retesting, Blocked)
    - Include the Talkpush remarks if available
    - Note the resolution status
 

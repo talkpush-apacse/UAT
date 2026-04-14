@@ -28,6 +28,7 @@ const BEHAVIOR_OPTIONS = [
   { value: "Bug/Glitch", activeStyle: "bg-red-600 text-white border-red-600" },
   { value: "Configuration Issue", activeStyle: "bg-orange-500 text-white border-orange-500" },
   { value: "For Retesting", activeStyle: "bg-blue-600 text-white border-blue-600" },
+  { value: "Blocked", activeStyle: "bg-gray-600 text-white border-gray-600" },
 ] as const
 
 const RESOLUTION_OPTIONS = [
