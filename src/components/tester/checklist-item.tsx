@@ -44,7 +44,8 @@ const STATUS_OPTIONS = [
   { value: "Pass", label: "Pass" },
   { value: "Fail", label: "Fail" },
   { value: "N/A", label: "N/A" },
-  { value: "Blocked", label: "Up For Review" },
+  { value: "Blocked", label: "Blocked" },
+  { value: "Up For Review", label: "Up For Review" },
 ] as const
 
 import { ACTOR_COLORS as ACTOR_CHIP_STYLES } from "@/lib/constants"
@@ -63,7 +64,11 @@ const STATUS_STYLES: Record<string, { active: string; inactive: string }> = {
     inactive: "border-gray-300 text-gray-700 hover:bg-gray-50",
   },
   Blocked: {
-    active: "bg-amber-600 text-white border-amber-600",
+    active: "bg-orange-500 text-white border-orange-500",
+    inactive: "border-orange-300 text-orange-700 hover:bg-orange-50",
+  },
+  "Up For Review": {
+    active: "bg-amber-500 text-white border-amber-500",
     inactive: "border-amber-300 text-amber-700 hover:bg-amber-50",
   },
 }
@@ -120,6 +125,8 @@ function getCardStyles(status: string | null): string {
     case "N/A":
       return "border-l-4 border-l-gray-400 bg-gray-50/50"
     case "Blocked":
+      return "border-l-4 border-l-orange-500 bg-orange-50/50"
+    case "Up For Review":
       return "border-l-4 border-l-amber-500 bg-amber-50/50"
     default:
       return "border-l-4 border-l-brand-sage-lighter bg-white"
@@ -174,7 +181,7 @@ export default function ChecklistItem({
   const [responseId, setResponseId] = useState(response?.id || null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
   const [showComment, setShowComment] = useState(
-    !!response?.comment || status === "Fail" || status === "Blocked"
+    !!response?.comment || status === "Fail" || status === "Blocked" || status === "Up For Review"
   )
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
@@ -230,7 +237,7 @@ export default function ChecklistItem({
     const finalStatus = newStatus === status ? null : newStatus
     setStatus(finalStatus)
 
-    if (finalStatus === "Fail" || finalStatus === "Blocked") {
+    if (finalStatus === "Fail" || finalStatus === "Blocked" || finalStatus === "Up For Review") {
       setShowComment(true)
     }
 
@@ -268,8 +275,10 @@ export default function ChecklistItem({
   const commentPrompt = status === "Fail"
     ? "Please describe the issue you encountered"
     : status === "Blocked"
-      ? "Please describe what needs to be reviewed in this step"
-      : "Add a comment..."
+      ? "Which step is blocking you?"
+      : status === "Up For Review"
+        ? "Please describe what needs to be reviewed in this step"
+        : "Add a comment..."
 
   return (
     // Issue #10 — step ID anchor for deep-linking
@@ -511,10 +520,10 @@ export default function ChecklistItem({
             + Add comment
           </button>
         )}
-        {(showComment || status === "Fail" || status === "Blocked") && (
+        {(showComment || status === "Fail" || status === "Blocked" || status === "Up For Review") && (
           <div>
-            {(status === "Fail" || status === "Blocked") && (
-              <p className={`text-xs font-medium mb-1 ${status === "Fail" ? "text-red-600" : "text-amber-600"}`}>
+            {(status === "Fail" || status === "Blocked" || status === "Up For Review") && (
+              <p className={`text-xs font-medium mb-1 ${status === "Fail" ? "text-red-600" : status === "Blocked" ? "text-orange-600" : "text-amber-600"}`}>
                 {commentPrompt}
               </p>
             )}
@@ -527,7 +536,7 @@ export default function ChecklistItem({
             />
           </div>
         )}
-        {!showComment && status && status !== "Fail" && status !== "Blocked" && (
+        {!showComment && status && status !== "Fail" && status !== "Blocked" && status !== "Up For Review" && (
           <button
             type="button"
             onClick={() => setShowComment(true)}

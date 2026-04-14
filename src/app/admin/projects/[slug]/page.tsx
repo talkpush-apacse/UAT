@@ -134,6 +134,7 @@ export default async function ProjectDetailPage({
           fail: testerResponses.filter((r) => r.status === "Fail").length,
           na: testerResponses.filter((r) => r.status === "N/A").length,
           blocked: testerResponses.filter((r) => r.status === "Blocked").length,
+          upForReview: testerResponses.filter((r) => r.status === "Up For Review").length,
         }
       })
     }

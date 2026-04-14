@@ -12,7 +12,8 @@ const STATUS_PILL: Record<string, string> = {
   Pass: "bg-green-100 text-green-800",
   Fail: "bg-red-100 text-red-800",
   "N/A": "bg-gray-100 text-gray-700",
-  Blocked: "bg-amber-100 text-amber-800",
+  Blocked: "bg-orange-100 text-orange-800",
+  "Up For Review": "bg-amber-100 text-amber-800",
   "—": "bg-gray-100 text-gray-500",
 }
 

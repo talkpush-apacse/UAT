@@ -20,6 +20,7 @@ export interface TesterProgress {
   fail: number
   na: number
   blocked: number
+  upForReview: number
 }
 
 export default function LiveProgressTable({
@@ -166,7 +167,8 @@ export default function LiveProgressTable({
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[70px]">Pass</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[70px]">Fail</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[70px]">N/A</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[90px]">For Review</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[90px]">Blocked</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[110px]">For Review</th>
                 <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
@@ -208,7 +210,14 @@ export default function LiveProgressTable({
                     </td>
                     <td className="px-4 py-3">
                       {tester.blocked > 0 ? (
-                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">{tester.blocked}</Badge>
+                        <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">{tester.blocked}</Badge>
+                      ) : (
+                        <span className="text-xs text-gray-300">0</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {tester.upForReview > 0 ? (
+                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">{tester.upForReview}</Badge>
                       ) : (
                         <span className="text-xs text-gray-300">0</span>
                       )}

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useId } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight, CheckCircle, XCircle, MinusCircle, Ban, HelpCircle } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import { markTestComplete } from "@/lib/actions/testers"
 
@@ -154,13 +154,13 @@ export default function ChecklistView({
       {/* Before You Begin — collapsible guide */}
       <div className="mt-4">
         <div className="rounded-xl border border-brand-lavender-lighter bg-brand-lavender-lightest shadow-sm overflow-hidden">
-          {/* Issue #8: aria-expanded, aria-label, aria-controls on toggle button */}
+          {/* Toggle header — full row clickable, shows Hide/Show Guide label */}
           <button
             onClick={toggleGuide}
             aria-expanded={isGuideOpen}
             aria-controls={guideBodyId}
             aria-label={isGuideOpen ? "Collapse instructions" : "Expand instructions"}
-            className="w-full flex items-center justify-between px-4 py-3 text-left"
+            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-brand-lavender-lighter/40 transition-colors"
           >
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg bg-brand-lavender-lighter flex items-center justify-center flex-shrink-0">
@@ -168,42 +168,85 @@ export default function ChecklistView({
               </div>
               <span className="text-sm font-medium text-brand-lavender-darker">Before You Begin</span>
             </div>
-            {isGuideOpen ? (
-              <ChevronUp className="w-4 h-4 text-brand-lavender" />
-            ) : (
-              <ChevronDown className="w-4 h-4 text-brand-lavender" />
-            )}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-medium text-brand-lavender-darker">
+                {isGuideOpen ? "Hide" : "Show Guide"}
+              </span>
+              {isGuideOpen ? (
+                <ChevronUp className="w-4 h-4 text-brand-lavender-darker" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-brand-lavender-darker" />
+              )}
+            </div>
           </button>
 
           {/* Collapsible body */}
           <div
             id={guideBodyId}
             className={`transition-all duration-300 ease-in-out ${
-              isGuideOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+              isGuideOpen ? "max-h-[680px] opacity-100" : "max-h-0 opacity-0"
             } overflow-hidden`}
           >
             <div className="px-4 pb-4 space-y-4">
               {/* Usage instructions */}
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">How to use this checklist</p>
-                <ul className="space-y-1.5 text-sm text-gray-600">
+                <ul className="space-y-1.5 text-sm text-gray-600 mb-3">
                   <li className="flex items-start gap-2">
                     <span className="text-brand-lavender mt-0.5">&#8226;</span>
                     Follow each step in order from top to bottom
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-brand-lavender mt-0.5">&#8226;</span>
-                    Mark each step as <span className="font-medium text-green-600">Pass</span>, <span className="font-medium text-red-500">Fail</span>, <span className="font-medium text-gray-500">N/A</span>, or <span className="font-medium text-amber-600">Up For Review</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-lavender mt-0.5">&#8226;</span>
-                    Add comments or attach screenshots when something fails
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-lavender mt-0.5">&#8226;</span>
-                    Your progress is saved automatically
+                    Add comments or attach screenshots when something fails or looks off
                   </li>
                 </ul>
+
+                {/* Status definitions — casual icon guide */}
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-green-700">Pass</span>
+                      <span className="text-sm text-gray-600"> — The step worked exactly as described. No issues.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                    <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-red-600">Fail</span>
+                      <span className="text-sm text-gray-600"> — Something went wrong or didn&apos;t match the expected result.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                    <MinusCircle className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-gray-600">N/A</span>
+                      <span className="text-sm text-gray-600"> — This step doesn&apos;t apply to your test scenario. Skip it.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                    <Ban className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-orange-600">Blocked</span>
+                      <span className="text-sm text-gray-600"> — You can&apos;t test this step because a previous step failed. Tell us which step is blocking you.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                    <HelpCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-amber-600">Up For Review</span>
+                      <span className="text-sm text-gray-600"> — You&apos;re unsure if this is a pass or fail. Flag it and an admin will review.</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Autosave reassurance note */}
+                <div className="mt-3 px-3 py-2.5 bg-brand-lavender-lighter/60 rounded-lg border border-brand-lavender-lighter">
+                  <p className="text-sm text-brand-lavender-darker">
+                    <span className="font-medium">Your progress is saved automatically.</span> You can close this page and come back to the same link anytime to continue where you left off.
+                  </p>
+                </div>
               </div>
 
               {/* Troubleshooting */}

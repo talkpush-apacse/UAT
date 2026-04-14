@@ -5,7 +5,7 @@ const STATUS_STYLES: Record<string, string> = {
   Pass: "bg-green-100 text-green-800 border-green-200",
   Fail: "bg-red-100 text-red-800 border-red-200",
   "N/A": "bg-gray-100 text-gray-700 border-gray-200",
-  Blocked: "bg-amber-100 text-amber-800 border-amber-200",
+  Blocked: "bg-orange-100 text-orange-800 border-orange-200",
   "Up For Review": "bg-amber-100 text-amber-800 border-amber-200",
 }
 

@@ -24,6 +24,7 @@ interface SummaryStats {
   passCount: number
   failCount: number
   blockedCount: number
+  upForReviewCount: number
   naCount: number
   notTestedCount: number
   issueCount: number

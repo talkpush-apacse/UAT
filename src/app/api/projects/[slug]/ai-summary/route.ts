@@ -128,6 +128,7 @@ export async function POST(
     const passCount = answeredResponses.filter((r) => r.status === "Pass").length
     const failCount = answeredResponses.filter((r) => r.status === "Fail").length
     const blockedCount = answeredResponses.filter((r) => r.status === "Blocked").length
+    const upForReviewCount = answeredResponses.filter((r) => r.status === "Up For Review").length
     const naCount = answeredResponses.filter((r) => r.status === "N/A").length
     const notTestedCount = totalExecutions - answeredResponses.length
 
@@ -138,10 +139,10 @@ export async function POST(
       adminReviews.map((r) => [`${r.tester_id}::${r.checklist_item_id}`, r])
     )
 
-    // Build detailed issue list (Fail + Blocked responses)
+    // Build detailed issue list (Fail + Blocked + Up For Review responses)
     const issues: StepIssue[] = []
     responses.forEach((r) => {
-      if (r.status !== "Fail" && r.status !== "Blocked") return
+      if (r.status !== "Fail" && r.status !== "Blocked" && r.status !== "Up For Review") return
       const item = itemMap.get(r.checklist_item_id)
       const tester = testerMap.get(r.tester_id)
       if (!item || !tester) return
@@ -207,7 +208,8 @@ UAT STATISTICS:
 - Total test executions (steps × testers): ${totalExecutions}
 - Pass: ${passCount} (${totalExecutions > 0 ? Math.round((passCount / totalExecutions) * 100) : 0}%)
 - Fail: ${failCount} (${totalExecutions > 0 ? Math.round((failCount / totalExecutions) * 100) : 0}%)
-- Up For Review (Blocked): ${blockedCount} (${totalExecutions > 0 ? Math.round((blockedCount / totalExecutions) * 100) : 0}%)
+- Blocked (previous step failed, could not test): ${blockedCount} (${totalExecutions > 0 ? Math.round((blockedCount / totalExecutions) * 100) : 0}%)
+- Up For Review (tester flagged for admin review): ${upForReviewCount} (${totalExecutions > 0 ? Math.round((upForReviewCount / totalExecutions) * 100) : 0}%)
 - N/A: ${naCount}
 - Not Yet Tested: ${notTestedCount}
 
@@ -221,7 +223,7 @@ TESTER NAMES: ${testerList.map((t) => t.name).join(", ")}
 
 Write a concise executive summary of this UAT in the following structure. Use markdown formatting.
 
-1. **Overview** — One paragraph: project name, number of testers, total test executions, and overall pass rate. Mention how many test executions passed versus how many were flagged (Fail + Up For Review combined).
+1. **Overview** — One paragraph: project name, number of testers, total test executions, and overall pass rate. Mention how many test executions passed versus how many were flagged (Fail + Blocked + Up For Review combined).
 
 2. **Key Findings** — Analyze the steps with issues. Group by recurring patterns (i.e., steps reported by multiple testers or steps with similar findings). For each finding:
    - Mention the step number and what the step does
@@ -282,6 +284,7 @@ Keep the tone professional and factual. This will be shared internally at Talkpu
         passCount,
         failCount,
         blockedCount,
+        upForReviewCount,
         naCount,
         notTestedCount,
         issueCount: issues.length,

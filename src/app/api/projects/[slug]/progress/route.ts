@@ -75,6 +75,7 @@ export async function GET(
         fail: 0,
         na: 0,
         blocked: 0,
+        upForReview: 0,
       }))
       return NextResponse.json({ testers: emptyProgress }, {
         headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
@@ -107,6 +108,7 @@ export async function GET(
         fail: testerResponses.filter((r) => r.status === "Fail").length,
         na: testerResponses.filter((r) => r.status === "N/A").length,
         blocked: testerResponses.filter((r) => r.status === "Blocked").length,
+        upForReview: testerResponses.filter((r) => r.status === "Up For Review").length,
       }
     })
 

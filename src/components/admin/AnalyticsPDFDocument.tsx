@@ -63,7 +63,8 @@ const PDF_STATUS_COLORS: Record<string, string> = {
   Pass: "#22c55e",
   Fail: "#ef4444",
   "N/A": "#94a3b8",
-  Blocked: "#f59e0b",
+  Blocked: "#f97316",
+  "Up For Review": "#f59e0b",
   "Not Tested": "#d1d5db",
 }
 
