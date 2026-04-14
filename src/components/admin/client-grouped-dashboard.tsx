@@ -1,39 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import {
-  Building2,
-  ChevronDown,
-  ChevronUp,
-  Search,
-  Users,
-  ChevronsUpDown,
-  LayoutList,
-  LayoutGrid,
-  Pencil,
-  ExternalLink,
-  Trash2,
-  SearchX,
-  Plus,
-} from "lucide-react"
-import { deleteProject } from "@/lib/actions/projects"
-import { toast } from "sonner"
+import { Card, CardContent } from "@/components/ui/card"
+import { Building2, Search, SearchX, ChevronRight, Plus } from "lucide-react"
 
 export type ProjectStatus = "Signed Off" | "In Progress" | "Not Started"
 
@@ -63,212 +33,35 @@ interface Props {
   recentlyAccessed?: ProjectWithCounts[]
 }
 
-// ─── Status helpers ───────────────────────────────────────────────────────────
-
-function getProjectStatus(project: ProjectWithCounts): ProjectStatus {
-  if (project.signoffCount > 0) return "Signed Off"
-  if (project.testerCount > 0) return "In Progress"
-  return "Not Started"
-}
-
-/**
- * P3 — Unified project-level status badge.
- * Signed Off  → solid green fill (terminal state)
- * In Progress → amber tint (active state)
- * Not Started → neutral gray (inactive state)
- */
-function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
-  const styles: Record<ProjectStatus, string> = {
-    "Signed Off": "bg-green-600 text-white border-transparent",
-    "In Progress": "bg-[#FEF3C7] text-[#92400E] border-amber-200",
-    "Not Started": "bg-[#F3F4F6] text-[#6B7280] border-gray-200",
-  }
-  return (
-    <Badge variant="outline" className={`text-xs font-medium whitespace-nowrap ${styles[status]}`}>
-      {status}
-    </Badge>
-  )
-}
-
-/**
- * Compact trash-icon-only delete button for table rows.
- * Uses the same deleteProject server action as DeleteProjectButton.
- */
-function TableDeleteButton({
-  projectId,
-  projectName,
-}: {
-  projectId: string
-  projectName: string
-}) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-
-  const handleDelete = async () => {
-    setLoading(true)
-    const result = await deleteProject(projectId)
-    setLoading(false)
-    if (result.error) {
-      toast.error(result.error)
-    } else {
-      toast.success("Project deleted")
-      router.refresh()
-    }
-  }
-
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={loading}
-          className="h-7 w-7 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete &ldquo;{projectName}&rdquo;?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete this project and all its checklist steps,
-            testers, responses, attachments, and sign-offs. This cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            Delete Project
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
-}
-
-// ─── Main dashboard ───────────────────────────────────────────────────────────
-
 export default function ClientGroupedDashboard({ groups }: Props) {
-  const router = useRouter()
-  const [viewMode, setViewMode] = useState<"table" | "cards">("table")
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    () => new Set(groups.map((g) => g.clientName))
-  )
   const [searchQuery, setSearchQuery] = useState("")
 
-  const toggleGroup = (clientName: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev)
-      if (next.has(clientName)) {
-        next.delete(clientName)
-      } else {
-        next.add(clientName)
-      }
-      return next
-    })
-  }
-
-  const expandAll = () =>
-    setExpandedGroups(new Set(filteredGroups.map((g) => g.clientName)))
-  const collapseAll = () => setExpandedGroups(new Set())
-
-  const filteredGroups = groups
-    .map((group) => {
-      const query = searchQuery.toLowerCase()
-      if (group.clientName.toLowerCase().includes(query)) {
-        return group
-      }
-      const matchingProjects = group.projects.filter(
-        (p) =>
-          p.company_name.toLowerCase().includes(query) ||
-          p.slug.toLowerCase().includes(query) ||
-          (p.title && p.title.toLowerCase().includes(query))
-      )
-      if (matchingProjects.length > 0) {
-        return { ...group, projects: matchingProjects }
-      }
-      return null
-    })
-    .filter((g): g is ClientGroup => g !== null)
-
-  // Flat list of all projects for table view
-  const allProjects = filteredGroups.flatMap((g) => g.projects)
+  const filteredGroups = groups.filter((group) =>
+    group.clientName.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
-    <div className="space-y-4">
-      {/* ── Search bar + controls ── */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Filter by client or project name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-brand-lavender-darker focus:border-brand-lavender-darker focus:outline-none"
-          />
-        </div>
-
-        {/* Expand / Collapse — compact button group, only in cards view */}
-        {viewMode === "cards" && (
-          <div className="flex items-center border border-gray-200 rounded-md overflow-hidden">
-            <button
-              onClick={expandAll}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset"
-            >
-              <ChevronsUpDown className="h-3 w-3" />
-              Expand
-            </button>
-            <button
-              onClick={collapseAll}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors border-l border-gray-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset"
-            >
-              Collapse
-            </button>
-          </div>
-        )}
-
-        {/* P1 — View mode toggle */}
-        <div className="flex items-center border border-gray-200 rounded-md overflow-hidden ml-auto">
-          <button
-            onClick={() => setViewMode("table")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset ${
-              viewMode === "table"
-                ? "bg-gray-800 text-white"
-                : "bg-white text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            <LayoutList className="h-3.5 w-3.5" />
-            Table
-          </button>
-          <button
-            onClick={() => setViewMode("cards")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors border-l border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset ${
-              viewMode === "cards"
-                ? "bg-gray-800 text-white"
-                : "bg-white text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            Cards
-          </button>
-        </div>
+    <div className="space-y-6">
+      {/* Search bar */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search clients..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-brand-lavender-darker focus:border-brand-lavender-darker focus:outline-none"
+        />
       </div>
 
-      {/* ── Empty state — shown when search returns no results ── */}
+      {/* Empty search state */}
       {filteredGroups.length === 0 && searchQuery && (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
           <SearchX className="h-10 w-10 text-gray-300 mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-600 mb-1">
-            No checklists match &ldquo;{searchQuery}&rdquo;
+            No clients match &ldquo;{searchQuery}&rdquo;
           </p>
-          <p className="text-xs text-gray-400 mb-5">
-            Try a different client name, project title, or slug.
-          </p>
+          <p className="text-xs text-gray-400 mb-5">Try a different client name.</p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => setSearchQuery("")}
@@ -288,121 +81,11 @@ export default function ClientGroupedDashboard({ groups }: Props) {
         </div>
       )}
 
-      {/* ── P1: TABLE VIEW ── */}
-      {viewMode === "table" && filteredGroups.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50/50 border-b border-gray-100">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Client
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Checklist Name
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Status
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Testers
-                  </th>
-                  <th className="hidden sm:table-cell text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Created
-                  </th>
-                  <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {allProjects.map((project) => {
-                  const status = getProjectStatus(project)
-                  return (
-                    <tr
-                      key={project.id}
-                      onClick={() =>
-                        router.push(`/admin/projects/${project.slug}`)
-                      }
-                      className="group border-t border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                    >
-                      {/* 3px left-border spatial accent — appears on hover */}
-                      <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap border-l-[3px] border-l-transparent group-hover:border-l-brand-sage-darker transition-colors">
-                        {project.company_name}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div>
-                          <span className="font-medium text-gray-900 group-hover:text-brand-sage-darker transition-colors">
-                            {project.title || project.company_name}
-                          </span>
-                          {/* Slug shown only on row hover — not persistent clutter */}
-                          <span className="block text-xs text-gray-400 font-mono mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                            /test/{project.slug}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <ProjectStatusBadge status={status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="flex items-center gap-1 text-sm text-gray-500">
-                          <Users className="h-3.5 w-3.5" />
-                          {project.testerCount}
-                        </span>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-400">
-                        {project.created_at ? new Date(project.created_at).toLocaleDateString() : "—"}
-                      </td>
-                      {/* Stop row-click from firing inside the actions cell */}
-                      <td
-                        className="px-4 py-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex items-center justify-end gap-1">
-                          <Link href={`/admin/projects/${project.slug}`}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs text-brand-sage-darker hover:bg-brand-sage-lightest"
-                            >
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              View
-                            </Button>
-                          </Link>
-                          <Link href={`/admin/projects/${project.slug}/edit`}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                          </Link>
-                          <TableDeleteButton
-                            projectId={project.id}
-                            projectName={project.title || project.company_name}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* ── CARDS VIEW ── */}
-      {viewMode === "cards" && filteredGroups.length > 0 && (
-        <div className="space-y-4">
+      {/* Client cards grid */}
+      {filteredGroups.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredGroups.map((group) => {
-            const isSingleItem = group.projects.length === 1
-
-            // P5 — Aggregate status counts for multi-item group headers
-            const signedOffCount = group.projects.filter(
-              (p) => p.signoffCount > 0
-            ).length
+            const signedOffCount = group.projects.filter((p) => p.signoffCount > 0).length
             const inProgressCount = group.projects.filter(
               (p) => p.signoffCount === 0 && p.testerCount > 0
             ).length
@@ -410,157 +93,59 @@ export default function ClientGroupedDashboard({ groups }: Props) {
               (p) => p.signoffCount === 0 && p.testerCount === 0
             ).length
 
-            // P4 — Flatten single-item groups: no accordion wrapper
-            // P3e — Wrap in 3-col grid so card sits in col-1, not full-width
-            if (isSingleItem) {
-              const project = group.projects[0]
-              const status = getProjectStatus(project)
-              return (
-                <div key={project.id} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Link
-                  href={`/admin/projects/${project.slug}`}
-                >
-                  <Card className="group bg-white rounded-xl border border-gray-100 border-l-[3px] border-l-brand-sage-darker shadow-sm hover:shadow-md hover:border-gray-200 hover:border-l-brand-sage-darker transition-all duration-200 cursor-pointer">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          {/* Client name as overline — P4 inline context */}
-                          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">
-                            {project.company_name}
-                          </p>
-                          <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug">
-                            {project.title || project.company_name}
-                          </CardTitle>
-                        </div>
-                        <ProjectStatusBadge status={status} />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {project.test_scenario && (
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-                          {project.test_scenario}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {project.testerCount} tester
-                          {project.testerCount !== 1 ? "s" : ""}
-                        </span>
-                        <span>
-                          {project.created_at ? new Date(project.created_at).toLocaleDateString() : "—"}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-                </div>
-              )
-            }
-
-            // Multi-item group: accordion with aggregate status (P4 + P5)
-            const isOpen = expandedGroups.has(group.clientName)
             return (
-              <div
+              <Link
                 key={group.clientName}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                href={`/admin?client=${encodeURIComponent(group.clientName)}`}
+                className="group block outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker rounded-xl"
               >
-                {/* Group header with aggregate status */}
-                <button
-                  onClick={() => toggleGroup(group.clientName)}
-                  className="w-full flex items-center justify-between px-5 py-4 bg-gray-50/50 hover:bg-gray-100/50 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <Building2 className="h-4 w-4 text-gray-400" />
-                    <span className="text-base font-semibold text-gray-900">
-                      {group.clientName}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className="text-xs bg-gray-100 text-gray-600 border-gray-200"
-                    >
-                      {group.projects.length} checklists
-                    </Badge>
-                  </div>
+                <Card className="relative bg-white border border-gray-100 border-t-4 border-t-brand-sage-darker shadow-sm group-hover:shadow-md group-hover:border-gray-200 transition-all duration-200 h-full cursor-pointer">
+                  <CardContent className="p-5">
+                    {/* Icon + Name + Arrow */}
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex-shrink-0 w-10 h-10 bg-brand-sage-lightest rounded-lg flex items-center justify-center">
+                          <Building2 className="h-5 w-5 text-brand-sage-darker" />
+                        </div>
+                        <h3 className="text-[15px] font-semibold text-gray-800 leading-snug group-hover:text-brand-sage-darker transition-colors line-clamp-2">
+                          {group.clientName}
+                        </h3>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-brand-sage-darker transition-colors flex-shrink-0 mt-1" />
+                    </div>
 
-                  <div className="flex items-center gap-3">
-                    {/* P5 — Aggregate status summary pills */}
-                    <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
+                    {/* Checklist count */}
+                    <p className="text-sm text-gray-500 mb-3 ml-[52px]">
+                      <span className="tabular-nums font-semibold text-gray-800">
+                        {group.projects.length}
+                      </span>{" "}
+                      {group.projects.length === 1 ? "checklist" : "checklists"}
+                    </p>
+
+                    {/* Status summary badges */}
+                    <div className="flex flex-wrap gap-1.5 ml-[52px]">
                       {signedOffCount > 0 && (
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-green-500 inline-block flex-shrink-0" />
+                        <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                           {signedOffCount} Signed Off
                         </span>
                       )}
                       {inProgressCount > 0 && (
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-amber-400 inline-block flex-shrink-0" />
+                        <span className="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
                           {inProgressCount} In Progress
                         </span>
                       )}
                       {notStartedCount > 0 && (
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-gray-300 inline-block flex-shrink-0" />
+                        <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-500 border border-gray-200 rounded-full px-2.5 py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                           {notStartedCount} Not Started
                         </span>
                       )}
                     </div>
-                    {isOpen ? (
-                      <ChevronUp className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Project cards grid */}
-                {isOpen && (
-                  <div className="p-4">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {group.projects.map((project) => {
-                        const status = getProjectStatus(project)
-                        return (
-                          <Link
-                            key={project.id}
-                            href={`/admin/projects/${project.slug}`}
-                          >
-                            <Card className="group bg-white rounded-xl border border-gray-100 border-l-[3px] border-l-brand-sage-darker shadow-sm hover:shadow-md hover:border-gray-200 hover:border-l-brand-sage-darker transition-all duration-200 cursor-pointer h-full">
-                              <CardHeader className="pb-2">
-                                <div className="flex items-start justify-between gap-3">
-                                  <CardTitle
-                                    className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug"
-                                    title={project.title || project.company_name}
-                                  >
-                                    {project.title || project.company_name}
-                                  </CardTitle>
-                                  <ProjectStatusBadge status={status} />
-                                </div>
-                              </CardHeader>
-                              <CardContent>
-                                {project.test_scenario && (
-                                  <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-                                    {project.test_scenario}
-                                  </p>
-                                )}
-                                <div className="flex items-center gap-4 text-xs text-gray-400">
-                                  <span className="flex items-center gap-1">
-                                    <Users className="h-3 w-3" />
-                                    {project.testerCount} tester
-                                    {project.testerCount !== 1 ? "s" : ""}
-                                  </span>
-                                  <span>
-                                    {project.created_at ? new Date(project.created_at).toLocaleDateString() : "—"}
-                                  </span>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+                  </CardContent>
+                </Card>
+              </Link>
             )
           })}
         </div>

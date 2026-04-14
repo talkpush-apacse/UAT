@@ -5,12 +5,13 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Plus, FolderOpen, Building2 } from "lucide-react"
+import { Plus, FolderOpen, Building2, ArrowLeft } from "lucide-react"
 import ClientGroupedDashboard, {
   type ClientGroup,
   type ProjectStatus,
   type ProjectWithCounts,
 } from "@/components/admin/client-grouped-dashboard"
+import ClientChecklistList from "@/components/admin/client-checklist-list"
 
 function toTimestamp(value: string | null | undefined) {
   return value ? new Date(value).getTime() : 0
@@ -46,7 +47,11 @@ function assertNoQueryError(
   }
 }
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: { client?: string }
+}) {
   const isAdmin = await verifyAdminSession()
   if (!isAdmin) redirect("/admin/login")
 
@@ -226,16 +231,77 @@ export default async function AdminDashboard() {
       }
     })
 
+  // ── Filtered client view ────────────────────────────────────────────────────
+  const clientFilter = searchParams?.client
+  if (clientFilter) {
+    const decodedClient = decodeURIComponent(clientFilter)
+    const matchingGroup = groupedByClient.find((g) => g.clientName === decodedClient)
+
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4 min-w-0">
+            <Link href="/admin">
+              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700 -ml-2 gap-1.5 flex-shrink-0">
+                <ArrowLeft className="h-4 w-4" />
+                All Clients
+              </Button>
+            </Link>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">
+                Client
+              </p>
+              <h1 className="text-[28px] font-bold text-gray-900 leading-tight flex items-center gap-3 flex-wrap">
+                <span className="truncate">{decodedClient}</span>
+                {matchingGroup && (
+                  <span className="text-sm font-normal text-gray-500 bg-gray-100 rounded-full px-2.5 py-0.5 flex-shrink-0">
+                    {matchingGroup.projects.length}{" "}
+                    {matchingGroup.projects.length === 1 ? "checklist" : "checklists"}
+                  </span>
+                )}
+              </h1>
+            </div>
+          </div>
+          <Link href="/admin/projects/new" className="flex-shrink-0">
+            <Button>
+              <Plus className="h-4 w-4 mr-1.5" />
+              New UAT Checklist
+            </Button>
+          </Link>
+        </div>
+
+        {!matchingGroup ? (
+          <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+            <Building2 className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-500">Client not found</p>
+            <p className="text-xs text-gray-400 mt-1 mb-4">
+              No checklists exist for &ldquo;{decodedClient}&rdquo;
+            </p>
+            <Link href="/admin">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to all clients
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <ClientChecklistList group={matchingGroup} />
+        )}
+      </div>
+    )
+  }
+
+  // ── Default: Client grid view ────────────────────────────────────────────────
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-[28px] font-bold text-gray-900 leading-tight">UAT Checklists</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            <span className="tabular-nums">{projectsWithCounts.length}</span>{" "}
-            {projectsWithCounts.length === 1 ? "checklist" : "checklists"} across{" "}
             <span className="tabular-nums">{groupedByClient.length}</span>{" "}
-            {groupedByClient.length === 1 ? "client" : "clients"}
+            {groupedByClient.length === 1 ? "client" : "clients"} ·{" "}
+            <span className="tabular-nums">{projectsWithCounts.length}</span>{" "}
+            {projectsWithCounts.length === 1 ? "checklist" : "checklists"} total
           </p>
         </div>
         <div className="flex items-center gap-2">

@@ -1,5 +1,17 @@
 [
   {
+    "version": "2.9.4",
+    "name": "Version 2.9.4 - Client Grid",
+    "changes": [
+      "Redesigned admin homepage to show a grid of client cards",
+      "Each client card shows checklist count and status summary badges",
+      "Clicking a client navigates to a filtered checklist view",
+      "Added Back to All Clients navigation on filtered view",
+      "Search on grid filters clients; search on filtered view filters checklists"
+    ],
+    "deployed_at": "2026-04-14"
+  },
+  {
     "version": "2.9.3",
     "codename": "Gate Open",
     "changes": [
