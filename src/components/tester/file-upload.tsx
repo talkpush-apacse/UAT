@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
 import { Paperclip, FileText, File as FileIcon, X } from "lucide-react"
 import { toast } from "sonner"
 
