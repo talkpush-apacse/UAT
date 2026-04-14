@@ -17,8 +17,9 @@ import {
 import { addChecklistItem } from "@/lib/actions/checklist"
 import type { Actor } from "@/lib/constants"
 import { toast } from "sonner"
-import { Plus, X, ExternalLink } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { type ChecklistItem } from "./types"
+import { ViewSampleField } from "./view-sample-field"
 
 /* ------------------------------------------------------------------ */
 /*  AddStepForm                                                        */
@@ -150,24 +151,11 @@ export function AddStepForm({
         </div>
 
         {/* Row 3: Link to Sample/Guide */}
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">Link to Sample / Guide</Label>
-          <div className="relative">
-            <Input
-              type="url"
-              value={newItem.viewSample}
-              onChange={(e) =>
-                setNewItem({ ...newItem, viewSample: e.target.value })
-              }
-              placeholder="https://example.com/sample-screenshot.png"
-              className="pl-9"
-            />
-            <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          </div>
-          <p className="text-xs text-gray-400">
-            URL to a screenshot or guide testers should review for this step
-          </p>
-        </div>
+        <ViewSampleField
+          value={newItem.viewSample}
+          onChange={(v) => setNewItem({ ...newItem, viewSample: v })}
+          projectId={projectId}
+        />
 
         {/* Row 4: Module | Tip */}
         <div className="grid grid-cols-2 gap-4">

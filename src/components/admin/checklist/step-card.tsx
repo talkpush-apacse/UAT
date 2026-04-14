@@ -36,13 +36,13 @@ import {
   Link as LinkIcon,
   Lightbulb,
   X,
-  ExternalLink,
   FileText,
 } from "lucide-react"
 import MDEditor from "@uiw/react-md-editor"
 import ReactMarkdown from "react-markdown"
 import rehypeRaw from "rehype-raw"
 import RichActionEditor from "./RichActionEditor"
+import { ViewSampleField } from "./view-sample-field"
 import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES } from "./types"
 import type { Actor } from "@/lib/constants"
 
@@ -180,24 +180,12 @@ export function SortableStepCard({
             </div>
 
             {/* Row 3: Link to Sample/Guide */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-gray-500">Link to Sample / Guide</Label>
-              <div className="relative">
-                <Input
-                  type="url"
-                  value={editData.view_sample || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, view_sample: e.target.value })
-                  }
-                  placeholder="https://example.com/sample-screenshot.png"
-                  className="pl-9"
-                />
-                <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
-              <p className="text-xs text-gray-400">
-                URL to a screenshot or guide testers should review for this step
-              </p>
-            </div>
+            <ViewSampleField
+              value={editData.view_sample || ""}
+              onChange={(v) => setEditData({ ...editData, view_sample: v })}
+              projectId={item.project_id}
+              checklistItemId={item.id}
+            />
 
             {/* Row 4: Module | Tip */}
             <div className="grid grid-cols-2 gap-4">
