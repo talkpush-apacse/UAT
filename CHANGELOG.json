@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.10.1",
+    "codename": "Admin Reviews API",
+    "changes": [
+      "Added get_admin_reviews MCP tool for AI-powered UAT result summaries",
+      "Returns non-pass items grouped by tester with behavior type, resolution status, and findings",
+      "Includes project-wide summary stats (pass/fail/N/A counts and pass rate)"
+    ],
+    "deployed_at": "2026-04-14"
+  },
+  {
     "version": "2.10.0",
     "codename": "Safe Revert",
     "changes": [
