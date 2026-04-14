@@ -1,5 +1,17 @@
 [
   {
+    "version": "2.11.0",
+    "codename": "Rich Uploads",
+    "changes": [
+      "Added PDF and DOCX/DOC support for tester file attachments",
+      "Testers can now attach multiple files at once per step",
+      "Clipboard paste support — paste screenshots directly into the upload zone",
+      "Added per-file delete button on attachments (hover to reveal)",
+      "Admin review panel now shows tester attachments alongside comments"
+    ],
+    "deployed_at": "2026-04-14"
+  },
+  {
     "version": "2.10.1",
     "codename": "Admin Reviews API",
     "changes": [

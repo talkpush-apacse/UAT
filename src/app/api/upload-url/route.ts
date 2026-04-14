@@ -21,6 +21,9 @@ export async function POST(request: Request) {
     "video/mp4",
     "video/webm",
     "video/quicktime",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ]
 
   if (!allowedTypes.includes(mimeType)) {

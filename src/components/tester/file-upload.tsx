@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Paperclip } from "lucide-react"
+import { Paperclip, FileText, File as FileIcon, X } from "lucide-react"
+import { toast } from "sonner"
 
 interface AttachmentData {
   id: string
@@ -15,15 +16,29 @@ interface AttachmentData {
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-const ALLOWED_TYPES = [
-  "image/jpeg",
+
+const ALLOWED_MIME_TYPES = new Set([
   "image/png",
+  "image/jpeg",
   "image/gif",
   "image/webp",
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-]
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+])
+
+const ACCEPT_STRING = ".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx"
+
+/** Icon for non-image attachments */
+function AttachmentIcon({ mimeType }: { mimeType: string }) {
+  if (mimeType === "application/pdf") {
+    return <FileText className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+  }
+  if (mimeType.includes("word") || mimeType.includes("document")) {
+    return <FileText className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+  }
+  return <FileIcon className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+}
 
 export default function FileUpload({
   responseId,
@@ -38,29 +53,19 @@ export default function FileUpload({
 }) {
   const [attachments, setAttachments] = useState<AttachmentData[]>(existingAttachments)
   const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [uploadErrors, setUploadErrors] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  // Upload a single file — returns the saved AttachmentData or an error string
+  const uploadSingleFile = useCallback(
+    async (file: File): Promise<AttachmentData | string> => {
+      if (!ALLOWED_MIME_TYPES.has(file.type)) {
+        return `${file.name}: unsupported file type`
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        return `${file.name}: exceeds 10MB limit`
+      }
 
-    setError(null)
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setError("File type not supported. Use JPEG, PNG, GIF, WebP, MP4, WebM, or MOV.")
-      return
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      setError("File is too large. Maximum size is 10MB.")
-      return
-    }
-
-    setUploading(true)
-
-    try {
-      // Get signed upload URL
       const res = await fetch("/api/upload-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,16 +80,12 @@ export default function FileUpload({
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || "Failed to get upload URL")
-        setUploading(false)
-        return
+        const data = await res.json().catch(() => ({ error: "Upload failed" }))
+        return `${file.name}: ${data.error || "upload failed"}`
       }
 
       const { signedUrl, path } = await res.json()
 
-      // Upload file directly via the signed URL (bypasses SDK bucket lookup
-      // which fails for anon clients on private buckets)
       const uploadRes = await fetch(signedUrl, {
         method: "PUT",
         headers: { "Content-Type": file.type },
@@ -92,18 +93,14 @@ export default function FileUpload({
       })
 
       if (!uploadRes.ok) {
-        setError("Upload failed: " + uploadRes.statusText)
-        setUploading(false)
-        return
+        return `${file.name}: upload failed`
       }
 
-      // Build public URL (bucket is public — permanent accessible URL)
       const supabase = createClient()
       const { data: urlData } = supabase.storage
         .from("attachments")
         .getPublicUrl(path)
 
-      // Save attachment record
       const { data: attachment, error: dbError } = await supabase
         .from("attachments")
         .insert({
@@ -117,46 +114,143 @@ export default function FileUpload({
         .single()
 
       if (dbError) {
-        setError("Failed to save attachment record")
-        setUploading(false)
-        return
+        return `${file.name}: failed to save record`
       }
 
-      setAttachments((prev) => [...prev, attachment])
-    } catch {
-      setError("Upload failed. Please try again.")
-    } finally {
+      return attachment
+    },
+    [responseId, testerId, projectId]
+  )
+
+  // Handle an array of files — upload in parallel, collect successes and errors
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return
+      setUploading(true)
+      setUploadErrors([])
+
+      const results = await Promise.all(files.map(uploadSingleFile))
+
+      const newAttachments: AttachmentData[] = []
+      const errors: string[] = []
+      results.forEach((result) => {
+        if (typeof result === "string") {
+          errors.push(result)
+        } else {
+          newAttachments.push(result)
+        }
+      })
+
+      setAttachments((prev) => [...prev, ...newAttachments])
+      setUploadErrors(errors)
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
+    },
+    [uploadSingleFile]
+  )
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    await handleFiles(files)
+  }
+
+  // Clipboard paste — images only (PDFs/DOCX not reliably supported by browsers)
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      const items = Array.from(e.clipboardData?.items || [])
+      const files = items
+        .filter((item) => item.kind === "file")
+        .map((item) => {
+          const file = item.getAsFile()
+          if (!file) return null
+          // Generate a filename for unnamed screenshots
+          const name =
+            file.name && file.name !== "image.png" && file.name !== ""
+              ? file.name
+              : `screenshot-${Date.now()}.png`
+          return name !== file.name
+            ? new File([file], name, { type: file.type })
+            : file
+        })
+        .filter((f): f is File => f !== null)
+
+      if (files.length > 0) {
+        e.preventDefault()
+        handleFiles(files)
+      }
+    },
+    [handleFiles]
+  )
+
+  const handleDelete = async (attachment: AttachmentData) => {
+    const res = await fetch("/api/delete-attachment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attachmentId: attachment.id, testerId }),
+    })
+
+    if (res.ok) {
+      setAttachments((prev) => prev.filter((a) => a.id !== attachment.id))
+    } else {
+      toast.error("Failed to remove attachment")
     }
   }
 
   return (
-    <div>
-      {/* Existing attachments */}
+    <div
+      tabIndex={0}
+      onPaste={handlePaste}
+      className="focus:outline-none"
+    >
+      {/* Attachment list */}
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
           {attachments.map((att) => (
-            <a
+            <div
               key={att.id}
-              href={att.file_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 rounded-lg border border-gray-100 text-xs hover:bg-gray-100 transition-colors"
+              className="group relative flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 rounded-lg border border-gray-100 text-xs hover:bg-gray-100 transition-colors"
             >
-              {att.mime_type.startsWith("image/") ? "🖼" : "🎬"}
-              <span className="max-w-[120px] truncate text-gray-700">{att.file_name}</span>
-            </a>
+              {att.mime_type.startsWith("image/") ? (
+                <a
+                  href={att.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5"
+                >
+                  <span>🖼</span>
+                  <span className="max-w-[120px] truncate text-gray-700">{att.file_name}</span>
+                </a>
+              ) : (
+                <a
+                  href={att.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5"
+                >
+                  <AttachmentIcon mimeType={att.mime_type} />
+                  <span className="max-w-[120px] truncate text-gray-700">{att.file_name}</span>
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={() => handleDelete(att)}
+                className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 focus-visible:opacity-100 focus-visible:outline-none"
+                aria-label={`Remove ${att.file_name}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Upload button */}
-      <div className="flex items-center gap-2">
+      {/* Upload controls */}
+      <div className="flex items-center gap-2 flex-wrap">
         <input
           ref={fileInputRef}
           type="file"
-          accept={ALLOWED_TYPES.join(",")}
+          accept={ACCEPT_STRING}
+          multiple
           onChange={handleFileSelect}
           className="hidden"
         />
@@ -171,10 +265,19 @@ export default function FileUpload({
           <Paperclip className="h-3 w-3 mr-1" />
           {uploading ? "Uploading..." : "Attach File"}
         </Button>
-        <span className="text-xs text-gray-400">Max 10MB</span>
+        <span className="text-xs text-gray-400">Max 10MB · or paste from clipboard</span>
       </div>
 
-      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      {/* Per-file upload errors */}
+      {uploadErrors.length > 0 && (
+        <div className="mt-1 space-y-0.5">
+          {uploadErrors.map((err, i) => (
+            <p key={i} className="text-xs text-red-600">
+              {err}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

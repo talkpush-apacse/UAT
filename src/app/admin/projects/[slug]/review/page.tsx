@@ -17,6 +17,15 @@ export type HistoryEntry = {
   changedAt: string
 }
 
+export type AttachmentData = {
+  id: string
+  response_id: string
+  file_name: string
+  file_url: string
+  file_size: number
+  mime_type: string
+}
+
 export type ReviewStep = {
   checklistItemId: string
   stepNumber: number
@@ -26,6 +35,7 @@ export type ReviewStep = {
   testerStatus: string
   testerComment: string | null
   responseId: string
+  attachments: AttachmentData[]
   adminReview: {
     behaviorType: string | null
     resolutionStatus: string
@@ -110,6 +120,8 @@ export default async function ReviewPage({
     changed_at: string
   }[] = []
 
+  let attachmentsList: AttachmentData[] = []
+
   if (testerIds.length > 0 && itemIds.length > 0) {
     const [responsesResult, adminReviewsResult, reviewHistoryResult] = await Promise.all([
       supabase
@@ -143,6 +155,20 @@ export default async function ReviewPage({
     responses = responsesResult.data || []
     adminReviews = adminReviewsResult.data || []
     reviewHistory = reviewHistoryResult.data || []
+
+    // Fetch attachments for all responses in this project
+    const responseIds = responses.map((r) => r.id)
+    if (responseIds.length > 0) {
+      const { data: attachmentsData, error: attachmentsError } = await supabase
+        .from("attachments")
+        .select("id, response_id, file_name, file_url, file_size, mime_type")
+        .in("response_id", responseIds)
+
+      if (attachmentsError) {
+        console.error("Failed to fetch attachments:", attachmentsError.message)
+      }
+      attachmentsList = attachmentsData || []
+    }
   }
 
   // Build history lookup: key = "testerId:checklistItemId" → HistoryEntry[]
@@ -162,6 +188,14 @@ export default async function ReviewPage({
   const responseMap = new Map<string, (typeof responses)[0]>()
   responses.forEach((r) => {
     responseMap.set(`${r.tester_id}:${r.checklist_item_id}`, r)
+  })
+
+  // Build attachment lookup: response_id → AttachmentData[]
+  const attachmentsByResponse = new Map<string, AttachmentData[]>()
+  attachmentsList.forEach((a) => {
+    const list = attachmentsByResponse.get(a.response_id) ?? []
+    list.push(a)
+    attachmentsByResponse.set(a.response_id, list)
   })
 
   const reviewMap = new Map<string, (typeof adminReviews)[0]>()
@@ -187,6 +221,7 @@ export default async function ReviewPage({
 
       if (!isNonPass && !isForRetesting) continue
 
+      const stepResponseId = response?.id ?? ""
       steps.push({
         checklistItemId: item.id,
         stepNumber: item.step_number,
@@ -195,7 +230,8 @@ export default async function ReviewPage({
         action: item.action,
         testerStatus: testerStatus ?? "—",
         testerComment: response?.comment ?? null,
-        responseId: response?.id ?? "",
+        responseId: stepResponseId,
+        attachments: stepResponseId ? (attachmentsByResponse.get(stepResponseId) ?? []) : [],
         adminReview: adminReview
           ? {
               behaviorType: adminReview.behavior_type,

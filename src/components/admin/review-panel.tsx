@@ -2,9 +2,9 @@
 
 import { useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X } from "lucide-react"
+import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X, FileText, File } from "lucide-react"
 import { saveAdminReview, bulkMarkResolved } from "@/lib/actions/admin-reviews"
-import type { TesterSection, HistoryEntry } from "@/app/admin/projects/[slug]/review/page"
+import type { TesterSection, HistoryEntry, AttachmentData } from "@/app/admin/projects/[slug]/review/page"
 
 type SaveStatus = "idle" | "saving" | "saved" | "error"
 
@@ -127,6 +127,38 @@ function ActivityTimeline({ history }: { history: HistoryEntry[] }) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Attachment display (read-only, admin view)                          */
+/* ------------------------------------------------------------------ */
+
+function AttachmentList({ attachments }: { attachments: AttachmentData[] }) {
+  if (attachments.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-1.5">
+      {attachments.map((att) => (
+        <a
+          key={att.id}
+          href={att.file_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          {att.mime_type.startsWith("image/") ? (
+            <span>🖼</span>
+          ) : att.mime_type === "application/pdf" ? (
+            <FileText className="h-3 w-3 text-red-500 flex-shrink-0" />
+          ) : att.mime_type.includes("word") || att.mime_type.includes("document") ? (
+            <FileText className="h-3 w-3 text-blue-500 flex-shrink-0" />
+          ) : (
+            <File className="h-3 w-3 text-gray-400 flex-shrink-0" />
+          )}
+          <span className="max-w-[140px] truncate">{att.file_name}</span>
+        </a>
+      ))}
     </div>
   )
 }
@@ -268,6 +300,9 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
             &ldquo;{step.testerComment}&rdquo;
           </p>
         )}
+
+        {/* Tester attachments */}
+        <AttachmentList attachments={step.attachments} />
       </div>
 
       {/* Admin review controls */}
