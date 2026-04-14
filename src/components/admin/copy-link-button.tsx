@@ -8,7 +8,8 @@ export default function CopyLinkButton({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
-    const url = `${window.location.origin}/test/${slug}`
+    const base = process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com"
+    const url = `${base}/test/${slug}`
     navigator.clipboard.writeText(url)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
