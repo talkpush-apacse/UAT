@@ -23,17 +23,18 @@ const PATH_STYLES: Record<string, string> = {
 
 import { ACTOR_COLORS as ACTOR_STYLES } from "@/lib/constants"
 
-const BEHAVIOR_OPTIONS = [
+const FINDING_OPTIONS = [
   { value: "Expected Behavior", activeStyle: "bg-green-600 text-white border-green-600" },
   { value: "Bug/Glitch", activeStyle: "bg-red-600 text-white border-red-600" },
   { value: "Configuration Issue", activeStyle: "bg-orange-500 text-white border-orange-500" },
-  { value: "For Retesting", activeStyle: "bg-blue-600 text-white border-blue-600" },
+  { value: "User Error", activeStyle: "bg-yellow-500 text-white border-yellow-500" },
   { value: "Blocked", activeStyle: "bg-gray-600 text-white border-gray-600" },
 ] as const
 
 const RESOLUTION_OPTIONS = [
   { value: "Not Yet Started", activeStyle: "bg-gray-500 text-white border-gray-500" },
   { value: "In Progress", activeStyle: "bg-blue-500 text-white border-blue-500" },
+  { value: "For Retesting", activeStyle: "bg-blue-600 text-white border-blue-600" },
   { value: "Done", activeStyle: "bg-green-600 text-white border-green-600" },
 ] as const
 
@@ -67,7 +68,8 @@ function relativeTime(dateStr: string): string {
 /* ------------------------------------------------------------------ */
 
 const FIELD_LABELS: Record<string, string> = {
-  behavior_type: "Behavior Type",
+  finding_type: "Review Finding Type",
+  behavior_type: "Behavior Type (legacy)", // kept for old history entries
   resolution_status: "Resolution Status",
   notes: "Notes",
 }
@@ -177,7 +179,7 @@ interface StepRowProps {
 
 function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowProps) {
   const [behaviorType, setBehaviorType] = useState<string | null>(
-    step.adminReview?.behaviorType ?? null
+    step.adminReview?.findingType ?? null
   )
   const [resolutionStatus, setResolutionStatus] = useState<string>(
     step.adminReview?.resolutionStatus ?? "Not Yet Started"
@@ -326,11 +328,11 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
           </div>
         </div>
 
-        {/* Behavior Type */}
+        {/* Review Finding Type */}
         <div>
-          <p className="text-xs text-violet-600 font-medium mb-1.5">Behavior Type</p>
+          <p className="text-xs text-violet-600 font-medium mb-1.5">Review Finding Type</p>
           <div className="flex flex-wrap gap-1.5">
-            {BEHAVIOR_OPTIONS.map(({ value, activeStyle }) => (
+            {FINDING_OPTIONS.map(({ value, activeStyle }) => (
               <button
                 key={value}
                 type="button"

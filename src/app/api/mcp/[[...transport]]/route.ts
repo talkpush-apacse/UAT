@@ -734,7 +734,7 @@ const handler = createMcpHandler(
         let allReviews: {
           checklist_item_id: string;
           tester_id: string;
-          behavior_type: string | null;
+          finding_type: string | null;
           resolution_status: string;
           notes: string | null;
         }[] = [];
@@ -742,7 +742,7 @@ const handler = createMcpHandler(
           const { data: rev, error: revError } = await supabase
             .from("admin_reviews")
             .select(
-              "checklist_item_id, tester_id, behavior_type, resolution_status, notes"
+              "checklist_item_id, tester_id, finding_type, resolution_status, notes"
             )
             .in("checklist_item_id", itemIds);
           if (revError) throw new Error(revError.message);
@@ -786,7 +786,7 @@ const handler = createMcpHandler(
                 actor: item?.actor ?? null,
                 action: item?.action ?? null,
                 status: resp.status,
-                behavior_type: review?.behavior_type ?? null,
+                finding_type: review?.finding_type ?? null,
                 resolution_status: review?.resolution_status ?? null,
                 findings: review?.notes ?? null,
               };

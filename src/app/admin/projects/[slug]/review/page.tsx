@@ -37,7 +37,7 @@ export type ReviewStep = {
   responseId: string
   attachments: AttachmentData[]
   adminReview: {
-    behaviorType: string | null
+    findingType: string | null
     resolutionStatus: string
     notes: string | null
   } | null
@@ -106,7 +106,7 @@ export default async function ReviewPage({
   let adminReviews: {
     checklist_item_id: string
     tester_id: string
-    behavior_type: string | null
+    finding_type: string | null
     resolution_status: string
     notes: string | null
   }[] = []
@@ -131,7 +131,7 @@ export default async function ReviewPage({
         .in("checklist_item_id", itemIds),
       supabase
         .from("admin_reviews")
-        .select("checklist_item_id, tester_id, behavior_type, resolution_status, notes")
+        .select("checklist_item_id, tester_id, finding_type, resolution_status, notes")
         .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds),
       supabase
@@ -217,7 +217,7 @@ export default async function ReviewPage({
 
       // Include if tester status is non-Pass (Fail, Blocked, N/A) OR if admin flagged For Retesting
       const isNonPass = testerStatus !== null && testerStatus !== "Pass"
-      const isForRetesting = adminReview?.behavior_type === "For Retesting"
+      const isForRetesting = adminReview?.resolution_status === "For Retesting"
 
       if (!isNonPass && !isForRetesting) continue
 
@@ -234,7 +234,7 @@ export default async function ReviewPage({
         attachments: stepResponseId ? (attachmentsByResponse.get(stepResponseId) ?? []) : [],
         adminReview: adminReview
           ? {
-              behaviorType: adminReview.behavior_type,
+              findingType: adminReview.finding_type,
               resolutionStatus: adminReview.resolution_status,
               notes: adminReview.notes,
             }

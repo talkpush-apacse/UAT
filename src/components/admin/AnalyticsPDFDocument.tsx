@@ -21,7 +21,7 @@ interface FailedStepRow {
   testerName: string
   testerEmail: string
   status: string
-  behaviorType: string | null
+  findingType: string | null
   resolutionStatus: string
   notes: string | null
   comment: string | null
@@ -71,7 +71,7 @@ const PDF_FINDING_COLORS: Record<string, string> = {
   "Expected Behavior": "#22c55e",
   "Bug/Glitch": "#ef4444",
   "Configuration Issue": "#f97316",
-  "For Retesting": "#3b82f6",
+  "User Error": "#eab308",
   "Blocked": "#6b7280",
   "Not Yet Reviewed": "#d1d5db",
 }
@@ -86,6 +86,7 @@ const PDF_ACTOR_COLORS: Record<string, { bg: string; text: string }> = {
 const PDF_RESOLUTION_COLORS: Record<string, { bg: string; text: string }> = {
   "Not Yet Started": { bg: "#fef3c7", text: "#b45309" },
   "In Progress": { bg: "#dbeafe", text: "#1d4ed8" },
+  "For Retesting": { bg: "#dbeafe", text: "#1d4ed8" },
   Done: { bg: "#dcfce7", text: "#166534" },
   pending: { bg: "#fef3c7", text: "#b45309" },
 }
@@ -731,23 +732,23 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
               text: "#374151",
             }
           const findingBg =
-            row.behaviorType === "Expected Behavior"
+            row.findingType === "Expected Behavior"
               ? "#dcfce7"
-              : row.behaviorType === "Bug/Glitch"
+              : row.findingType === "Bug/Glitch"
               ? "#fee2e2"
-              : row.behaviorType === "For Retesting"
-              ? "#dbeafe"
-              : row.behaviorType === "Blocked"
+              : row.findingType === "User Error"
+              ? "#fef9c3"
+              : row.findingType === "Blocked"
               ? "#f3f4f6"
               : "#ffedd5"
           const findingText =
-            row.behaviorType === "Expected Behavior"
+            row.findingType === "Expected Behavior"
               ? "#166534"
-              : row.behaviorType === "Bug/Glitch"
+              : row.findingType === "Bug/Glitch"
               ? "#991b1b"
-              : row.behaviorType === "For Retesting"
-              ? "#1e40af"
-              : row.behaviorType === "Blocked"
+              : row.findingType === "User Error"
+              ? "#713f12"
+              : row.findingType === "Blocked"
               ? "#374151"
               : "#9a3412"
 
@@ -808,7 +809,7 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
                 {/* Col 2: Talkpush Finding */}
                 <View style={styles.stepCol}>
                   <Text style={styles.stepColLabel}>Talkpush Finding</Text>
-                  {row.behaviorType ? (
+                  {row.findingType ? (
                     <>
                       <View
                         style={[
@@ -819,7 +820,7 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
                         <Text
                           style={[styles.pillText, { color: findingText }]}
                         >
-                          {row.behaviorType}
+                          {row.findingType}
                         </Text>
                       </View>
                       {row.notes ? (

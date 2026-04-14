@@ -107,7 +107,7 @@ export async function POST(
     let adminReviews: {
       checklist_item_id: string
       tester_id: string
-      behavior_type: string | null
+      finding_type: string | null
       resolution_status: string
       notes: string | null
     }[] = []
@@ -115,7 +115,7 @@ export async function POST(
     if (testerIds.length > 0 && itemIds.length > 0) {
       const { data } = await supabase
         .from("admin_reviews")
-        .select("checklist_item_id, tester_id, behavior_type, resolution_status, notes")
+        .select("checklist_item_id, tester_id, finding_type, resolution_status, notes")
         .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds)
       adminReviews = data || []
@@ -153,7 +153,7 @@ export async function POST(
         testerName: tester.name,
         testerStatus: r.status,
         testerComment: r.comment || null,
-        talkpushFinding: review?.behavior_type || null,
+        talkpushFinding: review?.finding_type || null,
         talkpushNotes: review?.notes || null,
         resolutionStatus: review?.resolution_status || "pending",
       })
@@ -226,7 +226,7 @@ Write a concise executive summary of this UAT in the following structure. Use ma
 2. **Key Findings** — Analyze the steps with issues. Group by recurring patterns (i.e., steps reported by multiple testers or steps with similar findings). For each finding:
    - Mention the step number and what the step does
    - How many testers reported it
-   - What the Talkpush finding/classification is (Bug/Glitch, Configuration Issue, Expected Behavior, For Retesting, Blocked)
+   - What the Review Finding Type is (Bug/Glitch, Configuration Issue, Expected Behavior, User Error, Blocked)
    - Include the Talkpush remarks if available
    - Note the resolution status
 

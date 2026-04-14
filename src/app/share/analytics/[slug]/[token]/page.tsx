@@ -94,7 +94,7 @@ export default async function PublicAnalyticsPage({
   let adminReviews: {
     checklist_item_id: string
     tester_id: string
-    behavior_type: string | null
+    finding_type: string | null
     resolution_status: string
     notes: string | null
   }[] = []
@@ -108,7 +108,7 @@ export default async function PublicAnalyticsPage({
         .in("checklist_item_id", itemIds),
       supabase
         .from("admin_reviews")
-        .select("checklist_item_id, tester_id, behavior_type, resolution_status, notes")
+        .select("checklist_item_id, tester_id, finding_type, resolution_status, notes")
         .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds),
     ])

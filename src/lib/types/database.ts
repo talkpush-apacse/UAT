@@ -86,7 +86,7 @@ export type Database = {
       }
       admin_reviews: {
         Row: {
-          behavior_type: string | null
+          finding_type: string | null
           checklist_item_id: string
           created_at: string | null
           id: string
@@ -96,7 +96,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          behavior_type?: string | null
+          finding_type?: string | null
           checklist_item_id: string
           created_at?: string | null
           id?: string
@@ -106,7 +106,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          behavior_type?: string | null
+          finding_type?: string | null
           checklist_item_id?: string
           created_at?: string | null
           id?: string

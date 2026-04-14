@@ -50,7 +50,7 @@ interface Response {
 interface AdminReview {
   checklist_item_id: string
   tester_id: string
-  behavior_type: string | null
+  finding_type: string | null
   resolution_status: string
   notes: string | null
 }
@@ -71,7 +71,7 @@ const FINDING_COLORS: Record<string, string> = {
   "Expected Behavior": "#22c55e",
   "Bug/Glitch": "#ef4444",
   "Configuration Issue": "#f97316",
-  "For Retesting": "#3b82f6",
+  "User Error": "#eab308",
   "Blocked": "#6b7280",
   "Not Yet Reviewed": "#d1d5db",
 }
@@ -81,6 +81,7 @@ import { ACTOR_COLORS_MEDIUM as ACTOR_BADGE } from "@/lib/constants"
 const RESOLUTION_BADGE: Record<string, string> = {
   "Not Yet Started": "bg-amber-100 text-amber-700",
   "In Progress": "bg-blue-100 text-blue-700",
+  "For Retesting": "bg-blue-100 text-blue-700",
   "Done": "bg-green-100 text-green-700",
   // Legacy values (from database default)
   pending: "bg-amber-100 text-amber-700",
@@ -196,24 +197,24 @@ export default function AnalyticsCharts({
 
   /* ---------- Section 3: Talkpush Findings breakdown (non-Pass steps with admin review) ---------- */
   const findingsBreakdown = useMemo(() => {
-    // Look at all non-Pass responses that have an admin review with a behavior_type set
+    // Look at all non-Pass responses that have an admin review with a finding_type set
     const findingCounts: Record<string, number> = {
       "Expected Behavior": 0,
       "Bug/Glitch": 0,
       "Configuration Issue": 0,
-      "For Retesting": 0,
+      "User Error": 0,
       "Blocked": 0,
     }
 
-    // Count non-Pass responses with a Talkpush finding
+    // Count non-Pass responses with a finding type
     let reviewedCount = 0
     let unreviewedCount = 0
 
     responses.forEach((r) => {
       if (r.status === "Pass" || r.status === null) return
       const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
-      if (review?.behavior_type && findingCounts[review.behavior_type] !== undefined) {
-        findingCounts[review.behavior_type]++
+      if (review?.finding_type && findingCounts[review.finding_type] !== undefined) {
+        findingCounts[review.finding_type]++
         reviewedCount++
       } else {
         unreviewedCount++
@@ -269,7 +270,7 @@ export default function AnalyticsCharts({
       testerName: string
       testerEmail: string
       status: string
-      behaviorType: string | null
+      findingType: string | null
       resolutionStatus: string
       notes: string | null
       comment: string | null
@@ -288,7 +289,7 @@ export default function AnalyticsCharts({
         testerName: tester.name,
         testerEmail: tester.email,
         status: r.status,
-        behaviorType: review?.behavior_type ?? null,
+        findingType: review?.finding_type ?? null,
         resolutionStatus: review?.resolution_status ?? "pending",
         notes: review?.notes ?? null,
         comment: r.comment ?? null,
@@ -366,7 +367,7 @@ export default function AnalyticsCharts({
 
       for (const row of failedStepsRows) {
         const talkpushParts: string[] = []
-        if (row.behaviorType) talkpushParts.push(row.behaviorType)
+        if (row.findingType) talkpushParts.push(row.findingType)
         if (row.notes) talkpushParts.push(row.notes)
 
         sheet.addRow({
@@ -598,24 +599,24 @@ export default function AnalyticsCharts({
                           {/* Col 2 — Talkpush Finding */}
                           <div className="px-4 py-3">
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Talkpush Finding</p>
-                            {row.behaviorType ? (
+                            {row.findingType ? (
                               <>
                                 <span
                                   className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mb-2"
                                   style={{
                                     backgroundColor:
-                                      row.behaviorType === "Expected Behavior" ? "#dcfce7"
-                                      : row.behaviorType === "Bug/Glitch" ? "#fee2e2"
-                                      : row.behaviorType === "For Retesting" ? "#dbeafe"
+                                      row.findingType === "Expected Behavior" ? "#dcfce7"
+                                      : row.findingType === "Bug/Glitch" ? "#fee2e2"
+                                      : row.findingType === "User Error" ? "#fef9c3"
                                       : "#ffedd5",
                                     color:
-                                      row.behaviorType === "Expected Behavior" ? "#166534"
-                                      : row.behaviorType === "Bug/Glitch" ? "#991b1b"
-                                      : row.behaviorType === "For Retesting" ? "#1e40af"
+                                      row.findingType === "Expected Behavior" ? "#166534"
+                                      : row.findingType === "Bug/Glitch" ? "#991b1b"
+                                      : row.findingType === "User Error" ? "#713f12"
                                       : "#9a3412",
                                   }}
                                 >
-                                  {row.behaviorType}
+                                  {row.findingType}
                                 </span>
                                 {row.notes && (
                                   <p className="text-sm text-gray-600 leading-relaxed">{row.notes}</p>

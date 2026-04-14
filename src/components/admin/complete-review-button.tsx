@@ -42,7 +42,7 @@ export default function CompleteReviewButton({
           checklistItemId: step.checklistItemId,
           testerId: section.tester.id,
         })
-        if (!step.adminReview?.behaviorType) uncategorizedCount++
+        if (!step.adminReview?.findingType) uncategorizedCount++
         if (step.adminReview?.resolutionStatus !== "Done") unresolvedCount++
       }
     }

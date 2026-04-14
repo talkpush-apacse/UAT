@@ -24,7 +24,7 @@ export async function saveAdminReview(data: {
   // 1. Fetch the current row (if exists) to compare for history tracking
   const { data: existing } = await supabase
     .from('admin_reviews')
-    .select('behavior_type, resolution_status, notes')
+    .select('finding_type, resolution_status, notes')
     .eq('checklist_item_id', data.checklistItemId)
     .eq('tester_id', data.testerId)
     .maybeSingle()
@@ -33,7 +33,7 @@ export async function saveAdminReview(data: {
   const payload = {
     checklist_item_id: data.checklistItemId,
     tester_id: data.testerId,
-    behavior_type: data.behaviorType,
+    finding_type: data.behaviorType,
     resolution_status: data.resolutionStatus,
     notes: data.notes,
     updated_at: new Date().toISOString(),
@@ -63,7 +63,7 @@ export async function saveAdminReview(data: {
     new_value: string | null
   }[] = []
 
-  const oldBehavior = existing?.behavior_type ?? null
+  const oldBehavior = existing?.finding_type ?? null
   const oldResolution = existing?.resolution_status ?? null
   const oldNotes = existing?.notes ?? null
 
@@ -71,7 +71,7 @@ export async function saveAdminReview(data: {
     historyRows.push({
       checklist_item_id: data.checklistItemId,
       tester_id: data.testerId,
-      field_changed: 'behavior_type',
+      field_changed: 'finding_type',
       old_value: oldBehavior,
       new_value: data.behaviorType,
     })
@@ -248,7 +248,7 @@ export async function completeAllReviews(
   // 1. Batch-fetch all existing reviews in one query instead of N individual fetches
   const { data: existingRows, error: fetchError } = await supabase
     .from('admin_reviews')
-    .select('checklist_item_id, tester_id, behavior_type, resolution_status, notes')
+    .select('checklist_item_id, tester_id, finding_type, resolution_status, notes')
     .in('checklist_item_id', checklistItemIds)
     .in('tester_id', testerIds)
 
@@ -260,11 +260,11 @@ export async function completeAllReviews(
   // Build a lookup map: "checklistItemId::testerId" → existing row data
   const existingMap = new Map<
     string,
-    { behavior_type: string | null; resolution_status: string | null; notes: string | null }
+    { finding_type: string | null; resolution_status: string | null; notes: string | null }
   >()
   for (const row of existingRows ?? []) {
     existingMap.set(`${row.checklist_item_id}::${row.tester_id}`, {
-      behavior_type: row.behavior_type,
+      finding_type: row.finding_type,
       resolution_status: row.resolution_status,
       notes: row.notes,
     })
@@ -274,7 +274,7 @@ export async function completeAllReviews(
   const upsertRows: {
     checklist_item_id: string
     tester_id: string
-    behavior_type: string
+    finding_type: string
     resolution_status: string
     notes: string | null
     updated_at: string
@@ -294,7 +294,7 @@ export async function completeAllReviews(
     const key = `${item.checklistItemId}::${item.testerId}`
     const existing = existingMap.get(key)
 
-    const oldBehavior = existing?.behavior_type ?? null
+    const oldBehavior = existing?.finding_type ?? null
     const oldResolution = existing?.resolution_status ?? null
 
     // Determine new values
@@ -307,7 +307,7 @@ export async function completeAllReviews(
     upsertRows.push({
       checklist_item_id: item.checklistItemId,
       tester_id: item.testerId,
-      behavior_type: newBehavior,
+      finding_type: newBehavior,
       resolution_status: newResolution,
       notes: existing?.notes ?? null,
       updated_at: now,
@@ -320,7 +320,7 @@ export async function completeAllReviews(
       historyRows.push({
         checklist_item_id: item.checklistItemId,
         tester_id: item.testerId,
-        field_changed: 'behavior_type',
+        field_changed: 'finding_type',
         old_value: oldBehavior,
         new_value: newBehavior,
       })

@@ -1,5 +1,18 @@
 [
   {
+    "version": "2.11.1",
+    "codename": "Finding Type Revamp",
+    "changes": [
+      "Renamed 'Behavior Type' to 'Review Finding Type' across admin review panel",
+      "Removed 'For Retesting' from finding type — moved it to Resolution Status",
+      "Added 'User Error' as a new finding type option",
+      "Resolution Status now has 4 options: Not Yet Started, In Progress, For Retesting, Done",
+      "Updated DB column behavior_type → finding_type with full data migration",
+      "Analytics charts, PDF export, AI summary, and MCP tool updated to use new field name"
+    ],
+    "deployed_at": "2026-04-14"
+  },
+  {
     "version": "2.11.0",
     "codename": "Rich Uploads",
     "changes": [
