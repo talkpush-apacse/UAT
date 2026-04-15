@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils"
 
 interface ChangelogEntry {
   version: string
-  codename: string
+  name?: string
+  codename?: string
   changes: string[]
   deployed_at: string
 }
@@ -32,7 +33,7 @@ export function ChangelogSection({ entries }: { entries: ChangelogEntry[] }) {
                   v{entry.version}
                 </span>
                 <span className="text-sm font-medium text-gray-800 truncate">
-                  {entry.codename}
+                  {entry.name ?? entry.codename}
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
