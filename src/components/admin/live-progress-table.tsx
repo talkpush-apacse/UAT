@@ -245,12 +245,16 @@ export default function LiveProgressTable({
                         </div>
                       ) : (
                         <div className="flex items-center gap-1">
-                          <Link href={`/test/${slug}/checklist?tester=${tester.id}`} target="_blank">
-                            <Button variant="outline" size="sm" className="h-7 px-2 text-xs text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
+                          <Button asChild variant="outline" size="sm" className="h-7 px-2 text-xs text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">
+                            <Link
+                              href={`/test/${slug}/checklist?tester=${tester.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               <ExternalLink className="h-3 w-3 mr-1" />
                               View
-                            </Button>
-                          </Link>
+                            </Link>
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"

@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAnonSupabaseClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyAdminSession } from '@/lib/utils/admin-auth'
 import { registerTesterSchema } from '@/lib/schemas/tester'
@@ -30,7 +30,7 @@ export async function registerTester(
     return { fieldErrors: parsed.error.flatten().fieldErrors }
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = createAnonSupabaseClient()
 
   // Check for existing tester by email
   const { data: existingByEmail } = await supabase
@@ -95,7 +95,7 @@ export async function registerTester(
 export async function markTestComplete(
   testerId: string
 ): Promise<{ error?: string }> {
-  const supabase = createServerSupabaseClient()
+  const supabase = createAnonSupabaseClient()
 
   // Verify the tester exists before updating
   const { data: tester } = await supabase

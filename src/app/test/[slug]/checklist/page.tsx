@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createAnonSupabaseClient } from "@/lib/supabase/server"
 import ChecklistView from "@/components/tester/checklist-view"
 
 export default async function ChecklistPage({
@@ -13,7 +13,7 @@ export default async function ChecklistPage({
     redirect(`/test/${params.slug}`)
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = createAnonSupabaseClient()
 
   const { data: project } = await supabase
     .from("projects")

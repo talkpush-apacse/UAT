@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAnonSupabaseClient } from '@/lib/supabase/server'
 import { saveResponseSchema } from '@/lib/schemas/response'
 
 export async function saveResponse(
@@ -11,7 +11,7 @@ export async function saveResponse(
     return { error: parsed.error.issues[0]?.message || 'Invalid data' }
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = createAnonSupabaseClient()
 
   const { error } = await supabase.from('responses').upsert(
     {

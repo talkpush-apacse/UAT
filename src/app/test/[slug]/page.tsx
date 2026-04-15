@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createAnonSupabaseClient } from "@/lib/supabase/server"
 import RegistrationForm from "@/components/tester/registration-form"
 import { ClipboardList } from "lucide-react"
 
@@ -8,7 +8,7 @@ export default async function TesterRegistrationPage({
 }: {
   params: { slug: string }
 }) {
-  const supabase = createServerSupabaseClient()
+  const supabase = createAnonSupabaseClient()
 
   const { data: project } = await supabase
     .from("projects")

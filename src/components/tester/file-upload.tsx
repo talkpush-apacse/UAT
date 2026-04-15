@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createAnonClient } from "@/lib/supabase/client"
 import { Paperclip, FileText, File as FileIcon, X } from "lucide-react"
 import { toast } from "sonner"
 
@@ -95,7 +95,7 @@ export default function FileUpload({
         return `${file.name}: upload failed`
       }
 
-      const supabase = createClient()
+      const supabase = createAnonClient()
       const { data: urlData } = supabase.storage
         .from("attachments")
         .getPublicUrl(path)
