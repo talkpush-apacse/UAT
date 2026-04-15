@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useFormState } from "react-dom"
 import { createProject, type ProjectActionState } from "@/lib/actions/projects"
+import { slugifyProjectTitle } from "@/lib/utils/project-slug"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -25,6 +26,9 @@ export default function NewProjectPage() {
   const [state, formAction] = useFormState(createProject, initialState)
   const [companyName, setCompanyName] = useState("")
   const [clientNames, setClientNames] = useState<string[]>([])
+  const [title, setTitle] = useState("")
+  const [slug, setSlug] = useState("")
+  const [slugEdited, setSlugEdited] = useState(false)
 
   useEffect(() => {
     fetch("/api/clients")
@@ -34,6 +38,20 @@ export default function NewProjectPage() {
       )
       .catch(() => {})
   }, [])
+
+  const handleTitleChange = (value: string) => {
+    setTitle(value)
+    if (!slugEdited) {
+      setSlug(value ? slugifyProjectTitle(value) : "")
+    }
+  }
+
+  const handleSlugChange = (value: string) => {
+    setSlugEdited(true)
+    setSlug(value ? slugifyProjectTitle(value) : "")
+  }
+
+  const previewSlug = slug || (title ? slugifyProjectTitle(title) : "uat-checklist")
 
   return (
     <div className="max-w-2xl">
@@ -79,6 +97,8 @@ export default function NewProjectPage() {
               <Input
                 id="title"
                 name="title"
+                value={title}
+                onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="e.g. Q1 2026 CRM Migration UAT"
                 required
               />
@@ -87,15 +107,17 @@ export default function NewProjectPage() {
               )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="slug" className="text-xs text-gray-500">URL Slug *</Label>
+              <Label htmlFor="slug" className="text-xs text-gray-500">URL Slug</Label>
               <Input
                 id="slug"
                 name="slug"
-                placeholder="e.g. acme-corp-q1"
-                required
+                value={slug}
+                onChange={(e) => handleSlugChange(e.target.value)}
+                placeholder={title ? slugifyProjectTitle(title) : "uat-checklist"}
               />
               <p className="text-xs text-gray-400">
-                Lowercase, alphanumeric with hyphens. This will be the tester link: /test/your-slug
+                Lowercase, alphanumeric with hyphens. Tester link preview:{" "}
+                <span className="font-mono text-gray-500">/test/{previewSlug}</span>
               </p>
               {state.fieldErrors?.slug && (
                 <p className="text-sm text-red-600">{state.fieldErrors.slug[0]}</p>

@@ -3,14 +3,6 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { duplicateProject, deleteProject } from "@/lib/actions/projects"
+import { deleteProject } from "@/lib/actions/projects"
+import DuplicateProjectDialog from "@/components/admin/duplicate-project-dialog"
 import { toast } from "sonner"
 import { MoreHorizontal, Copy, Trash2, Loader2 } from "lucide-react"
 
@@ -40,12 +33,10 @@ import { MoreHorizontal, Copy, Trash2, Loader2 } from "lucide-react"
  */
 export default function MoreActionsDropdown({
   projectId,
-  slug,
   companyName,
   title,
 }: {
   projectId: string
-  slug: string
   companyName: string
   title?: string | null
 }) {
@@ -54,26 +45,6 @@ export default function MoreActionsDropdown({
   const [deleting, setDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
-  const [renameTitle, setRenameTitle] = useState("")
-
-  const openRenameDialog = () => {
-    const defaultTitle = title ? `${title} (Copy)` : `${companyName} (Copy)`
-    setRenameTitle(defaultTitle)
-    setShowRenameDialog(true)
-  }
-
-  const handleDuplicate = async () => {
-    setShowRenameDialog(false)
-    setDuplicating(true)
-    const result = await duplicateProject(projectId, slug, renameTitle.trim() || undefined)
-    setDuplicating(false)
-    if (result.error) {
-      toast.error(result.error)
-    } else if (result.newSlug) {
-      toast.success("Project duplicated")
-      router.push(`/admin/projects/${result.newSlug}`)
-    }
-  }
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -109,7 +80,7 @@ export default function MoreActionsDropdown({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem
-            onClick={openRenameDialog}
+            onClick={() => setShowRenameDialog(true)}
             className="gap-2 cursor-pointer"
           >
             <Copy className="h-3.5 w-3.5" />
@@ -126,34 +97,14 @@ export default function MoreActionsDropdown({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Rename dialog — shown before duplicating so the copy gets a meaningful title */}
-      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Duplicate Project</DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
-              New project title
-            </label>
-            <Input
-              value={renameTitle}
-              onChange={(e) => setRenameTitle(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleDuplicate() }}
-              className="w-full"
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleDuplicate} disabled={!renameTitle.trim()}>
-              Duplicate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DuplicateProjectDialog
+        projectId={projectId}
+        companyName={companyName}
+        title={title}
+        open={showRenameDialog}
+        onOpenChange={setShowRenameDialog}
+        onBusyChange={setDuplicating}
+      />
 
       {/* Delete confirmation dialog — triggered from dropdown, not inline */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

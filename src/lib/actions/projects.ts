@@ -4,12 +4,12 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyAdminSession } from '@/lib/utils/admin-auth'
+import { generateUniqueProjectSlug } from '@/lib/utils/project-slug'
 import { createProjectSchema, updateProjectSchema } from '@/lib/schemas/project'
 import type { Database } from '@/lib/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 type ProjectUpdate = Database['public']['Tables']['projects']['Update']
-type ProjectRow = Database['public']['Tables']['projects']['Row']
 
 export interface ProjectActionState {
   error?: string
@@ -36,10 +36,21 @@ export async function createProject(
   }
 
   const supabase = createAdminClient()
+  let slug: string
+
+  try {
+    slug = await generateUniqueProjectSlug(
+      supabase,
+      parsed.data.slug || parsed.data.title
+    )
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to generate project slug' }
+  }
+
   const { error } = await supabase.from('projects').insert({
     company_name: parsed.data.companyName,
     title: parsed.data.title,
-    slug: parsed.data.slug,
+    slug,
     test_scenario: parsed.data.testScenario || null,
     talkpush_login_link: parsed.data.talkpushLoginLink || null,
   })
@@ -51,7 +62,7 @@ export async function createProject(
     return { error: error.message }
   }
 
-  redirect(`/admin/projects/${parsed.data.slug}`)
+  redirect(`/admin/projects/${slug}`)
 }
 
 export async function updateProject(
@@ -131,7 +142,6 @@ export async function deleteProject(
 
 export async function duplicateProject(
   projectId: string,
-  slug: string,
   newTitle?: string,
 ): Promise<{ error?: string; newSlug?: string }> {
   const isAdmin = await verifyAdminSession()
@@ -140,61 +150,68 @@ export async function duplicateProject(
   const supabase: SupabaseClient<Database> = createAdminClient()
 
   // Fetch original project
-  const { data: original } = await supabase
+  const { data: original, error: originalError } = await supabase
     .from('projects')
-    .select('id, slug, company_name, title, test_scenario, talkpush_login_link')
+    .select('id, company_name, title, test_scenario, talkpush_login_link')
     .eq('id', projectId)
     .single()
 
+  if (originalError) return { error: originalError.message }
   if (!original) return { error: 'Project not found' }
 
-  // Generate unique slug: "{slug}-copy", then "{slug}-copy-2", etc.
-  // Fetch all matching slugs in one query instead of a while-loop of individual checks.
-  const { data: existingSlugs } = await supabase
-    .from('projects')
-    .select('slug')
-    .ilike('slug', `${slug}-copy%`)
-  const taken = new Set((existingSlugs || []).map((r) => r.slug))
-  let newSlug = `${slug}-copy`
-  let suffix = 2
-  while (taken.has(newSlug)) {
-    newSlug = `${slug}-copy-${suffix++}`
-  }
+  const duplicateTitle =
+    newTitle?.trim() ||
+    (original.title ? `${original.title} (Copy)` : `${original.company_name} (Copy)`)
 
-  const orig = original as ProjectRow
+  let newSlug: string
+
+  try {
+    newSlug = await generateUniqueProjectSlug(supabase, duplicateTitle)
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to generate project slug' }
+  }
 
   // Insert new project
   const { data: newProject, error: projError } = await supabase
     .from('projects')
     .insert({
-      company_name: orig.company_name,
-      title: newTitle ?? (orig.title ? `${orig.title} (Copy)` : `${orig.company_name} (Copy)`),
+      company_name: original.company_name,
+      title: duplicateTitle,
       slug: newSlug,
-      test_scenario: orig.test_scenario,
-      talkpush_login_link: orig.talkpush_login_link,
+      test_scenario: original.test_scenario,
+      talkpush_login_link: original.talkpush_login_link,
     })
     .select()
     .single()
 
   if (projError) return { error: projError.message }
+  if (!newProject) return { error: 'Failed to create duplicated project' }
 
   // Fetch and copy all checklist items
-  const { data: items } = await supabase
+  const { data: items, error: itemsFetchError } = await supabase
     .from('checklist_items')
     .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample')
     .eq('project_id', projectId)
     .order('sort_order')
 
+  if (itemsFetchError) {
+    await supabase.from('projects').delete().eq('id', newProject.id)
+    return { error: itemsFetchError.message }
+  }
+
   if (items && items.length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const copies = items.map(({ id, project_id, ...rest }) => ({
       ...rest,
-      project_id: newProject!.id,
+      project_id: newProject.id,
     }))
     const { error: itemsError } = await supabase
       .from('checklist_items')
       .insert(copies)
-    if (itemsError) return { error: itemsError.message }
+    if (itemsError) {
+      await supabase.from('projects').delete().eq('id', newProject.id)
+      return { error: itemsError.message }
+    }
   }
 
   revalidatePath('/admin')

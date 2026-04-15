@@ -24,11 +24,14 @@ import {
   LayoutGrid,
   Pencil,
   ExternalLink,
+  Copy,
+  Loader2,
   Trash2,
   SearchX,
   Plus,
 } from "lucide-react"
 import { deleteProject } from "@/lib/actions/projects"
+import DuplicateProjectDialog from "@/components/admin/duplicate-project-dialog"
 import { toast } from "sonner"
 import type { ClientGroup, ProjectWithCounts, ProjectStatus } from "./client-grouped-dashboard"
 
@@ -48,6 +51,46 @@ function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
     <Badge variant="outline" className={`text-xs font-medium whitespace-nowrap ${styles[status]}`}>
       {status}
     </Badge>
+  )
+}
+
+function TableDuplicateButton({
+  projectId,
+  companyName,
+  projectTitle,
+}: {
+  projectId: string
+  companyName: string
+  projectTitle: string | null
+}) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen(true)}
+        disabled={loading}
+        className="h-7 w-7 p-0 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+        aria-label="Duplicate checklist"
+      >
+        {loading ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Copy className="h-3.5 w-3.5" />
+        )}
+      </Button>
+      <DuplicateProjectDialog
+        projectId={projectId}
+        companyName={companyName}
+        title={projectTitle}
+        open={open}
+        onOpenChange={setOpen}
+        onBusyChange={setLoading}
+      />
+    </>
   )
 }
 
@@ -267,6 +310,11 @@ export default function ClientChecklistList({ group }: Props) {
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
                           </Link>
+                          <TableDuplicateButton
+                            projectId={project.id}
+                            companyName={project.company_name}
+                            projectTitle={project.title}
+                          />
                           <TableDeleteButton
                             projectId={project.id}
                             projectName={project.title || project.company_name}

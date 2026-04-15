@@ -1,48 +1,46 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { duplicateProject } from "@/lib/actions/projects"
-import { toast } from "sonner"
+import DuplicateProjectDialog from "@/components/admin/duplicate-project-dialog"
 import { Copy, Loader2 } from "lucide-react"
 
 export default function DuplicateProjectButton({
   projectId,
-  slug,
+  companyName,
+  title,
 }: {
   projectId: string
-  slug: string
+  companyName: string
+  title?: string | null
 }) {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
-
-  const handleDuplicate = async () => {
-    setLoading(true)
-    const result = await duplicateProject(projectId, slug)
-    setLoading(false)
-    if (result.error) {
-      toast.error(result.error)
-    } else if (result.newSlug) {
-      toast.success("Project duplicated")
-      router.push(`/admin/projects/${result.newSlug}`)
-    }
-  }
+  const [open, setOpen] = useState(false)
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleDuplicate}
-      disabled={loading}
-      className="text-gray-600 border-gray-200 hover:bg-gray-50"
-    >
-      {loading ? (
-        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-      ) : (
-        <Copy className="h-3.5 w-3.5 mr-1.5" />
-      )}
-      {loading ? "Duplicating…" : "Duplicate Project"}
-    </Button>
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setOpen(true)}
+        disabled={loading}
+        className="text-gray-600 border-gray-200 hover:bg-gray-50"
+      >
+        {loading ? (
+          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+        ) : (
+          <Copy className="h-3.5 w-3.5 mr-1.5" />
+        )}
+        {loading ? "Duplicating..." : "Duplicate Project"}
+      </Button>
+      <DuplicateProjectDialog
+        projectId={projectId}
+        companyName={companyName}
+        title={title}
+        open={open}
+        onOpenChange={setOpen}
+        onBusyChange={setLoading}
+      />
+    </>
   )
 }

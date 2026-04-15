@@ -1,6 +1,7 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { generateUniqueProjectSlug } from "@/lib/utils/project-slug";
 
 // --- Helper ---
 async function getProjectBySlug(slug: string) {
@@ -222,23 +223,7 @@ const handler = createMcpHandler(
       },
       async ({ company_name, title, test_scenario, talkpush_login_link }) => {
         const supabase = createAdminClient();
-
-        // Generate slug from title
-        const baseSlug = title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "");
-
-        // Check for slug collision and append suffix if needed
-        const { data: existing } = await supabase
-          .from("projects")
-          .select("slug")
-          .ilike("slug", `${baseSlug}%`);
-
-        const slug =
-          existing && existing.length > 0
-            ? `${baseSlug}-${existing.length + 1}`
-            : baseSlug;
+        const slug = await generateUniqueProjectSlug(supabase, title);
 
         const { data, error } = await supabase
           .from("projects")
