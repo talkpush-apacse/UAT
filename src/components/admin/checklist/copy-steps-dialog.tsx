@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Copy, ChevronDown, Loader2, ArrowLeft } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { Copy, ChevronDown, Loader2, ArrowLeft, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,22 @@ function groupSteps(steps: StepPreview[]): StepGroup[] {
   return groups
 }
 
+function getProjectLabel(project: SourceProject) {
+  return `${project.company_name} — ${project.title || project.slug} (${project.itemCount} ${project.itemCount === 1 ? "step" : "steps"})`
+}
+
+function projectMatchesSearch(project: SourceProject, query: string) {
+  const normalizedQuery = query.trim().toLowerCase()
+  if (!normalizedQuery) return true
+
+  return [
+    project.company_name,
+    project.title,
+    project.slug,
+    `${project.itemCount}`,
+  ].some((value) => value?.toLowerCase().includes(normalizedQuery))
+}
+
 import { ACTOR_COLORS as ACTOR_CHIP } from "@/lib/constants"
 
 type DialogStep = "project-select" | "step-select"
@@ -66,6 +83,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
   const [projects, setProjects] = useState<SourceProject[]>([])
   const [loadingProjects, setLoadingProjects] = useState(false)
   const [selectedId, setSelectedId] = useState<string>("")
+  const [projectSearchQuery, setProjectSearchQuery] = useState("")
   const [fetchError, setFetchError] = useState<string | null>(null)
 
   // Step 2: step selection
@@ -84,6 +102,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
     setLoadingProjects(true)
     setFetchError(null)
     setSelectedId("")
+    setProjectSearchQuery("")
     setDialogStep("project-select")
     setSteps([])
     setSelectedStepIds(new Set())
@@ -100,6 +119,19 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
   }, [open, projectId])
 
   const selectedProject = projects.find((p) => p.id === selectedId)
+  const filteredProjects = useMemo(
+    () => projects.filter((project) => projectMatchesSearch(project, projectSearchQuery)),
+    [projects, projectSearchQuery]
+  )
+
+  const handleProjectSearchChange = (value: string) => {
+    setProjectSearchQuery(value)
+
+    const selected = projects.find((project) => project.id === selectedId)
+    if (selected && !projectMatchesSearch(selected, value)) {
+      setSelectedId("")
+    }
+  }
 
   /* ---- Step 1 → Step 2: load step list ---- */
   const handleLoadSteps = async () => {
@@ -208,23 +240,42 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                   Source project
                 </label>
                 <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    type="search"
+                    value={projectSearchQuery}
+                    onChange={(e) => handleProjectSearchChange(e.target.value)}
+                    placeholder="Search by company, title, or slug..."
+                    className="pl-9"
+                    aria-label="Search source projects"
+                  />
+                </div>
+                <div className="relative">
                   <select
                     id="source-project"
                     value={selectedId}
                     onChange={(e) => setSelectedId(e.target.value)}
+                    disabled={filteredProjects.length === 0}
                     className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3 py-2.5 pr-9 text-sm text-gray-800
                       focus:outline-none focus:ring-2 focus:ring-brand-lavender-darker focus:border-brand-lavender-darker
                       disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="">— Select a project —</option>
-                    {projects.map((p) => (
+                    <option value="">
+                      {filteredProjects.length === 0 ? "No matching projects" : "— Select a project —"}
+                    </option>
+                    {filteredProjects.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.company_name} — {p.title || p.slug} ({p.itemCount} {p.itemCount === 1 ? "step" : "steps"})
+                        {getProjectLabel(p)}
                       </option>
                     ))}
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 </div>
+                {projectSearchQuery && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Showing {filteredProjects.length} of {projects.length} projects.
+                  </p>
+                )}
 
                 {selectedProject && selectedProject.itemCount === 0 && (
                   <p className="text-xs text-amber-600 mt-1">
