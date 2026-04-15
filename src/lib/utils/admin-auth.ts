@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers'
 import { timingSafeEqual } from 'crypto'
 import { SESSION_DURATION_MS } from './session-constants'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { isAllowedAdminEmail } from './admin-access'
 
 const COOKIE_NAME = 'admin_session'
 
@@ -49,20 +51,40 @@ export async function createAdminSession(): Promise<void> {
 
 export async function verifyAdminSession(): Promise<boolean> {
   const cookie = cookies().get(COOKIE_NAME)
-  if (!cookie?.value) return false
+  if (!cookie?.value) return verifySupabaseAdminSession()
 
   const [timestamp, signature] = cookie.value.split('.')
-  if (!timestamp || !signature) return false
+  if (!timestamp || !signature) return verifySupabaseAdminSession()
 
   const isValid = await verify(timestamp, signature)
-  if (!isValid) return false
+  if (!isValid) return verifySupabaseAdminSession()
 
   const elapsed = Date.now() - parseInt(timestamp, 10)
-  if (elapsed > SESSION_DURATION_MS) return false
+  if (elapsed > SESSION_DURATION_MS) return verifySupabaseAdminSession()
 
   return true
 }
 
 export function destroyAdminSession(): void {
   cookies().delete(COOKIE_NAME)
+}
+
+async function verifySupabaseAdminSession(): Promise<boolean> {
+  try {
+    const supabase = createServerSupabaseClient()
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+
+    if (error) {
+      console.error('Supabase auth verification failed:', error.message)
+      return false
+    }
+
+    return isAllowedAdminEmail(user?.email)
+  } catch (error) {
+    console.error('Supabase auth verification failed:', error)
+    return false
+  }
 }

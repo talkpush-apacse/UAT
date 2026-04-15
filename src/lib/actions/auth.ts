@@ -6,6 +6,7 @@ import {
   createAdminSession,
   destroyAdminSession,
 } from '@/lib/utils/admin-auth'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export interface AuthState {
   error?: string
@@ -30,6 +31,17 @@ export async function loginAdmin(
 }
 
 export async function logoutAdmin(): Promise<void> {
+  try {
+    const supabase = createServerSupabaseClient()
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      console.error('Supabase sign-out failed:', error.message)
+    }
+  } catch (error) {
+    console.error('Supabase sign-out failed:', error)
+  }
+
   destroyAdminSession()
   redirect('/admin/login')
 }
