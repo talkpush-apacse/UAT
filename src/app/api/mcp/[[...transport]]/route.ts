@@ -42,7 +42,7 @@ const handler = createMcpHandler(
       async ({ query }) => {
         const supabase = createAdminClient();
         const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "https://uat.se-talkpush.com";
+          process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com";
 
         const q = query.trim();
         const { data, error } = await supabase
@@ -93,7 +93,7 @@ const handler = createMcpHandler(
       async ({ id }) => {
         const supabase = createAdminClient();
         const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "https://uat.se-talkpush.com";
+          process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com";
 
         const project = await getProjectBySlug(id);
 
