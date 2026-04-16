@@ -397,6 +397,18 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
 /*  ReviewPanel                                                         */
 /* ------------------------------------------------------------------ */
 
+const FILTER_OPTIONS: { label: string; value: string; activeStyle: string }[] = [
+  { label: "All", value: "All", activeStyle: "bg-gray-800 text-white border-gray-800" },
+  { label: "Not Yet Started", value: "Not Yet Started", activeStyle: "bg-gray-500 text-white border-gray-500" },
+  { label: "In Progress", value: "In Progress", activeStyle: "bg-blue-500 text-white border-blue-500" },
+  { label: "For Retesting", value: "For Retesting", activeStyle: "bg-blue-600 text-white border-blue-600" },
+  { label: "Done", value: "Done", activeStyle: "bg-green-600 text-white border-green-600" },
+]
+
+function getEffectiveResolutionStatus(step: TesterSection["steps"][0]): string {
+  return step.adminReview?.resolutionStatus ?? "Not Yet Started"
+}
+
 interface Props {
   testerSections: TesterSection[]
   projectSlug: string
@@ -407,6 +419,7 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkResult, setBulkResult] = useState<{ message: string; type: "success" | "error" } | null>(null)
+  const [resolutionFilter, setResolutionFilter] = useState<string>("All")
 
   const toggleItem = (key: string) => {
     setSelectedItems((prev) => {
@@ -471,10 +484,58 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
     }
   }
 
+  const filteredSections =
+    resolutionFilter === "All"
+      ? testerSections
+      : testerSections
+          .map((section) => ({
+            ...section,
+            steps: section.steps.filter(
+              (step) => getEffectiveResolutionStatus(step) === resolutionFilter
+            ),
+          }))
+          .filter((section) => section.steps.length > 0)
+
   return (
     <div className="relative pb-20">
+      {/* Resolution Status Filter */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        {FILTER_OPTIONS.map(({ label, value, activeStyle }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setResolutionFilter(value)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
+              resolutionFilter === value
+                ? activeStyle
+                : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+        {resolutionFilter !== "All" && (
+          <span className="text-xs text-gray-400 ml-1">
+            {filteredSections.reduce((acc, s) => acc + s.steps.length, 0)} item
+            {filteredSections.reduce((acc, s) => acc + s.steps.length, 0) !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+
+      {filteredSections.length === 0 && resolutionFilter !== "All" ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-sm font-medium text-gray-500">No items with status &ldquo;{resolutionFilter}&rdquo;</p>
+          <button
+            type="button"
+            onClick={() => setResolutionFilter("All")}
+            className="mt-2 text-xs text-brand-sage-darker hover:underline"
+          >
+            Clear filter
+          </button>
+        </div>
+      ) : (
       <div className="space-y-6">
-        {testerSections.map(({ tester, steps }) => {
+        {filteredSections.map(({ tester, steps }) => {
           const doneCount = steps.filter(
             (s) => s.adminReview?.resolutionStatus === "Done"
           ).length
@@ -549,6 +610,7 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
           )
         })}
       </div>
+      )}
 
       {/* Floating bulk action bar */}
       {(selectedItems.size > 0 || bulkResult) && (
