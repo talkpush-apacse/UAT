@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X, FileText, File } from "lucide-react"
+import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X, FileText, File, MessageSquare } from "lucide-react"
 import { saveAdminReview, bulkMarkResolved } from "@/lib/actions/admin-reviews"
 import type { TesterSection, HistoryEntry, AttachmentData } from "@/app/admin/projects/[slug]/review/page"
 
@@ -188,6 +188,7 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
   const [notes, setNotes] = useState<string>(step.adminReview?.notes ?? "")
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const testerComment = step.testerComment?.trim() ?? ""
 
   // Refs to hold the latest values — prevents stale closures in the debounced
   // notes save from overwriting behavior_type or resolution_status with old values.
@@ -298,10 +299,16 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
         <p className="text-sm text-gray-700 leading-relaxed mb-1">{step.action}</p>
 
         {/* Tester comment */}
-        {step.testerComment && (
-          <p className="text-xs text-gray-400 italic mt-1">
-            &ldquo;{step.testerComment}&rdquo;
-          </p>
+        {testerComment.length > 0 && (
+          <div className="mt-3 rounded-md border border-gray-200 border-l-4 border-l-amber-400 bg-gray-50 p-3">
+            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-gray-500">
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>Tester comment</span>
+            </div>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-900">
+              {testerComment}
+            </p>
+          </div>
         )}
 
         {/* Tester attachments */}
