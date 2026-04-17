@@ -177,12 +177,14 @@ function makeHandler(baseUrl: string) {
         const { data, error } = await query;
         if (error) throw new Error(error.message);
 
+        const projects = data.map((p) => ({ ...p, tester_url: `${baseUrl}/test/${p.slug}` }));
+
         return {
           content: [
             {
               type: "text" as const,
               text: JSON.stringify(
-                { count: data.length, projects: data },
+                { count: projects.length, projects },
                 null,
                 2
               ),
@@ -240,7 +242,11 @@ function makeHandler(baseUrl: string) {
           content: [
             {
               type: "text" as const,
-              text: JSON.stringify({ created: true, project: data }, null, 2),
+              text: JSON.stringify({
+                created: true,
+                project: data,
+                tester_url: `${baseUrl}/test/${data.slug}`,
+              }, null, 2),
             },
           ],
         };
@@ -263,7 +269,10 @@ function makeHandler(baseUrl: string) {
         const project = await getProjectBySlug(slug);
         return {
           content: [
-            { type: "text" as const, text: JSON.stringify(project, null, 2) },
+            {
+              type: "text" as const,
+              text: JSON.stringify({ ...project, tester_url: `${baseUrl}/test/${project.slug}` }, null, 2),
+            },
           ],
         };
       }
