@@ -1,5 +1,19 @@
 [
   {
+    "version": "2.13.0",
+    "name": "Version 2.13.0 - Wizard Mode for Testers",
+    "changes": [
+      "Added per-project 'Wizard mode' admin toggle on the Edit Project screen (off by default)",
+      "New one-step-at-a-time wizard view for testers — shows 'Step N of M', with Back and Next controls",
+      "On Next, the wizard waits for the current step's autosave to settle before advancing (no extra DB calls)",
+      "Talkpush-actor steps render as informational slides in wizard mode — no input needed, auto-marked as Pass on Next",
+      "Final step shows 'Submit & Mark Complete' instead of Next",
+      "Classic long-form view unchanged for projects without wizard mode enabled",
+      "Added migration 20260417120000_add_wizard_mode.sql — adds projects.wizard_mode boolean, default false"
+    ],
+    "deployed_at": "2026-04-17"
+  },
+  {
     "version": "2.12.0",
     "name": "Version 2.12.0 - Blocked Status & Guide Update",
     "changes": [

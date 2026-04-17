@@ -80,6 +80,7 @@ export async function updateProject(
     slug: formData.get('slug'),
     testScenario: formData.get('testScenario'),
     talkpushLoginLink: formData.get('talkpushLoginLink'),
+    wizardMode: formData.get('wizardMode') ?? 'false',
   })
 
   if (!parsed.success) {
@@ -95,6 +96,8 @@ export async function updateProject(
     updates.test_scenario = parsed.data.testScenario || null
   if (parsed.data.talkpushLoginLink !== undefined)
     updates.talkpush_login_link = parsed.data.talkpushLoginLink || null
+  if (parsed.data.wizardMode !== undefined)
+    updates.wizard_mode = parsed.data.wizardMode
 
   const { error } = await supabase
     .from('projects')

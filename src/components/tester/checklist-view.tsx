@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight, CheckCircle, XCircle, MinusCircle, Ban, HelpCircle } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import { markTestComplete } from "@/lib/actions/testers"
+import ChecklistWizardView from "./checklist-wizard-view"
 
 interface ChecklistItemData {
   id: string
@@ -42,6 +43,7 @@ interface Project {
   company_name: string
   test_scenario: string | null
   talkpush_login_link: string | null
+  wizard_mode?: boolean | null
 }
 
 interface Tester {
@@ -50,22 +52,30 @@ interface Tester {
   test_completed?: string | null
 }
 
-
-export default function ChecklistView({
-  project,
-  tester,
-  checklistItems,
-  responses: initialResponses,
-  attachments: initialAttachments,
-  testCompleted = null,
-}: {
+type ChecklistViewProps = {
   project: Project
   tester: Tester
   checklistItems: ChecklistItemData[]
   responses: ResponseData[]
   attachments: AttachmentData[]
   testCompleted?: string | null
-}) {
+}
+
+export default function ChecklistView(props: ChecklistViewProps) {
+  if (props.project.wizard_mode) {
+    return <ChecklistWizardView {...props} />
+  }
+  return <ClassicChecklistView {...props} />
+}
+
+function ClassicChecklistView({
+  project,
+  tester,
+  checklistItems,
+  responses: initialResponses,
+  attachments: initialAttachments,
+  testCompleted = null,
+}: ChecklistViewProps) {
   const [responses, setResponses] = useState<Record<string, ResponseData>>(() => {
     const map: Record<string, ResponseData> = {}
     initialResponses.forEach((r) => {
