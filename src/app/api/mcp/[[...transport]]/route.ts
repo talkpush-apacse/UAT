@@ -16,8 +16,9 @@ async function getProjectBySlug(slug: string) {
   return data;
 }
 
-// --- MCP Handler ---
-const handler = createMcpHandler(
+// --- MCP Handler Factory ---
+function makeHandler(baseUrl: string) {
+  return createMcpHandler(
   (server) => {
     // ============================================================
     // TOOL: search (required by ChatGPT MCP Apps spec)
@@ -41,8 +42,6 @@ const handler = createMcpHandler(
       },
       async ({ query }) => {
         const supabase = createAdminClient();
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com";
 
         const q = query.trim();
         const { data, error } = await supabase
@@ -92,8 +91,6 @@ const handler = createMcpHandler(
       },
       async ({ id }) => {
         const supabase = createAdminClient();
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com";
 
         const project = await getProjectBySlug(id);
 
@@ -828,7 +825,8 @@ const handler = createMcpHandler(
     maxDuration: 60,
     verboseLogs: true,
   }
-);
+  );
+}
 
 // --- API Key Middleware Wrapper ---
 async function withApiKeyAuth(
@@ -851,13 +849,16 @@ async function withApiKeyAuth(
 
 // Export route handlers with auth wrapper
 export async function GET(req: Request) {
-  return withApiKeyAuth(req, handler);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+  return withApiKeyAuth(req, makeHandler(baseUrl));
 }
 
 export async function POST(req: Request) {
-  return withApiKeyAuth(req, handler);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+  return withApiKeyAuth(req, makeHandler(baseUrl));
 }
 
 export async function DELETE(req: Request) {
-  return withApiKeyAuth(req, handler);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+  return withApiKeyAuth(req, makeHandler(baseUrl));
 }
