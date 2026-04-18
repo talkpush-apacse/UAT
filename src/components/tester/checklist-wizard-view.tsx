@@ -3,10 +3,11 @@
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, LogIn } from "lucide-react"
+import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, LogIn, List } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import { markTestComplete } from "@/lib/actions/testers"
 import { createAnonClient } from "@/lib/supabase/client"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 interface ChecklistItemData {
   id: string
@@ -131,6 +132,7 @@ export default function ChecklistWizardView({
   const [isTestComplete, setIsTestComplete] = useState(testCompleted === "Yes")
   const [isMarkingComplete, setIsMarkingComplete] = useState(false)
   const [isAdvancing, setIsAdvancing] = useState(false)
+  const [isNavOpen, setIsNavOpen] = useState(false)
 
   const totalCount = checklistItems.length
 
@@ -160,6 +162,13 @@ export default function ChecklistWizardView({
   const isTalkpushStep = currentItem?.actor === "Talkpush"
   const currentResponse = currentItem ? responses[currentItem.id] : undefined
   const currentHasStatus = currentResponse?.status != null
+
+  const COMMENT_REQUIRED_STATUSES = ["Fail", "Blocked", "Up For Review"]
+  const currentRequiresComment =
+    currentResponse?.status != null &&
+    COMMENT_REQUIRED_STATUSES.includes(currentResponse.status)
+  const currentCommentMissing =
+    currentRequiresComment && !currentResponse?.comment?.trim()
 
   const nonTalkpushItems = useMemo(
     () => checklistItems.filter((i) => i.actor !== "Talkpush"),
@@ -212,6 +221,12 @@ export default function ChecklistWizardView({
 
   const handleBack = () => {
     setCurrentIndex((i) => i - 1)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleJumpToStep = (index: number) => {
+    setCurrentIndex(index)
+    setIsNavOpen(false)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -268,8 +283,8 @@ export default function ChecklistWizardView({
     )
   }
 
-  const nextDisabled = !isTalkpushStep && !currentHasStatus
-  const submitDisabled = !canSubmit || isMarkingComplete
+  const nextDisabled = !isTalkpushStep && (!currentHasStatus || currentCommentMissing)
+  const submitDisabled = !canSubmit || isMarkingComplete || (!isTalkpushStep && currentCommentMissing)
 
   return (
     <div className="max-w-3xl mx-auto px-4 pb-12">
@@ -283,9 +298,15 @@ export default function ChecklistWizardView({
             <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
             <p className="text-sm text-gray-500">Hi {tester.name}</p>
           </div>
-          <p className="text-sm sm:text-base font-semibold text-brand-sage-darker flex-shrink-0 ml-4">
+          <button
+            type="button"
+            onClick={() => setIsNavOpen(true)}
+            className="text-sm sm:text-base font-semibold text-brand-sage-darker flex-shrink-0 ml-4 flex items-center gap-1.5 hover:text-brand-sage transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2 rounded"
+            aria-label="Open step navigation"
+          >
             Step {currentIndex + 1} of {totalCount}
-          </p>
+            <List className="h-3.5 w-3.5" />
+          </button>
         </div>
         <Progress
           value={progressPct}
@@ -325,6 +346,60 @@ export default function ChecklistWizardView({
           />
         )}
       </div>
+
+      {/* Step navigation sheet */}
+      <Sheet open={isNavOpen} onOpenChange={setIsNavOpen}>
+        <SheetContent side="right" className="w-80 sm:w-96 overflow-y-auto p-0">
+          <SheetHeader className="px-4 pt-5 pb-3 border-b border-gray-100">
+            <SheetTitle className="text-base">All Steps</SheetTitle>
+          </SheetHeader>
+          <div className="divide-y divide-gray-100">
+            {checklistItems.map((item, idx) => {
+              const resp = responses[item.id]
+              const isCurrent = idx === currentIndex
+              const isTalkpush = item.actor === "Talkpush"
+              const stepStatus = isTalkpush ? "Pass" : (resp?.status ?? null)
+              const statusColors: Record<string, string> = {
+                Pass: "text-green-600",
+                Fail: "text-red-600",
+                "N/A": "text-gray-500",
+                Blocked: "text-orange-600",
+                "Up For Review": "text-amber-600",
+              }
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleJumpToStep(idx)}
+                  className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
+                    isCurrent ? "bg-brand-sage-lightest" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <span
+                    className={`flex-shrink-0 w-6 h-6 rounded-full text-xs font-semibold flex items-center justify-center mt-0.5 ${
+                      isCurrent
+                        ? "bg-brand-sage text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {item.step_number}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-800 truncate">{item.action}</p>
+                    {stepStatus ? (
+                      <span className={`text-xs font-medium ${statusColors[stepStatus] ?? "text-gray-500"}`}>
+                        {isTalkpush ? "Talkpush · Pass" : stepStatus}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">Not answered</span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Navigation */}
       <div className="mt-6 pt-4 border-t border-gray-200 space-y-2">
@@ -377,13 +452,17 @@ export default function ChecklistWizardView({
         </div>
 
         {/* Helper text */}
-        {isLastStep && !allNonTalkpushAnswered ? (
+        {isLastStep && (!allNonTalkpushAnswered || (!isTalkpushStep && currentCommentMissing)) ? (
           <p className="text-xs text-gray-400 text-center">
-            {completedNonTalkpush} of {totalNonTalkpush} steps answered — finish all to submit.
+            {!isTalkpushStep && currentCommentMissing
+              ? "Please add a comment before submitting."
+              : `${completedNonTalkpush} of ${totalNonTalkpush} steps answered — finish all to submit.`}
           </p>
         ) : nextDisabled && !isLastStep ? (
           <p className="text-xs text-gray-400 text-center">
-            Choose a status (Pass / Fail / N/A / Blocked / Up For Review) to continue.
+            {currentCommentMissing
+              ? "Please add a comment before continuing."
+              : "Choose a status (Pass / Fail / N/A / Blocked / Up For Review) to continue."}
           </p>
         ) : null}
       </div>
