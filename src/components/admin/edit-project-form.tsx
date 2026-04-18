@@ -134,7 +134,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tester Experience</p>
             <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50/50 px-4 py-3">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">Wizard mode (one step at a time)</p>
+                <p className="text-sm font-medium text-gray-900">One page per step</p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   When enabled, testers see one step at a time with Back and Next controls instead of the full list.
                 </p>
