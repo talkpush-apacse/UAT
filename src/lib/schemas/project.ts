@@ -27,6 +27,13 @@ export const updateProjectSchema = z.object({
   slug: slugSchema.optional(),
   testScenario: z.string().max(2000).optional().or(z.literal('')),
   talkpushLoginLink: z.string().url('Must be a valid URL').max(500).optional().or(z.literal('')),
+  wizardMode: z.preprocess(
+    (v) => {
+      if (v === undefined) return undefined
+      return v === true || v === 'true' || v === 'on' || v === '1'
+    },
+    z.boolean().optional()
+  ),
 })
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>

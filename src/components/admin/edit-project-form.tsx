@@ -25,6 +25,7 @@ interface Project {
   title: string | null
   test_scenario: string | null
   talkpush_login_link: string | null
+  wizard_mode: boolean | null
 }
 
 export default function EditProjectForm({ project }: { project: Project }) {
@@ -35,6 +36,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
   )
   const [companyName, setCompanyName] = useState(project.company_name)
   const [clientNames, setClientNames] = useState<string[]>([])
+  const [wizardMode, setWizardMode] = useState(project.wizard_mode ?? false)
 
   useEffect(() => {
     fetch("/api/clients")
@@ -124,6 +126,38 @@ export default function EditProjectForm({ project }: { project: Project }) {
               <p className="text-sm text-red-600">{state.fieldErrors.talkpushLoginLink[0]}</p>
             )}
           </div>
+
+          <Separator />
+
+          {/* Tester Experience */}
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tester Experience</p>
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50/50 px-4 py-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900">Wizard mode (one step at a time)</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  When enabled, testers see one step at a time with Back and Next controls instead of the full list.
+                </p>
+              </div>
+              <input type="hidden" name="wizardMode" value={wizardMode ? "true" : "false"} />
+              <button
+                type="button"
+                role="switch"
+                aria-checked={wizardMode}
+                onClick={() => setWizardMode((prev) => !prev)}
+                className={`relative flex-shrink-0 mt-0.5 h-6 w-11 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-offset-2 ${
+                  wizardMode ? "bg-brand-sage-darker" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                    wizardMode ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           {state.error && (
             <p className="text-sm text-red-600">{state.error}</p>
           )}

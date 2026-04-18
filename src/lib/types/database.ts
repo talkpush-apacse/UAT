@@ -282,6 +282,7 @@ export type Database = {
           talkpush_login_link: string | null
           test_scenario: string | null
           title: string | null
+          wizard_mode: boolean
         }
         Insert: {
           company_name: string
@@ -291,6 +292,7 @@ export type Database = {
           talkpush_login_link?: string | null
           test_scenario?: string | null
           title?: string | null
+          wizard_mode?: boolean
         }
         Update: {
           company_name?: string
@@ -300,6 +302,7 @@ export type Database = {
           talkpush_login_link?: string | null
           test_scenario?: string | null
           title?: string | null
+          wizard_mode?: boolean
         }
         Relationships: []
       }
