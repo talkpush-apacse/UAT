@@ -276,6 +276,7 @@ export type Database = {
       projects: {
         Row: {
           company_name: string
+          country: string
           created_at: string | null
           id: string
           slug: string
@@ -286,6 +287,7 @@ export type Database = {
         }
         Insert: {
           company_name: string
+          country?: string
           created_at?: string | null
           id?: string
           slug: string
@@ -296,6 +298,7 @@ export type Database = {
         }
         Update: {
           company_name?: string
+          country?: string
           created_at?: string | null
           id?: string
           slug?: string

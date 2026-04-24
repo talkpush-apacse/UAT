@@ -29,6 +29,7 @@ export async function createProject(
     slug: formData.get('slug'),
     testScenario: formData.get('testScenario'),
     talkpushLoginLink: formData.get('talkpushLoginLink'),
+    country: formData.get('country') ?? undefined,
   })
 
   if (!parsed.success) {
@@ -53,6 +54,7 @@ export async function createProject(
     slug,
     test_scenario: parsed.data.testScenario || null,
     talkpush_login_link: parsed.data.talkpushLoginLink || null,
+    country: parsed.data.country,
   })
 
   if (error) {
@@ -80,6 +82,7 @@ export async function updateProject(
     slug: formData.get('slug'),
     testScenario: formData.get('testScenario'),
     talkpushLoginLink: formData.get('talkpushLoginLink'),
+    country: formData.get('country') ?? undefined,
     wizardMode: formData.get('wizardMode') ?? 'false',
   })
 
@@ -96,6 +99,8 @@ export async function updateProject(
     updates.test_scenario = parsed.data.testScenario || null
   if (parsed.data.talkpushLoginLink !== undefined)
     updates.talkpush_login_link = parsed.data.talkpushLoginLink || null
+  if (parsed.data.country !== undefined)
+    updates.country = parsed.data.country
   if (parsed.data.wizardMode !== undefined)
     updates.wizard_mode = parsed.data.wizardMode
 
@@ -155,7 +160,7 @@ export async function duplicateProject(
   // Fetch original project
   const { data: original, error: originalError } = await supabase
     .from('projects')
-    .select('id, company_name, title, test_scenario, talkpush_login_link')
+    .select('id, company_name, title, test_scenario, talkpush_login_link, country')
     .eq('id', projectId)
     .single()
 
@@ -183,6 +188,7 @@ export async function duplicateProject(
       slug: newSlug,
       test_scenario: original.test_scenario,
       talkpush_login_link: original.talkpush_login_link,
+      country: original.country,
     })
     .select()
     .single()

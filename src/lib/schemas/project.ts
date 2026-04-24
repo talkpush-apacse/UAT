@@ -13,12 +13,18 @@ const createSlugSchema = z.preprocess(
   slugSchema.optional().or(z.literal(''))
 )
 
+const countrySchema = z
+  .string()
+  .regex(/^[A-Za-z]{2}$/, 'Country must be a 2-letter ISO code')
+  .transform((v) => v.toUpperCase())
+
 export const createProjectSchema = z.object({
   companyName: z.string().min(1, 'Please select a client').max(200),
   title: z.string().min(1, 'Title is required').max(300),
   slug: createSlugSchema,
   testScenario: z.string().max(2000).optional().or(z.literal('')),
   talkpushLoginLink: z.string().url('Must be a valid URL').max(500).optional().or(z.literal('')),
+  country: countrySchema.optional().default('PH'),
 })
 
 export const updateProjectSchema = z.object({
@@ -27,6 +33,7 @@ export const updateProjectSchema = z.object({
   slug: slugSchema.optional(),
   testScenario: z.string().max(2000).optional().or(z.literal('')),
   talkpushLoginLink: z.string().url('Must be a valid URL').max(500).optional().or(z.literal('')),
+  country: countrySchema.optional(),
   wizardMode: z.preprocess(
     (v) => {
       if (v === undefined) return undefined

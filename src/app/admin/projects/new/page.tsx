@@ -17,6 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { CountryPicker } from "@/components/ui/country-picker"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/countries"
 import Link from "next/link"
 import { ArrowLeft, Plus } from "lucide-react"
 
@@ -29,6 +31,7 @@ export default function NewProjectPage() {
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [slugEdited, setSlugEdited] = useState(false)
+  const [country, setCountry] = useState(DEFAULT_COUNTRY_CODE)
 
   useEffect(() => {
     fetch("/api/clients")
@@ -121,6 +124,17 @@ export default function NewProjectPage() {
               </p>
               {state.fieldErrors?.slug && (
                 <p className="text-sm text-red-600">{state.fieldErrors.slug[0]}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="country" className="text-xs text-gray-500">Country *</Label>
+              <input type="hidden" name="country" value={country} />
+              <CountryPicker id="country" value={country} onChange={setCountry} />
+              <p className="text-xs text-gray-400">
+                Sets the default flag and dial code on the tester registration phone input.
+              </p>
+              {state.fieldErrors?.country && (
+                <p className="text-sm text-red-600">{state.fieldErrors.country[0]}</p>
               )}
             </div>
             <div className="space-y-1.5">

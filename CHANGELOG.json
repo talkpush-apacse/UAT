@@ -1,5 +1,17 @@
 [
   {
+    "version": "2.14.0",
+    "name": "Version 2.14.0 - Per-Project Country",
+    "changes": [
+      "Added per-project Country setting — controls the default flag and dial code on the tester registration phone input",
+      "New searchable country picker on the Create and Edit Project forms (50+ countries)",
+      "Tester phone input now reads the country from the project; falls back to PH if empty",
+      "MCP create_project tool accepts an optional country ISO2 code",
+      "Added migration 20260423120000_add_country_to_projects.sql — projects.country TEXT NOT NULL DEFAULT 'PH'"
+    ],
+    "deployed_at": "2026-04-23"
+  },
+  {
     "version": "2.13.0",
     "name": "Version 2.13.0 - Wizard Mode for Testers",
     "changes": [

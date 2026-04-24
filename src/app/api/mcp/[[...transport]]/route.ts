@@ -219,9 +219,14 @@ const handler = createMcpHandler(
             .string()
             .optional()
             .describe("Talkpush login link for the project (optional)"),
+          country: z
+            .string()
+            .regex(/^[A-Za-z]{2}$/)
+            .optional()
+            .describe("ISO 3166-1 alpha-2 country code for the tester phone input default (e.g. 'PH', 'IN', 'US'). Defaults to 'PH'."),
         },
       },
-      async ({ company_name, title, test_scenario, talkpush_login_link }) => {
+      async ({ company_name, title, test_scenario, talkpush_login_link, country }) => {
         const supabase = createAdminClient();
         const slug = await generateUniqueProjectSlug(supabase, title);
 
@@ -232,6 +237,7 @@ const handler = createMcpHandler(
             title,
             test_scenario: test_scenario ?? null,
             talkpush_login_link: talkpush_login_link ?? null,
+            country: country ? country.toUpperCase() : "PH",
             slug,
           })
           .select()

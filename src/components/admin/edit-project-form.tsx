@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { CountryPicker } from "@/components/ui/country-picker"
+import { DEFAULT_COUNTRY_CODE } from "@/lib/countries"
 import { Pencil } from "lucide-react"
 
 interface Project {
@@ -25,6 +27,7 @@ interface Project {
   title: string | null
   test_scenario: string | null
   talkpush_login_link: string | null
+  country: string | null
   wizard_mode: boolean | null
 }
 
@@ -36,6 +39,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
   )
   const [companyName, setCompanyName] = useState(project.company_name)
   const [clientNames, setClientNames] = useState<string[]>([])
+  const [country, setCountry] = useState(project.country || DEFAULT_COUNTRY_CODE)
   const [wizardMode, setWizardMode] = useState(project.wizard_mode ?? false)
 
   useEffect(() => {
@@ -99,6 +103,17 @@ export default function EditProjectForm({ project }: { project: Project }) {
             />
             {state.fieldErrors?.slug && (
               <p className="text-sm text-red-600">{state.fieldErrors.slug[0]}</p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="country" className="text-xs text-gray-500">Country *</Label>
+            <input type="hidden" name="country" value={country} />
+            <CountryPicker id="country" value={country} onChange={setCountry} />
+            <p className="text-xs text-gray-400">
+              Sets the default flag and dial code on the tester registration phone input.
+            </p>
+            {state.fieldErrors?.country && (
+              <p className="text-sm text-red-600">{state.fieldErrors.country[0]}</p>
             )}
           </div>
           <div className="space-y-1.5">

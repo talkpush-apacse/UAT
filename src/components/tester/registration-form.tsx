@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import PhoneInput from "react-phone-input-2"
 import "react-phone-input-2/lib/style.css"
 import { ClipboardCheck } from "lucide-react"
+import { getCountryByCode, DEFAULT_COUNTRY_CODE } from "@/lib/countries"
 
 const initialState: RegisterTesterState = {}
 
@@ -17,14 +18,17 @@ export default function RegistrationForm({
   projectId,
   slug,
   companyName,
+  country,
 }: {
   projectId: string
   slug: string
   companyName?: string
+  country?: string | null
 }) {
   const [state, formAction] = useFormState(registerTester, initialState)
   const router = useRouter()
-  const [phone, setPhone] = useState("63")
+  const resolvedCountry = getCountryByCode(country || DEFAULT_COUNTRY_CODE)
+  const [phone, setPhone] = useState(resolvedCountry.dialCode)
   const [clientErrors, setClientErrors] = useState<{ name?: string; email?: string; mobile?: string }>({})
   const nameRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
@@ -131,7 +135,7 @@ export default function RegistrationForm({
             Mobile Number<span className="text-red-500 ml-0.5">*</span>
           </Label>
           <PhoneInput
-            country="ph"
+            country={resolvedCountry.code.toLowerCase()}
             value={phone}
             onChange={(value) => {
               setPhone(value)
