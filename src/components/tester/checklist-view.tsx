@@ -5,12 +5,13 @@ import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
 import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight, CheckCircle, XCircle, MinusCircle, Ban, HelpCircle } from "lucide-react"
 import ChecklistItem from "./checklist-item"
+import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
 import ChecklistWizardView from "./checklist-wizard-view"
 
 interface ChecklistItemData {
   id: string
-  step_number: number
+  step_number: number | null
   path: string | null
   actor: string
   action: string
@@ -18,6 +19,8 @@ interface ChecklistItemData {
   crm_module: string | null
   tip: string | null
   sort_order: number
+  item_type: string
+  header_label: string | null
 }
 
 interface ResponseData {
@@ -96,21 +99,31 @@ function ClassicChecklistView({
     setIsMarkingComplete(false)
   }
 
-  const completedCount = useMemo(() => {
-    return Object.values(responses).filter((r) => r.status !== null).length
-  }, [responses])
+  // Phase headers don't count toward progress — they have no status to set.
+  const stepItems = useMemo(
+    () => checklistItems.filter((i) => i.item_type !== "phase_header"),
+    [checklistItems]
+  )
 
-  const totalCount = checklistItems.length
+  const completedCount = useMemo(() => {
+    const stepIds = new Set(stepItems.map((i) => i.id))
+    return Object.values(responses).filter(
+      (r) => r.status !== null && stepIds.has(r.checklist_item_id)
+    ).length
+  }, [responses, stepItems])
+
+  const totalCount = stepItems.length
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
   // Issue #3 — CTA is only active when every step has a status
   const allStepsCompleted = totalCount > 0 && completedCount === totalCount
 
-  // Find the first Talkpush actor step to show the login link
+  // Find the first Talkpush actor *step* (not a phase header that defaults to Talkpush)
+  // to show the login link.
   const firstTalkpushItemId = useMemo(() => {
-    const talkpushItem = checklistItems.find((item) => item.actor === "Talkpush")
+    const talkpushItem = stepItems.find((item) => item.actor === "Talkpush")
     return talkpushItem?.id || null
-  }, [checklistItems])
+  }, [stepItems])
 
   // "Before You Begin" guide — collapsed state persisted per project
   const guideStorageKey = `uat-guide-collapsed-${project.id}`
@@ -290,23 +303,35 @@ function ClassicChecklistView({
 
       {/* Checklist — flat sequential list, no actor section grouping */}
       <div className="mt-6 space-y-3" id="checklist-sections">
-        {checklistItems.map((item) => (
-          <ChecklistItem
-            key={item.id}
-            item={item}
-            testerId={tester.id}
-            response={responses[item.id] || null}
-            attachments={initialAttachments.filter(
-              (a) => responses[item.id] && a.response_id === responses[item.id].id
-            )}
-            onResponseUpdate={handleResponseUpdate}
-            talkpushLoginLink={
-              item.id === firstTalkpushItemId
-                ? project.talkpush_login_link
-                : null
-            }
-          />
-        ))}
+        {checklistItems.map((item) => {
+          if (item.item_type === "phase_header") {
+            return (
+              <PhaseHeaderCard
+                key={item.id}
+                label={item.header_label}
+                action={item.action}
+                tip={item.tip}
+              />
+            )
+          }
+          return (
+            <ChecklistItem
+              key={item.id}
+              item={item as ChecklistItemData & { step_number: number }}
+              testerId={tester.id}
+              response={responses[item.id] || null}
+              attachments={initialAttachments.filter(
+                (a) => responses[item.id] && a.response_id === responses[item.id].id
+              )}
+              onResponseUpdate={handleResponseUpdate}
+              talkpushLoginLink={
+                item.id === firstTalkpushItemId
+                  ? project.talkpush_login_link
+                  : null
+              }
+            />
+          )
+        })}
 
         {/* Mark Test Complete — Issue #3: disabled until all steps have a status */}
         {checklistItems.length > 0 && (

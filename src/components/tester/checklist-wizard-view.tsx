@@ -3,15 +3,15 @@
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, LogIn, List } from "lucide-react"
+import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, List, Bookmark } from "lucide-react"
 import ChecklistItem from "./checklist-item"
+import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
-import { createAnonClient } from "@/lib/supabase/client"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 interface ChecklistItemData {
   id: string
-  step_number: number
+  step_number: number | null
   path: string | null
   actor: string
   action: string
@@ -19,6 +19,8 @@ interface ChecklistItemData {
   crm_module: string | null
   tip: string | null
   sort_order: number
+  item_type: string
+  header_label: string | null
 }
 
 interface ResponseData {
@@ -62,19 +64,10 @@ type Props = {
   testCompleted?: string | null
 }
 
-function TalkpushInfoSlide({
-  item,
-  firstTalkpushItemId,
-  talkpushLoginLink,
-}: {
-  item: ChecklistItemData
-  firstTalkpushItemId: string | null
-  talkpushLoginLink: string | null
-}) {
+function TalkpushVerifyHeader({ item }: { item: ChecklistItemData }) {
   return (
-    <div className="rounded-xl border border-brand-sage-lighter bg-white shadow-sm overflow-hidden">
-      {/* Header band */}
-      <div className="bg-brand-sage-lightest border-b border-brand-sage-lighter px-4 py-3 flex items-center gap-2">
+    <div className="rounded-xl border border-brand-sage-lighter bg-brand-sage-lightest px-4 py-3 mb-3">
+      <div className="flex items-center gap-2 mb-1.5">
         <span className="inline-flex items-center rounded-md bg-brand-sage-lighter px-2 py-0.5 text-xs font-medium text-brand-sage-darker border border-brand-sage-lighter">
           Talkpush
         </span>
@@ -82,33 +75,8 @@ function TalkpushInfoSlide({
           Step {item.step_number} · Performed by Talkpush
         </span>
       </div>
-      <div className="px-4 py-4 space-y-3">
-        <div className="rounded-lg bg-brand-sage-lightest border border-brand-sage-lighter px-3 py-2.5">
-          <p className="text-xs font-medium text-brand-sage-darker uppercase tracking-wide mb-1">No action required from you</p>
-          <p className="text-sm text-gray-600">This step is performed automatically by Talkpush. Review it and click Next to continue.</p>
-        </div>
-        <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">What happens in this step</p>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{item.action}</p>
-        </div>
-        {item.tip && (
-          <div className="rounded-lg bg-brand-amber-lightest border border-brand-amber-lighter px-3 py-2.5">
-            <p className="text-xs font-medium text-brand-amber-darker uppercase tracking-wide mb-1">Tip</p>
-            <p className="text-sm text-gray-700">{item.tip}</p>
-          </div>
-        )}
-        {item.id === firstTalkpushItemId && talkpushLoginLink && (
-          <a
-            href={talkpushLoginLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg border border-brand-sage-lighter bg-brand-sage-lightest px-3 py-2.5 text-sm font-medium text-brand-sage-darker hover:bg-brand-sage-lighter transition-colors"
-          >
-            <LogIn className="h-4 w-4 flex-shrink-0" />
-            Open Talkpush Login
-          </a>
-        )}
-      </div>
+      <p className="text-xs font-medium text-brand-sage-darker uppercase tracking-wide mb-0.5">Verify the automation triggered</p>
+      <p className="text-sm text-gray-600">This step is performed automatically. Confirm it ran as expected and mark Pass — or Fail / Blocked if it didn&apos;t.</p>
     </div>
   )
 }
@@ -135,12 +103,21 @@ export default function ChecklistWizardView({
   const [isNavOpen, setIsNavOpen] = useState(false)
 
   const totalCount = checklistItems.length
+  // Phase headers are not answerable — they don't require a status and don't
+  // gate the "all answered" check. The DB triggers also reject any response
+  // pointing at a header row.
+  const isAnswerable = (item: ChecklistItemData) => item.item_type !== "phase_header"
+  const answerableItems = useMemo(
+    () => checklistItems.filter(isAnswerable),
+    [checklistItems]
+  )
+  const totalAnswerable = answerableItems.length
 
-  // Start at the first un-answered non-Talkpush step; Talkpush steps are "already answered"
+  // Start at the first un-answered *answerable* step (skip phase headers)
   const initialIndex = useMemo(() => {
     if (totalCount === 0) return 0
     const firstUnanswered = checklistItems.findIndex((item) => {
-      if (item.actor === "Talkpush") return false
+      if (!isAnswerable(item)) return false
       const resp = initialResponses.find((r) => r.checklist_item_id === item.id)
       return !resp || resp.status === null
     })
@@ -150,7 +127,9 @@ export default function ChecklistWizardView({
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
 
   const firstTalkpushItemId = useMemo(() => {
-    const item = checklistItems.find((i) => i.actor === "Talkpush")
+    const item = checklistItems.find(
+      (i) => isAnswerable(i) && i.actor === "Talkpush"
+    )
     return item?.id ?? null
   }, [checklistItems])
 
@@ -159,55 +138,33 @@ export default function ChecklistWizardView({
   }
 
   const currentItem = checklistItems[currentIndex]
-  const isTalkpushStep = currentItem?.actor === "Talkpush"
+  const isHeaderStep = currentItem?.item_type === "phase_header"
+  const isTalkpushStep = !isHeaderStep && currentItem?.actor === "Talkpush"
   const currentResponse = currentItem ? responses[currentItem.id] : undefined
   const currentHasStatus = currentResponse?.status != null
 
   const COMMENT_REQUIRED_STATUSES = ["Fail", "Blocked", "Up For Review"]
   const currentRequiresComment =
+    !isHeaderStep &&
     currentResponse?.status != null &&
     COMMENT_REQUIRED_STATUSES.includes(currentResponse.status)
   const currentCommentMissing =
     currentRequiresComment && !currentResponse?.comment?.trim()
 
-  const nonTalkpushItems = useMemo(
-    () => checklistItems.filter((i) => i.actor !== "Talkpush"),
-    [checklistItems]
-  )
-  const completedNonTalkpush = nonTalkpushItems.filter(
+  const completedCount = answerableItems.filter(
     (i) => responses[i.id]?.status != null
   ).length
-  const totalNonTalkpush = nonTalkpushItems.length
-  const allNonTalkpushAnswered = completedNonTalkpush === totalNonTalkpush
+  const allAnswered = completedCount === totalAnswerable
 
   const isLastStep = currentIndex === totalCount - 1
-  const canSubmit = (isTalkpushStep || currentHasStatus) && allNonTalkpushAnswered
+  // Phase headers: no status required to advance. Steps: require status + comment if applicable.
+  const canSubmit = (isHeaderStep || currentHasStatus) && allAnswered
 
   const progressPct = totalCount > 0 ? ((currentIndex + 1) / totalCount) * 100 : 0
 
   const doSaveCurrentStep = async () => {
-    if (isTalkpushStep) {
-      if (currentResponse?.status !== "Pass") {
-        const supabase = createAnonClient()
-        const { data } = await supabase
-          .from("responses")
-          .upsert(
-            {
-              tester_id: tester.id,
-              checklist_item_id: currentItem.id,
-              status: "Pass",
-              comment: null,
-            },
-            { onConflict: "tester_id,checklist_item_id" }
-          )
-          .select()
-          .single()
-        if (data) handleResponseUpdate(currentItem.id, data)
-      }
-    } else {
-      // Let ChecklistItem's 500ms debounce flush before advancing
-      await new Promise((r) => setTimeout(r, 700))
-    }
+    // Let ChecklistItem's 500ms debounce flush before advancing
+    await new Promise((r) => setTimeout(r, 700))
   }
 
   const handleNext = async () => {
@@ -283,8 +240,12 @@ export default function ChecklistWizardView({
     )
   }
 
-  const nextDisabled = !isTalkpushStep && (!currentHasStatus || currentCommentMissing)
-  const submitDisabled = !canSubmit || isMarkingComplete || (!isTalkpushStep && currentCommentMissing)
+  const nextDisabled =
+    !isHeaderStep && (!currentHasStatus || currentCommentMissing)
+  const submitDisabled =
+    !canSubmit ||
+    isMarkingComplete ||
+    (!isHeaderStep && currentCommentMissing)
 
   return (
     <div className="max-w-3xl mx-auto px-4 pb-12">
@@ -320,30 +281,33 @@ export default function ChecklistWizardView({
 
       {/* Step body */}
       <div className="mt-6">
-        {isTalkpushStep ? (
-          <TalkpushInfoSlide
-            item={currentItem}
-            firstTalkpushItemId={firstTalkpushItemId}
-            talkpushLoginLink={project.talkpush_login_link}
+        {isHeaderStep ? (
+          <PhaseHeaderCard
+            label={currentItem.header_label}
+            action={currentItem.action}
+            tip={currentItem.tip}
           />
         ) : (
-          <ChecklistItem
-            key={currentItem.id}
-            item={currentItem}
-            testerId={tester.id}
-            response={responses[currentItem.id] || null}
-            attachments={attachments.filter(
-              (a) =>
-                responses[currentItem.id] &&
-                a.response_id === responses[currentItem.id].id
-            )}
-            onResponseUpdate={handleResponseUpdate}
-            talkpushLoginLink={
-              currentItem.id === firstTalkpushItemId
-                ? project.talkpush_login_link
-                : null
-            }
-          />
+          <>
+            {isTalkpushStep && <TalkpushVerifyHeader item={currentItem} />}
+            <ChecklistItem
+              key={currentItem.id}
+              item={currentItem as ChecklistItemData & { step_number: number }}
+              testerId={tester.id}
+              response={responses[currentItem.id] || null}
+              attachments={attachments.filter(
+                (a) =>
+                  responses[currentItem.id] &&
+                  a.response_id === responses[currentItem.id].id
+              )}
+              onResponseUpdate={handleResponseUpdate}
+              talkpushLoginLink={
+                currentItem.id === firstTalkpushItemId
+                  ? project.talkpush_login_link
+                  : null
+              }
+            />
+          </>
         )}
       </div>
 
@@ -357,8 +321,8 @@ export default function ChecklistWizardView({
             {checklistItems.map((item, idx) => {
               const resp = responses[item.id]
               const isCurrent = idx === currentIndex
-              const isTalkpush = item.actor === "Talkpush"
-              const stepStatus = isTalkpush ? "Pass" : (resp?.status ?? null)
+              const isHeader = item.item_type === "phase_header"
+              const stepStatus = resp?.status ?? null
               const statusColors: Record<string, string> = {
                 Pass: "text-green-600",
                 Fail: "text-red-600",
@@ -372,23 +336,38 @@ export default function ChecklistWizardView({
                   type="button"
                   onClick={() => handleJumpToStep(idx)}
                   className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
-                    isCurrent ? "bg-brand-sage-lightest" : "hover:bg-gray-50"
+                    isCurrent
+                      ? isHeader
+                        ? "bg-brand-lavender-lightest"
+                        : "bg-brand-sage-lightest"
+                      : "hover:bg-gray-50"
                   }`}
                 >
                   <span
                     className={`flex-shrink-0 w-6 h-6 rounded-full text-xs font-semibold flex items-center justify-center mt-0.5 ${
-                      isCurrent
-                        ? "bg-brand-sage text-white"
-                        : "bg-gray-100 text-gray-600"
+                      isHeader
+                        ? "bg-brand-lavender-lighter text-brand-lavender-darker"
+                        : isCurrent
+                          ? "bg-brand-sage text-white"
+                          : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {item.step_number}
+                    {isHeader ? <Bookmark className="h-3 w-3" /> : item.step_number}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-800 truncate">{item.action}</p>
-                    {stepStatus ? (
+                    <p className="text-sm text-gray-800 truncate">
+                      {isHeader && item.header_label ? (
+                        <span className="text-[10px] font-mono uppercase tracking-wide text-brand-lavender-darker mr-1.5">
+                          {item.header_label}
+                        </span>
+                      ) : null}
+                      {item.action}
+                    </p>
+                    {isHeader ? (
+                      <span className="text-xs text-brand-lavender-darker">Phase header</span>
+                    ) : stepStatus ? (
                       <span className={`text-xs font-medium ${statusColors[stepStatus] ?? "text-gray-500"}`}>
-                        {isTalkpush ? "Talkpush · Pass" : stepStatus}
+                        {stepStatus}
                       </span>
                     ) : (
                       <span className="text-xs text-gray-400">Not answered</span>
@@ -452,11 +431,11 @@ export default function ChecklistWizardView({
         </div>
 
         {/* Helper text */}
-        {isLastStep && (!allNonTalkpushAnswered || (!isTalkpushStep && currentCommentMissing)) ? (
+        {isLastStep && (!allAnswered || (!isHeaderStep && currentCommentMissing)) ? (
           <p className="text-xs text-gray-400 text-center">
-            {!isTalkpushStep && currentCommentMissing
+            {!isHeaderStep && currentCommentMissing
               ? "Please add a comment before submitting."
-              : `${completedNonTalkpush} of ${totalNonTalkpush} steps answered — finish all to submit.`}
+              : `${completedCount} of ${totalAnswerable} steps answered — finish all to submit.`}
           </p>
         ) : nextDisabled && !isLastStep ? (
           <p className="text-xs text-gray-400 text-center">

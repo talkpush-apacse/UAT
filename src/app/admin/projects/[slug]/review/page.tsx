@@ -76,8 +76,11 @@ export default async function ReviewPage({
       .order("created_at", { ascending: true }),
     supabase
       .from("checklist_items")
-      .select("id, step_number, path, actor, action, crm_module, sort_order")
+      .select("id, step_number, path, actor, action, crm_module, sort_order, item_type")
       .eq("project_id", project.id)
+      // Phase headers can never have responses or admin reviews — exclude them
+      // from the review queue entirely.
+      .eq("item_type", "step")
       .order("sort_order"),
   ])
 
@@ -224,7 +227,8 @@ export default async function ReviewPage({
       const stepResponseId = response?.id ?? ""
       steps.push({
         checklistItemId: item.id,
-        stepNumber: item.step_number,
+        // Always non-null here because we filter item_type='step' above
+        stepNumber: item.step_number ?? 0,
         path: item.path,
         actor: item.actor,
         action: item.action,

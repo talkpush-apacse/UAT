@@ -2,7 +2,7 @@ import ExcelJS from 'exceljs'
 import { ACTORS } from '@/lib/constants'
 
 export interface ParsedChecklistItem {
-  stepNumber: number
+  stepNumber: number | null
   path: string | null
   actor: string
   action: string
@@ -10,6 +10,8 @@ export interface ParsedChecklistItem {
   crmModule: string | null
   tip: string | null
   sortOrder: number
+  itemType?: 'step' | 'phase_header'
+  headerLabel?: string | null
 }
 
 interface ParseResult {
@@ -86,19 +88,17 @@ export async function parseChecklistFile(
   const sampleCol = findColumnIndex(headers, 'View Sample', 'Sample', 'ViewSample', 'Link')
   const moduleCol = findColumnIndex(headers, 'CRM Module', 'CRMModule', 'Module')
   const tipCol = findColumnIndex(headers, 'Tip', 'Tips', 'Hint', 'Hints', 'Helper')
+  // Optional columns for phase headers
+  const typeCol = findColumnIndex(headers, 'Type', 'Item Type', 'ItemType')
+  const headerLabelCol = findColumnIndex(headers, 'Header Label', 'HeaderLabel', 'Phase', 'Phase Label')
 
   if (actionCol === null) {
     return {
       items: [],
-      errors: ['Required column "Action" not found. Expected columns: Step, Path, Tester Perspective, Action, View Sample, CRM Module'],
+      errors: ['Required column "Action" not found. Expected columns: Step, Path, Tester Perspective, Action, View Sample, CRM Module (optional: Type, Header Label)'],
     }
   }
-  if (actorCol === null) {
-    return {
-      items: [],
-      errors: ['Required column "Tester Perspective" not found. Expected columns: Step, Path, Tester Perspective, Action, View Sample, CRM Module'],
-    }
-  }
+  // Actor is only required if there are non-header rows. We validate per-row below.
 
   let sortOrder = 0
 
@@ -116,15 +116,35 @@ export async function parseChecklistFile(
 
     sortOrder++
 
+    // Determine item type. Default to 'step' for backwards-compat with sheets
+    // that don't include a Type column.
+    const typeRaw = getCellValue(typeCol).toLowerCase().replace(/[\s_-]+/g, '')
+    const itemType: 'step' | 'phase_header' =
+      typeRaw === 'phaseheader' || typeRaw === 'header' || typeRaw === 'phase'
+        ? 'phase_header'
+        : 'step'
+    const isHeader = itemType === 'phase_header'
+
     const stepStr = getCellValue(stepCol)
-    const stepNumber = stepStr ? parseInt(stepStr, 10) : sortOrder
-    if (isNaN(stepNumber)) {
-      errors.push(`Row ${rowNumber}: Invalid step number "${stepStr}"`)
-      return
+    let stepNumber: number | null
+    if (isHeader) {
+      // Phase headers don't carry a step number — even if the sheet provides one,
+      // the renumber RPC will set it to NULL on insert.
+      stepNumber = null
+    } else {
+      stepNumber = stepStr ? parseInt(stepStr, 10) : sortOrder
+      if (stepNumber !== null && isNaN(stepNumber)) {
+        errors.push(`Row ${rowNumber}: Invalid step number "${stepStr}"`)
+        return
+      }
     }
 
-    const actor = getCellValue(actorCol)
-    if (!VALID_ACTORS.includes(actor)) {
+    let actor = getCellValue(actorCol)
+    if (isHeader) {
+      // Headers don't need a real actor, but the column has a NOT NULL constraint.
+      // Use the placeholder the rest of the codebase uses for header rows.
+      if (!actor || !VALID_ACTORS.includes(actor)) actor = 'Talkpush'
+    } else if (!VALID_ACTORS.includes(actor)) {
       errors.push(
         `Row ${rowNumber}: Invalid actor "${actor}". Must be one of: ${VALID_ACTORS.join(', ')}`
       )
@@ -133,7 +153,7 @@ export async function parseChecklistFile(
 
     const pathValue = getCellValue(pathCol)
     let path: string | null = null
-    if (pathValue) {
+    if (!isHeader && pathValue) {
       const normalized = normalizePath(pathValue)
       if (normalized) {
         path = normalized
@@ -145,9 +165,10 @@ export async function parseChecklistFile(
       }
     }
 
-    const viewSample = getCellValue(sampleCol) || null
-    const crmModule = getCellValue(moduleCol) || null
+    const viewSample = isHeader ? null : getCellValue(sampleCol) || null
+    const crmModule = isHeader ? null : getCellValue(moduleCol) || null
     const tip = getCellValue(tipCol) || null
+    const headerLabel = isHeader ? getCellValue(headerLabelCol) || null : null
 
     items.push({
       stepNumber,
@@ -158,6 +179,8 @@ export async function parseChecklistFile(
       crmModule,
       tip,
       sortOrder,
+      itemType,
+      headerLabel,
     })
   })
 

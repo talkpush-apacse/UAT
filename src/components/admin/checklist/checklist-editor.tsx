@@ -61,7 +61,7 @@ export default function ChecklistEditor({
 }) {
   const router = useRouter()
   const [items, setItems] = useState(initialItems)
-  const [adding, setAdding] = useState(false)
+  const [adding, setAdding] = useState<null | "step" | "phase_header">(null)
   const [bulkMode, setBulkMode] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
@@ -177,8 +177,16 @@ export default function ChecklistEditor({
             Checklist Steps
           </h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            {items.length} {items.length === 1 ? "step" : "steps"}
-            {items.length > 1 && !bulkMode ? " — drag to reorder" : ""}
+            {(() => {
+              const stepCount = items.filter((i) => i.item_type !== "phase_header").length
+              const headerCount = items.length - stepCount
+              const stepLabel = `${stepCount} ${stepCount === 1 ? "step" : "steps"}`
+              const headerLabel = headerCount > 0
+                ? ` · ${headerCount} ${headerCount === 1 ? "phase header" : "phase headers"}`
+                : ""
+              const reorderHint = items.length > 1 && !bulkMode ? " — drag to reorder" : ""
+              return `${stepLabel}${headerLabel}${reorderHint}`
+            })()}
           </p>
         </div>
 
@@ -234,7 +242,7 @@ export default function ChecklistEditor({
                   size="sm"
                   onClick={handleEnterBulkMode}
                   className="text-gray-600 border-gray-200 hover:bg-gray-50"
-                  disabled={adding}
+                  disabled={!!adding}
                 >
                   <CheckSquare className="h-4 w-4 mr-1.5" />
                   Select
@@ -243,13 +251,22 @@ export default function ChecklistEditor({
               <CopyStepsDialog
                 projectId={projectId}
                 slug={slug}
-                disabled={adding}
+                disabled={!!adding}
                 onCopied={handleCopied}
               />
               <Button
-                onClick={() => setAdding(true)}
+                variant="outline"
+                onClick={() => setAdding("phase_header")}
+                className="border-brand-lavender-lighter text-brand-lavender-darker hover:bg-brand-lavender-lightest"
+                disabled={!!adding}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add Phase Header
+              </Button>
+              <Button
+                onClick={() => setAdding("step")}
                 className="bg-primary hover:bg-primary/90 text-white"
-                disabled={adding}
+                disabled={!!adding}
               >
                 <Plus className="h-4 w-4 mr-1.5" />
                 Add Step
@@ -278,7 +295,7 @@ export default function ChecklistEditor({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setAdding(true)}
+              onClick={() => setAdding("step")}
               className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest"
             >
               <Plus className="h-4 w-4 mr-1" />
@@ -341,11 +358,12 @@ export default function ChecklistEditor({
         <AddStepForm
           projectId={projectId}
           slug={slug}
+          mode={adding}
           onAdd={(added) => {
             setItems((prev) => renumberItems([...prev, added]))
-            setAdding(false)
+            setAdding(null)
           }}
-          onCancel={() => setAdding(false)}
+          onCancel={() => setAdding(null)}
         />
       )}
 

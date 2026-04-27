@@ -297,7 +297,9 @@ const handler = createMcpHandler(
 
         const { data, error } = await supabase
           .from("checklist_items")
-          .select("id, actor, action, path, crm_module, tip, view_sample, sort_order, step_number")
+          .select(
+            "id, actor, action, path, crm_module, tip, view_sample, sort_order, step_number, item_type, header_label"
+          )
           .eq("project_id", project.id)
           .order("sort_order", { ascending: true });
 
@@ -331,12 +333,18 @@ const handler = createMcpHandler(
       {
         title: "Create Checklist Items",
         description:
-          "Add new checklist steps to a project. Auto-increments sort_order and step_number after existing items.",
+          "Add new checklist steps or phase headers to a project. Auto-increments sort_order; step_number is sequential for testable steps and NULL for phase headers.",
         inputSchema: {
           slug: z.string().describe("The project slug"),
           items: z
             .array(
               z.object({
+                item_type: z
+                  .enum(["step", "phase_header"])
+                  .default("step")
+                  .describe(
+                    "'step' (default) creates a testable step; 'phase_header' creates a non-testable section divider"
+                  ),
                 actor: z
                   .enum([
                     "Candidate",
@@ -344,26 +352,35 @@ const handler = createMcpHandler(
                     "Recruiter",
                     "Referrer/Vendor",
                   ])
-                  .describe("Who performs this step"),
+                  .optional()
+                  .describe("Who performs this step (required for 'step', ignored for 'phase_header')"),
                 action: z
                   .string()
-                  .describe("What the actor does in this step"),
+                  .describe(
+                    "For a step: what the actor does. For a phase header: the title and description text."
+                  ),
                 path: z
                   .string()
                   .optional()
-                  .describe("URL path or location in the app (optional)"),
+                  .describe("URL path or location in the app (steps only)"),
                 crm_module: z
                   .string()
                   .optional()
-                  .describe("CRM module name (optional)"),
+                  .describe("CRM module name (steps only)"),
                 tip: z
                   .string()
                   .optional()
-                  .describe("Helpful tip for the tester (optional)"),
+                  .describe("Helpful tip displayed to testers (optional)"),
                 view_sample: z
                   .string()
                   .optional()
-                  .describe("URL to a sample/screenshot (optional)"),
+                  .describe("URL to a sample/screenshot (steps only)"),
+                header_label: z
+                  .string()
+                  .optional()
+                  .describe(
+                    "Short uppercase label for a phase header (e.g. 'PHASE 1'). Ignored for steps."
+                  ),
               })
             )
             .describe("Array of checklist items to create"),
@@ -373,7 +390,9 @@ const handler = createMcpHandler(
         const supabase = createAdminClient();
         const project = await getProjectBySlug(slug);
 
-        // Get current max sort_order and step_number
+        // Get current max sort_order. step_number is renumbered server-side
+        // by the renumber_steps RPC after insert, so we don't need to track
+        // it precisely here — just provide a temporary unique value for steps.
         const { data: existing } = await supabase
           .from("checklist_items")
           .select("sort_order, step_number")
@@ -384,17 +403,24 @@ const handler = createMcpHandler(
         let nextOrder = (existing?.[0]?.sort_order ?? 0) + 1;
         let nextStep = (existing?.[0]?.step_number ?? 0) + 1;
 
-        const rows = items.map((item) => ({
-          project_id: project.id,
-          actor: item.actor,
-          action: item.action,
-          path: item.path ?? null,
-          crm_module: item.crm_module ?? null,
-          tip: item.tip ?? null,
-          view_sample: item.view_sample ?? null,
-          sort_order: nextOrder++,
-          step_number: nextStep++,
-        }));
+        const rows = items.map((item) => {
+          const isHeader = item.item_type === "phase_header";
+          return {
+            project_id: project.id,
+            // Phase headers borrow the actor column with a placeholder so the
+            // existing NOT NULL constraint is satisfied; the UI ignores it.
+            actor: isHeader ? item.actor ?? "Talkpush" : item.actor!,
+            action: item.action,
+            path: isHeader ? null : item.path ?? null,
+            crm_module: isHeader ? null : item.crm_module ?? null,
+            tip: item.tip ?? null,
+            view_sample: isHeader ? null : item.view_sample ?? null,
+            sort_order: nextOrder++,
+            step_number: isHeader ? null : nextStep++,
+            item_type: item.item_type ?? "step",
+            header_label: isHeader ? item.header_label ?? null : null,
+          };
+        });
 
         const { data, error } = await supabase
           .from("checklist_items")
@@ -402,6 +428,10 @@ const handler = createMcpHandler(
           .select();
 
         if (error) throw new Error(error.message);
+
+        // Renumber so step_numbers are sequential 1..N over steps only,
+        // and phase headers stay at NULL.
+        await supabase.rpc("renumber_steps", { p_project_id: project.id });
 
         return {
           content: [
@@ -441,14 +471,32 @@ const handler = createMcpHandler(
           crm_module: z.string().optional().describe("Updated CRM module"),
           tip: z.string().optional().describe("Updated tip"),
           view_sample: z.string().optional().describe("Updated sample URL"),
+          item_type: z
+            .enum(["step", "phase_header"])
+            .optional()
+            .describe(
+              "Convert between testable step and phase header. When switching to phase_header, step_number is cleared."
+            ),
+          header_label: z
+            .string()
+            .optional()
+            .describe(
+              "Short uppercase label for a phase header (e.g. 'PHASE 1')."
+            ),
         },
       },
       async ({ id, ...updates }) => {
         const supabase = createAdminClient();
         // Remove undefined values
-        const cleanUpdates = Object.fromEntries(
+        const cleanUpdates: Record<string, unknown> = Object.fromEntries(
           Object.entries(updates).filter(([, v]) => v !== undefined)
         );
+
+        // Switching to phase_header forces step_number to NULL so the partial
+        // unique index doesn't trip and the row matches the header invariant.
+        if (cleanUpdates.item_type === "phase_header") {
+          cleanUpdates.step_number = null;
+        }
 
         if (Object.keys(cleanUpdates).length === 0) {
           throw new Error("No fields provided to update");
@@ -564,10 +612,13 @@ const handler = createMcpHandler(
         const supabase = createAdminClient();
         const project = await getProjectBySlug(slug);
 
+        // Phase headers can't have responses — count steps only so the
+        // completion percentage doesn't get artificially diluted.
         const { data: items } = await supabase
           .from("checklist_items")
           .select("id")
-          .eq("project_id", project.id);
+          .eq("project_id", project.id)
+          .eq("item_type", "step");
 
         const { data: testers } = await supabase
           .from("testers")

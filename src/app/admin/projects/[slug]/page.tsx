@@ -54,7 +54,7 @@ export default async function ProjectDetailPage({
 
   let checklistItems: Array<{
     id: string
-    step_number: number
+    step_number: number | null
     path: string | null
     actor: string
     action: string
@@ -62,6 +62,8 @@ export default async function ProjectDetailPage({
     tip: string | null
     sort_order: number
     view_sample: string | null
+    item_type: string
+    header_label: string | null
   }> | null = null
 
   let signoffs: Array<{
@@ -78,7 +80,7 @@ export default async function ProjectDetailPage({
     const [checklistResult, signoffResult, testersResult] = await Promise.all([
       supabase
         .from("checklist_items")
-        .select("id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample")
+        .select("id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample, item_type, header_label")
         .eq("project_id", project.id)
         .order("sort_order"),
       supabase
@@ -107,9 +109,12 @@ export default async function ProjectDetailPage({
     const testers = testersResult.data
 
     if (testers && testers.length > 0) {
-      // Scope responses to only checklist items belonging to this project
-      // so that testers who participated in other projects aren't double-counted.
-      const itemIds = (checklistItems || []).map((ci) => ci.id)
+      // Scope responses to only the *step* checklist items in this project —
+      // phase headers can't have responses, so excluding them keeps the count
+      // correct and makes the trigger never matter for normal flows.
+      const itemIds = (checklistItems || [])
+        .filter((ci) => ci.item_type === "step")
+        .map((ci) => ci.id)
 
       const { data: responses } = itemIds.length > 0
         ? await supabase
@@ -143,7 +148,9 @@ export default async function ProjectDetailPage({
     // Continue rendering with empty data rather than crashing
   }
 
-  const itemCount = checklistItems?.length || 0
+  // itemCount = testable steps only (phase headers excluded from "X steps" labels)
+  const itemCount =
+    checklistItems?.filter((ci) => ci.item_type === "step").length || 0
 
   const actionCards = [
     {

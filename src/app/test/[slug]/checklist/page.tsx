@@ -38,7 +38,7 @@ export default async function ChecklistPage({
   const [checklistResult, responsesResult] = await Promise.all([
     supabase
       .from("checklist_items")
-      .select("id, step_number, path, actor, action, view_sample, crm_module, tip, sort_order")
+      .select("id, step_number, path, actor, action, view_sample, crm_module, tip, sort_order, item_type, header_label")
       .eq("project_id", project.id)
       .order("sort_order"),
     supabase

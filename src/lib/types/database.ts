@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       admin_review_history: {
@@ -86,9 +61,9 @@ export type Database = {
       }
       admin_reviews: {
         Row: {
-          finding_type: string | null
           checklist_item_id: string
           created_at: string | null
+          finding_type: string | null
           id: string
           notes: string | null
           resolution_status: string
@@ -96,9 +71,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          finding_type?: string | null
           checklist_item_id: string
           created_at?: string | null
+          finding_type?: string | null
           id?: string
           notes?: string | null
           resolution_status?: string
@@ -106,9 +81,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          finding_type?: string | null
           checklist_item_id?: string
           created_at?: string | null
+          finding_type?: string | null
           id?: string
           notes?: string | null
           resolution_status?: string
@@ -170,72 +145,18 @@ export type Database = {
           },
         ]
       }
-      clients: {
-        Row: {
-          id: string
-          name: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      checklist_snapshots: {
-        Row: {
-          id: string
-          project_id: string
-          version_number: number
-          label: string
-          item_count: number
-          snapshot_data: Json
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          version_number: number
-          label: string
-          item_count?: number
-          snapshot_data?: Json
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          version_number?: number
-          label?: string
-          item_count?: number
-          snapshot_data?: Json
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "checklist_snapshots_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       checklist_items: {
         Row: {
           action: string
           actor: string
           crm_module: string | null
+          header_label: string | null
           id: string
+          item_type: string
           path: string | null
           project_id: string
           sort_order: number
-          step_number: number
+          step_number: number | null
           tip: string | null
           view_sample: string | null
         }
@@ -243,11 +164,13 @@ export type Database = {
           action: string
           actor: string
           crm_module?: string | null
+          header_label?: string | null
           id?: string
+          item_type?: string
           path?: string | null
           project_id: string
           sort_order?: number
-          step_number: number
+          step_number?: number | null
           tip?: string | null
           view_sample?: string | null
         }
@@ -255,11 +178,13 @@ export type Database = {
           action?: string
           actor?: string
           crm_module?: string | null
+          header_label?: string | null
           id?: string
+          item_type?: string
           path?: string | null
           project_id?: string
           sort_order?: number
-          step_number?: number
+          step_number?: number | null
           tip?: string | null
           view_sample?: string | null
         }
@@ -272,6 +197,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      checklist_snapshots: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_count: number
+          label: string
+          project_id: string
+          snapshot_data: Json
+          version_number: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_count?: number
+          label: string
+          project_id: string
+          snapshot_data?: Json
+          version_number: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_count?: number
+          label?: string
+          project_id?: string
+          snapshot_data?: Json
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_snapshots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       projects: {
         Row: {
@@ -559,9 +540,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

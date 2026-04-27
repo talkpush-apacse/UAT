@@ -59,8 +59,10 @@ export async function POST(
     // 2. Fetch checklist items
     const { data: checklistItems } = await supabase
       .from("checklist_items")
-      .select("id, step_number, path, actor, action, crm_module, sort_order")
+      // Phase headers aren't testable, so they have no issues to summarize.
+      .select("id, step_number, path, actor, action, crm_module, sort_order, item_type")
       .eq("project_id", project.id)
+      .eq("item_type", "step")
       .order("sort_order")
 
     const items = checklistItems || []
@@ -148,7 +150,8 @@ export async function POST(
       if (!item || !tester) return
       const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
       issues.push({
-        stepNumber: item.step_number,
+        // checklistItems is filtered to item_type='step' upstream, so step_number is non-null
+        stepNumber: item.step_number ?? 0,
         actor: item.actor,
         action: item.action,
         testerName: tester.name,
