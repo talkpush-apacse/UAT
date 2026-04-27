@@ -29,12 +29,12 @@ export interface ChecklistSnapshot {
   version_number: number
   label: string
   item_count: number
-  created_at: string
+  created_at: string | null
 }
 
 /** Shape of one item stored inside snapshot_data JSONB */
 interface SnapshotItem {
-  step_number: number
+  step_number: number | null
   path: string | null
   actor: string
   action: string
@@ -42,16 +42,20 @@ interface SnapshotItem {
   crm_module: string | null
   tip: string | null
   sort_order: number
+  item_type?: string
+  header_label?: string | null
 }
 
 /** Minimal step shape used for the "Copy from Project" step-selection dialog */
 export interface StepPreview {
   id: string
-  step_number: number
+  step_number: number | null
   actor: string
   action: string
   path: string | null
   crm_module: string | null
+  item_type: string
+  header_label: string | null
 }
 
 /* ------------------------------------------------------------------ */
@@ -107,7 +111,7 @@ export async function importChecklist(
     // Auto-snapshot existing items before overwriting so admins can revert if needed
     const { data: existingItems } = await supabase
       .from('checklist_items')
-      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order')
+      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order, item_type, header_label')
       .eq('project_id', projectId)
       .order('sort_order')
 
@@ -139,17 +143,22 @@ export async function importChecklist(
     await supabase.from('checklist_items').delete().eq('project_id', projectId)
 
     // Batch insert new items
-    const rows = items.map((item) => ({
-      project_id: projectId,
-      step_number: item.stepNumber,
-      path: item.path,
-      actor: item.actor,
-      action: item.action,
-      view_sample: item.viewSample,
-      crm_module: item.crmModule,
-      tip: item.tip,
-      sort_order: item.sortOrder,
-    }))
+    const rows = items.map((item) => {
+      const isHeader = item.itemType === 'phase_header'
+      return {
+        project_id: projectId,
+        step_number: isHeader ? null : item.stepNumber,
+        path: item.path,
+        actor: item.actor,
+        action: item.action,
+        view_sample: item.viewSample,
+        crm_module: item.crmModule,
+        tip: item.tip,
+        sort_order: item.sortOrder,
+        item_type: item.itemType ?? 'step',
+        header_label: item.headerLabel ?? null,
+      }
+    })
 
     const { error } = await supabase.from('checklist_items').insert(rows)
 
@@ -191,6 +200,7 @@ export async function updateChecklistItem(
 
     const supabase = createAdminClient()
     const updates: ChecklistItemUpdate = {}
+    if (parsed.data.itemType !== undefined) updates.item_type = parsed.data.itemType
     if (parsed.data.stepNumber !== undefined) updates.step_number = parsed.data.stepNumber
     if (parsed.data.path !== undefined) updates.path = parsed.data.path
     if (parsed.data.actor !== undefined) updates.actor = parsed.data.actor
@@ -198,6 +208,14 @@ export async function updateChecklistItem(
     if (parsed.data.viewSample !== undefined) updates.view_sample = parsed.data.viewSample || null
     if (parsed.data.crmModule !== undefined) updates.crm_module = parsed.data.crmModule || null
     if (parsed.data.tip !== undefined) updates.tip = parsed.data.tip || null
+    if (parsed.data.headerLabel !== undefined)
+      updates.header_label = parsed.data.headerLabel || null
+
+    // If we're flipping to phase_header, also clear step_number so the partial
+    // unique index doesn't trip and the row matches the header invariant.
+    if (parsed.data.itemType === 'phase_header') {
+      updates.step_number = null
+    }
 
     const { error } = await supabase
       .from('checklist_items')
@@ -233,7 +251,9 @@ export async function addChecklistItem(
 
     const supabase = createAdminClient()
 
-    // Get max sort_order and step_number for this project
+    const isHeader = parsed.data.itemType === 'phase_header'
+
+    // Get max sort_order (and step_number, for non-header insert) for this project
     const { data: maxItem } = await supabase
       .from('checklist_items')
       .select('sort_order, step_number')
@@ -243,28 +263,34 @@ export async function addChecklistItem(
       .single()
 
     const sortOrder = (maxItem?.sort_order || 0) + 1
-    // Use provided stepNumber or auto-calculate (will be corrected by renumber)
-    const stepNumber = parsed.data.stepNumber ?? (maxItem?.step_number || 0) + 1
+    // Headers have NULL step_number; for steps, use provided or auto-calc (renumber fixes it)
+    const stepNumber = isHeader
+      ? null
+      : parsed.data.stepNumber ?? (maxItem?.step_number || 0) + 1
 
     const { data: newItem, error } = await supabase
       .from('checklist_items')
       .insert({
         project_id: parsed.data.projectId,
         step_number: stepNumber,
-        path: parsed.data.path,
-        actor: parsed.data.actor,
+        path: parsed.data.path ?? null,
+        // For headers, actor is optional; persist a placeholder so existing
+        // NOT NULL on actor is satisfied without exposing it in the header UI.
+        actor: parsed.data.actor ?? 'Talkpush',
         action: parsed.data.action,
         view_sample: parsed.data.viewSample || null,
         crm_module: parsed.data.crmModule || null,
         tip: parsed.data.tip || null,
         sort_order: sortOrder,
+        item_type: parsed.data.itemType ?? 'step',
+        header_label: parsed.data.headerLabel || null,
       })
       .select('id')
       .single()
 
     if (error) return { error: error.message }
 
-    // Renumber all steps to ensure sequential step_numbers
+    // Renumber all steps to ensure sequential step_numbers (RPC ignores headers)
     await renumberSteps(parsed.data.projectId, supabase)
 
     revalidatePath(`/admin/projects/${slug}`)
@@ -360,7 +386,7 @@ export async function reorderChecklistItems(
 export async function duplicateChecklistItem(
   slug: string,
   itemId: string
-): Promise<{ error?: string; item?: { id: string; project_id: string; step_number: number; path: string | null; actor: string; action: string; view_sample: string | null; crm_module: string | null; tip: string | null; sort_order: number } }> {
+): Promise<{ error?: string; item?: { id: string; project_id: string; step_number: number | null; path: string | null; actor: string; action: string; view_sample: string | null; crm_module: string | null; tip: string | null; sort_order: number; item_type: string; header_label: string | null } }> {
   try {
     const isAdmin = await verifyAdminSession()
     if (!isAdmin) return { error: 'Unauthorized' }
@@ -370,7 +396,7 @@ export async function duplicateChecklistItem(
     // Fetch the source item
     const { data: source } = await supabase
       .from('checklist_items')
-      .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample')
+      .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample, item_type, header_label')
       .eq('id', itemId)
       .single()
 
@@ -386,13 +412,15 @@ export async function duplicateChecklistItem(
       .single()
 
     const newSortOrder = (maxRow?.sort_order ?? 0) + 1
+    const sourceIsHeader = source.item_type === 'phase_header'
 
-    // Insert copy at end
+    // Insert copy at end. Headers have NULL step_number; steps get a temporary
+    // value that the renumber RPC will overwrite.
     const { data: newItem, error } = await supabase
       .from('checklist_items')
       .insert({
         project_id: source.project_id,
-        step_number: newSortOrder,
+        step_number: sourceIsHeader ? null : newSortOrder,
         path: source.path,
         actor: source.actor,
         action: source.action,
@@ -400,6 +428,8 @@ export async function duplicateChecklistItem(
         crm_module: source.crm_module,
         tip: source.tip,
         sort_order: newSortOrder,
+        item_type: source.item_type,
+        header_label: source.header_label,
       })
       .select()
       .single()
@@ -478,7 +508,7 @@ export async function getProjectStepsForCopy(
 
     const { data, error } = await supabase
       .from('checklist_items')
-      .select('id, step_number, actor, action, path, crm_module')
+      .select('id, step_number, actor, action, path, crm_module, item_type, header_label')
       .eq('project_id', sourceProjectId)
       .order('sort_order')
 
@@ -517,7 +547,7 @@ export async function copyStepsFromProject(
     // Fetch only the selected steps from the source project, preserving sort_order
     const { data: sourceItems, error: fetchError } = await supabase
       .from('checklist_items')
-      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order')
+      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order, item_type, header_label')
       .eq('project_id', sourceProjectId)
       .in('id', selectedItemIds)
       .order('sort_order')
@@ -539,17 +569,23 @@ export async function copyStepsFromProject(
     const baseOrder = maxRow?.sort_order ?? 0
 
     // Build insert rows — step_number will be fixed by renumberSteps below
-    const rows = sourceItems.map((item, idx) => ({
-      project_id: targetProjectId,
-      step_number: baseOrder + idx + 1,   // temporary; corrected by renumberSteps
-      path: item.path,
-      actor: item.actor,
-      action: item.action,
-      view_sample: item.view_sample,
-      crm_module: item.crm_module,
-      tip: item.tip,
-      sort_order: baseOrder + idx + 1,
-    }))
+    // (and forced to NULL on phase headers by the RPC).
+    const rows = sourceItems.map((item, idx) => {
+      const isHeader = item.item_type === 'phase_header'
+      return {
+        project_id: targetProjectId,
+        step_number: isHeader ? null : baseOrder + idx + 1, // temporary; renumberSteps fixes it
+        path: item.path,
+        actor: item.actor,
+        action: item.action,
+        view_sample: item.view_sample,
+        crm_module: item.crm_module,
+        tip: item.tip,
+        sort_order: baseOrder + idx + 1,
+        item_type: item.item_type,
+        header_label: item.header_label,
+      }
+    })
 
     const { error: insertError } = await supabase
       .from('checklist_items')
@@ -637,7 +673,7 @@ export async function createChecklistSnapshot(
     // Read all current items for the snapshot payload
     const { data: items, error: itemsError } = await supabase
       .from('checklist_items')
-      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order')
+      .select('step_number, path, actor, action, view_sample, crm_module, tip, sort_order, item_type, header_label')
       .eq('project_id', project.id)
       .order('sort_order')
 
@@ -803,17 +839,24 @@ export async function revertToSnapshot(
     const snapshotItems = snapshot.snapshot_data as unknown as SnapshotItem[]
 
     if (snapshotItems.length > 0) {
-      const rows = snapshotItems.map((item, idx) => ({
-        project_id: project.id,
-        step_number: item.step_number,
-        path: item.path,
-        actor: item.actor,
-        action: item.action,
-        view_sample: item.view_sample ?? null,
-        crm_module: item.crm_module ?? null,
-        tip: item.tip ?? null,
-        sort_order: item.sort_order ?? idx + 1,
-      }))
+      const rows = snapshotItems.map((item, idx) => {
+        const itemType = item.item_type ?? 'step'
+        const isHeader = itemType === 'phase_header'
+        return {
+          project_id: project.id,
+          // Older snapshots (pre-phase-header) won't have item_type; treat as step.
+          step_number: isHeader ? null : item.step_number,
+          path: item.path,
+          actor: item.actor,
+          action: item.action,
+          view_sample: item.view_sample ?? null,
+          crm_module: item.crm_module ?? null,
+          tip: item.tip ?? null,
+          sort_order: item.sort_order ?? idx + 1,
+          item_type: itemType,
+          header_label: item.header_label ?? null,
+        }
+      })
 
       const { error: insertError } = await supabase.from('checklist_items').insert(rows)
       if (insertError) return { error: insertError.message }

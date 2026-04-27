@@ -1,5 +1,22 @@
 [
   {
+    "version": "2.15.0",
+    "name": "Version 2.15.0 - Phase Headers",
+    "changes": [
+      "Added phase header item type — visual section dividers like 'PHASE 1: Candidate Experience' that organize long checklists",
+      "Phase headers have no Pass/Fail/N/A/Blocked/Up For Review buttons, no comment box, and no file upload",
+      "Phase headers don't count toward progress totals or block the 'Mark Complete' gate",
+      "New '+ Add Phase Header' button in the admin checklist editor",
+      "Step numbering only counts testable steps — headers don't consume a number",
+      "DB-level integrity: triggers reject any response or admin_review pointing at a phase_header row",
+      "Wizard mode treats headers as info slides — Next is enabled without picking a status",
+      "MCP create_checklist_items / update_checklist_item / get_checklist now expose item_type and header_label",
+      "XLSX import recognizes optional 'Type' (step | phase_header) and 'Header Label' columns",
+      "Added migration 20260427120000_add_phase_header_type.sql"
+    ],
+    "deployed_at": "2026-04-28"
+  },
+  {
     "version": "2.14.0",
     "name": "Version 2.14.0 - Per-Project Country",
     "changes": [

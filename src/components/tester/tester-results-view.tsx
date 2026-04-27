@@ -20,9 +20,10 @@ import { Badge } from "@/components/ui/badge"
 
 interface ChecklistItem {
   id: string
-  step_number: number
+  step_number: number | null
   actor: string
   action: string
+  item_type?: string
 }
 
 interface Response {
@@ -123,6 +124,8 @@ export default function TesterResultsView({
     }[] = []
 
     for (const item of checklistItems) {
+      // Phase headers can never have responses — skip them outright.
+      if (item.item_type === "phase_header") continue
       const response = responseMap.get(item.id)
       if (!response || response.status === "Pass" || response.status === "N/A" || response.status === null) continue
       const review = reviewMap.get(item.id)

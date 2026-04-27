@@ -28,7 +28,7 @@ export default async function ManageChecklistPage({
   const [{ data: items }, { data: snapshots }] = await Promise.all([
     supabase
       .from("checklist_items")
-      .select("id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample")
+      .select("id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample, item_type, header_label")
       .eq("project_id", project.id)
       .order("sort_order"),
     supabase

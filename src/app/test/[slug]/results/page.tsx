@@ -35,11 +35,13 @@ export default async function TesterResultsPage({
     redirect(`/test/${params.slug}`)
   }
 
-  // Fetch checklist items
+  // Fetch checklist items (steps only — phase headers don't appear on the
+  // results screen since they're never tested or scored).
   const { data: checklistItems } = await supabase
     .from("checklist_items")
-    .select("id, step_number, actor, action, sort_order")
+    .select("id, step_number, actor, action, sort_order, item_type")
     .eq("project_id", project.id)
+    .eq("item_type", "step")
     .order("sort_order")
 
   const items = checklistItems || []

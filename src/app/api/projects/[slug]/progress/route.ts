@@ -49,11 +49,13 @@ export async function GET(
 
     // Fetch checklist item IDs scoped to this project so responses are
     // counted only for items that belong here (not other projects the
-    // same tester may have participated in).
+    // same tester may have participated in). Phase headers are excluded —
+    // they have no responses and shouldn't affect totals or denominators.
     const { data: checklistItems, error: checklistError } = await supabase
       .from("checklist_items")
       .select("id")
       .eq("project_id", project.id)
+      .eq("item_type", "step")
 
     if (checklistError) {
       console.error("Progress API - checklist lookup error:", checklistError.message)

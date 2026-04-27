@@ -25,8 +25,11 @@ import {
 /* ------------------------------------------------------------------ */
 
 interface ChecklistItem {
+  // step_number is nullable in the schema (phase headers), but the analytics
+  // page upstream filters to item_type='step', so in practice this is always
+  // a number here.
   id: string
-  step_number: number
+  step_number: number | null
   path: string | null
   actor: string
   action: string
@@ -136,7 +139,12 @@ export default function AnalyticsCharts({
   /* ---------- Completed tester IDs ---------- */
   const completedTesterIds = useMemo(() => {
     if (checklistItems.length === 0) return new Set<string>()
-    const lastStepNumber = Math.max(...checklistItems.map((i) => i.step_number))
+    // Phase headers are filtered out upstream, but defensively coalesce nulls.
+    const stepNumbers = checklistItems
+      .map((i) => i.step_number)
+      .filter((n): n is number => typeof n === "number")
+    if (stepNumbers.length === 0) return new Set<string>()
+    const lastStepNumber = Math.max(...stepNumbers)
     const lastStepItemIds = new Set(
       checklistItems.filter((i) => i.step_number === lastStepNumber).map((i) => i.id)
     )
@@ -284,7 +292,8 @@ export default function AnalyticsCharts({
       if (!item || !tester) return
       const review = reviewMap.get(`${r.tester_id}::${r.checklist_item_id}`)
       rows.push({
-        stepNumber: item.step_number,
+        // checklistItems is filtered to item_type='step' upstream
+        stepNumber: item.step_number ?? 0,
         actor: item.actor,
         action: stripMarkdown(item.action),
         testerName: tester.name,

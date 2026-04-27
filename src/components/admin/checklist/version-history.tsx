@@ -209,7 +209,7 @@ export function VersionHistory({ slug, initialSnapshots }: VersionHistoryProps) 
                       <p className="text-sm font-medium text-gray-800 truncate">{snap.label}</p>
                       <p className="text-xs text-gray-400 tabular-nums">
                         {snap.item_count} {snap.item_count === 1 ? "step" : "steps"}&nbsp;·&nbsp;
-                        {formatSnapshotDate(snap.created_at)}
+                        {formatSnapshotDate(snap.created_at ?? "")}
                       </p>
                     </div>
                   </div>

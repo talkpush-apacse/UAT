@@ -60,8 +60,10 @@ export default async function PublicAnalyticsPage({
   const [checklistItemsResult, testersResult] = await Promise.all([
     supabase
       .from("checklist_items")
-      .select("id, step_number, path, actor, action, crm_module")
+      // Analytics never charts phase headers — they're not testable.
+      .select("id, step_number, path, actor, action, crm_module, item_type")
       .eq("project_id", project.id)
+      .eq("item_type", "step")
       .order("sort_order"),
     supabase
       .from("testers")

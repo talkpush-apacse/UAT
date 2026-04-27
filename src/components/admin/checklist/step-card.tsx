@@ -38,12 +38,13 @@ import {
   X,
   ExternalLink,
   FileText,
+  Bookmark,
 } from "lucide-react"
 import MDEditor from "@uiw/react-md-editor"
 import ReactMarkdown from "react-markdown"
 import rehypeRaw from "rehype-raw"
 import RichActionEditor from "./RichActionEditor"
-import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES } from "./types"
+import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES, isPhaseHeader } from "./types"
 import type { Actor } from "@/lib/constants"
 
 /* ------------------------------------------------------------------ */
@@ -86,22 +87,32 @@ export function SortableStepCard({
     transition,
   }
 
+  const isHeader = isPhaseHeader(item)
+
   const handleSave = async () => {
-    const result = await updateChecklistItem(slug, {
-      id: item.id,
-      path: editData.path as "Happy" | "Non-Happy" | null,
-      actor: editData.actor as Actor,
-      action: editData.action,
-      viewSample: editData.view_sample || "",
-      crmModule: editData.crm_module || "",
-      tip: editData.tip || "",
-    })
+    const result = isHeader
+      ? await updateChecklistItem(slug, {
+          id: item.id,
+          itemType: "phase_header",
+          action: editData.action,
+          tip: editData.tip || "",
+          headerLabel: editData.header_label || "",
+        })
+      : await updateChecklistItem(slug, {
+          id: item.id,
+          path: editData.path as "Happy" | "Non-Happy" | null,
+          actor: editData.actor as Actor,
+          action: editData.action,
+          viewSample: editData.view_sample || "",
+          crmModule: editData.crm_module || "",
+          tip: editData.tip || "",
+        })
     if (result.error) {
       toast.error(result.error)
     } else {
       onUpdate(editData)
       setEditing(false)
-      toast.success("Step updated")
+      toast.success(isHeader ? "Phase header updated" : "Step updated")
     }
   }
 
@@ -110,7 +121,88 @@ export function SortableStepCard({
     setEditData(item)
   }
 
-  /* ---------- EDIT MODE ---------- */
+  /* ---------- EDIT MODE — phase header variant ---------- */
+  if (editing && isHeader) {
+    return (
+      <div ref={setNodeRef} style={style}>
+        <div className="bg-white rounded-xl border-2 border-brand-lavender-lighter shadow-md transition-all duration-200">
+          <div className="flex items-center justify-between px-5 py-3 bg-brand-lavender-lightest rounded-t-xl border-b border-brand-lavender-lighter">
+            <span className="text-sm font-semibold text-brand-lavender-darker flex items-center gap-2">
+              <Bookmark className="h-4 w-4" />
+              Editing Phase Header
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
+              onClick={handleCancel}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="p-5 space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-500">
+                Phase Label <span className="text-gray-400">(optional)</span>
+              </Label>
+              <Input
+                value={editData.header_label || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, header_label: e.target.value })
+                }
+                placeholder='e.g. "PHASE 1"'
+                maxLength={120}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-500">Title / Description</Label>
+              <RichActionEditor
+                value={editData.action}
+                onChange={(val) => setEditData({ ...editData, action: val })}
+                height={120}
+              />
+            </div>
+
+            <div className="space-y-1.5" data-color-mode="light">
+              <Label className="text-xs text-gray-500">
+                Tip <span className="text-gray-400">(optional)</span>
+              </Label>
+              <MDEditor
+                value={editData.tip || ""}
+                onChange={(val) => setEditData({ ...editData, tip: val || "" })}
+                height={80}
+                preview="edit"
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancel}
+                className="text-gray-500"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                className="bg-brand-lavender-darker hover:bg-brand-lavender text-white"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  /* ---------- EDIT MODE — step variant ---------- */
   if (editing) {
     return (
       <div ref={setNodeRef} style={style}>
@@ -247,7 +339,131 @@ export function SortableStepCard({
     )
   }
 
-  /* ---------- DISPLAY MODE ---------- */
+  /* ---------- DISPLAY MODE — phase header variant ---------- */
+  if (isHeader) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`transition-all duration-200 ${isDragging ? "z-10 opacity-70" : ""}`}
+      >
+        <div className={`group bg-brand-lavender-lightest rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 ${isSelected ? "border-brand-lavender bg-brand-lavender-lighter/40" : "border-brand-lavender-lighter hover:border-brand-lavender"}`}>
+          <div className="flex items-start gap-3 p-4">
+            {bulkMode ? (
+              <div className="flex items-center pt-1.5">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onSelectToggle(item.id)}
+                  className="h-4 w-4 rounded border-gray-300 text-brand-lavender-darker cursor-pointer"
+                />
+              </div>
+            ) : (
+              <div
+                className="flex items-center pt-0.5"
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="h-5 w-5 text-brand-lavender-lighter cursor-grab active:cursor-grabbing hover:text-brand-lavender transition-colors" />
+              </div>
+            )}
+
+            {/* Header marker pill (replaces step number) */}
+            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-lavender-lighter flex items-center justify-center text-brand-lavender-darker">
+              <Bookmark className="h-4 w-4" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge
+                  variant="outline"
+                  className="text-xs font-medium bg-brand-lavender-lighter text-brand-lavender-darker border-brand-lavender"
+                >
+                  Phase Header
+                </Badge>
+                {item.header_label && (
+                  <Badge
+                    variant="outline"
+                    className="text-xs font-mono uppercase tracking-wide bg-white text-brand-lavender-darker border-brand-lavender-lighter"
+                  >
+                    {item.header_label}
+                  </Badge>
+                )}
+              </div>
+
+              <div className="prose prose-sm prose-gray max-w-none text-sm text-gray-800 leading-relaxed prose-p:my-0.5 prose-strong:text-gray-900">
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{item.action}</ReactMarkdown>
+              </div>
+
+              {item.tip && (
+                <div className="mt-2 inline-flex items-center gap-1 text-xs text-amber-600">
+                  <Lightbulb className="h-3 w-3" />
+                  Tip
+                </div>
+              )}
+            </div>
+
+            {!bulkMode && (
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-brand-lavender-darker hover:bg-brand-lavender-lighter/50"
+                  onClick={() => setEditing(true)}
+                  title="Edit phase header"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-brand-lavender-darker hover:bg-brand-lavender-lighter/50"
+                  onClick={() => onDuplicate(item.id)}
+                  title="Duplicate phase header"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                      title="Delete phase header"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Phase Header</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will remove the phase header from the checklist. Step
+                        numbers will be unchanged.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDelete(item.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  /* ---------- DISPLAY MODE — step variant ---------- */
   return (
     <div
       ref={setNodeRef}
