@@ -1,5 +1,13 @@
 [
   {
+    "version": "2.15.1",
+    "codename": "Clean Signal",
+    "changes": [
+      "Fixed Notify Testers emails not delivering — switched sender to verified updates@se-talkpush.com"
+    ],
+    "deployed_at": "2026-04-28"
+  },
+  {
     "version": "2.15.0",
     "name": "Version 2.15.0 - Phase Headers",
     "changes": [
