@@ -112,7 +112,7 @@ export function SortableStepCard({
     } else {
       onUpdate(editData)
       setEditing(false)
-      toast.success(isHeader ? "Phase header updated" : "Step updated")
+      toast.success(isHeader ? "Section header updated" : "Step updated")
     }
   }
 
@@ -129,7 +129,7 @@ export function SortableStepCard({
           <div className="flex items-center justify-between px-5 py-3 bg-brand-lavender-lightest rounded-t-xl border-b border-brand-lavender-lighter">
             <span className="text-sm font-semibold text-brand-lavender-darker flex items-center gap-2">
               <Bookmark className="h-4 w-4" />
-              Editing Phase Header
+              Editing Section Header
             </span>
             <Button
               variant="ghost"
@@ -144,14 +144,14 @@ export function SortableStepCard({
           <div className="p-5 space-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs text-gray-500">
-                Phase Label <span className="text-gray-400">(optional)</span>
+                Section Label <span className="text-gray-400">(optional)</span>
               </Label>
               <Input
                 value={editData.header_label || ""}
                 onChange={(e) =>
                   setEditData({ ...editData, header_label: e.target.value })
                 }
-                placeholder='e.g. "PHASE 1"'
+                placeholder='e.g. "SECTION A" or "PHASE 1"'
                 maxLength={120}
               />
             </div>
@@ -379,7 +379,7 @@ export function SortableStepCard({
                   variant="outline"
                   className="text-xs font-medium bg-brand-lavender-lighter text-brand-lavender-darker border-brand-lavender"
                 >
-                  Phase Header
+                  Section Header
                 </Badge>
                 {item.header_label && (
                   <Badge
@@ -410,7 +410,7 @@ export function SortableStepCard({
                   size="sm"
                   className="h-8 w-8 p-0 text-gray-400 hover:text-brand-lavender-darker hover:bg-brand-lavender-lighter/50"
                   onClick={() => setEditing(true)}
-                  title="Edit phase header"
+                  title="Edit section header"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -420,7 +420,7 @@ export function SortableStepCard({
                   size="sm"
                   className="h-8 w-8 p-0 text-gray-400 hover:text-brand-lavender-darker hover:bg-brand-lavender-lighter/50"
                   onClick={() => onDuplicate(item.id)}
-                  title="Duplicate phase header"
+                  title="Duplicate section header"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -431,16 +431,16 @@ export function SortableStepCard({
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                      title="Delete phase header"
+                      title="Delete section header"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Phase Header</AlertDialogTitle>
+                      <AlertDialogTitle>Delete Section Header</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will remove the phase header from the checklist. Step
+                        This will remove the section header from the checklist. Step
                         numbers will be unchanged.
                       </AlertDialogDescription>
                     </AlertDialogHeader>

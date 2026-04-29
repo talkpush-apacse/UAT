@@ -90,7 +90,7 @@ export function AddStepForm({
       header_label: isHeader ? newItem.headerLabel || null : null,
     }
     onAdd(added)
-    toast.success(isHeader ? "Phase header added" : "Step added")
+    toast.success(isHeader ? "Section header added" : "Step added")
   }
 
   const accentClasses = isHeader
@@ -101,8 +101,8 @@ export function AddStepForm({
         icon: "text-brand-lavender-darker",
         cta: "bg-brand-lavender-darker hover:bg-brand-lavender text-white",
         ctaIcon: <Bookmark className="h-4 w-4 mr-1" />,
-        ctaLabel: "Add Phase Header",
-        heading: "Add New Phase Header",
+        ctaLabel: "Add Section Header",
+        heading: "Add New Section Header",
       }
     : {
         wrapper: "border-brand-sage-lighter",
@@ -141,17 +141,17 @@ export function AddStepForm({
       <div className="p-5 space-y-4">
         {isHeader ? (
           <>
-            {/* Phase Header form: just label + title + optional tip */}
+            {/* Section Header form: just label + title + optional tip */}
             <div className="space-y-1.5">
               <Label className="text-xs text-gray-500">
-                Phase Label <span className="text-gray-400">(optional)</span>
+                Section Label <span className="text-gray-400">(optional)</span>
               </Label>
               <Input
                 value={newItem.headerLabel}
                 onChange={(e) =>
                   setNewItem({ ...newItem, headerLabel: e.target.value })
                 }
-                placeholder='e.g. "PHASE 1"'
+                placeholder='e.g. "SECTION A" or "PHASE 1"'
                 maxLength={120}
               />
               <p className="text-xs text-gray-400">

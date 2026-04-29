@@ -31,7 +31,7 @@ export default function PhaseHeaderCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-lavender-darker bg-white border border-brand-lavender-lighter rounded-full px-2 py-0.5">
-                Phase Header
+                Section Header
               </span>
               {label && (
                 <span className="text-[11px] font-mono uppercase tracking-wide text-brand-lavender-darker">

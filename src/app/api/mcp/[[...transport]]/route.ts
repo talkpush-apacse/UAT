@@ -333,7 +333,7 @@ const handler = createMcpHandler(
       {
         title: "Create Checklist Items",
         description:
-          "Add new checklist steps or phase headers to a project. Auto-increments sort_order; step_number is sequential for testable steps and NULL for phase headers.",
+          "Add new checklist steps or section headers to a project. Auto-increments sort_order; step_number is sequential for testable steps and NULL for section headers.",
         inputSchema: {
           slug: z.string().describe("The project slug"),
           items: z
@@ -343,7 +343,7 @@ const handler = createMcpHandler(
                   .enum(["step", "phase_header"])
                   .default("step")
                   .describe(
-                    "'step' (default) creates a testable step; 'phase_header' creates a non-testable section divider"
+                    "'step' (default) creates a testable step; 'phase_header' creates a non-testable section header (UI label: Section Header)"
                   ),
                 actor: z
                   .enum([
@@ -353,11 +353,11 @@ const handler = createMcpHandler(
                     "Referrer/Vendor",
                   ])
                   .optional()
-                  .describe("Who performs this step (required for 'step', ignored for 'phase_header')"),
+                  .describe("Who performs this step (required for 'step', ignored for section headers)"),
                 action: z
                   .string()
                   .describe(
-                    "For a step: what the actor does. For a phase header: the title and description text."
+                    "For a step: what the actor does. For a section header: the title and description text."
                   ),
                 path: z
                   .string()
@@ -379,7 +379,7 @@ const handler = createMcpHandler(
                   .string()
                   .optional()
                   .describe(
-                    "Short uppercase label for a phase header (e.g. 'PHASE 1'). Ignored for steps."
+                    "Short uppercase label for a section header (e.g. 'PHASE 1' or 'SECTION A'). Ignored for steps."
                   ),
               })
             )
@@ -475,13 +475,13 @@ const handler = createMcpHandler(
             .enum(["step", "phase_header"])
             .optional()
             .describe(
-              "Convert between testable step and phase header. When switching to phase_header, step_number is cleared."
+              "Convert between testable step and section header. When switching to phase_header, step_number is cleared."
             ),
           header_label: z
             .string()
             .optional()
             .describe(
-              "Short uppercase label for a phase header (e.g. 'PHASE 1')."
+              "Short uppercase label for a section header (e.g. 'PHASE 1' or 'SECTION A')."
             ),
         },
       },

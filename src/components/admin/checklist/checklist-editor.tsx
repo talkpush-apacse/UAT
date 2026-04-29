@@ -182,7 +182,7 @@ export default function ChecklistEditor({
               const headerCount = items.length - stepCount
               const stepLabel = `${stepCount} ${stepCount === 1 ? "step" : "steps"}`
               const headerLabel = headerCount > 0
-                ? ` · ${headerCount} ${headerCount === 1 ? "phase header" : "phase headers"}`
+                ? ` · ${headerCount} ${headerCount === 1 ? "section header" : "section headers"}`
                 : ""
               const reorderHint = items.length > 1 && !bulkMode ? " — drag to reorder" : ""
               return `${stepLabel}${headerLabel}${reorderHint}`
@@ -261,7 +261,7 @@ export default function ChecklistEditor({
                 disabled={!!adding}
               >
                 <Plus className="h-4 w-4 mr-1.5" />
-                Add Phase Header
+                Add Section Header
               </Button>
               <Button
                 onClick={() => setAdding("step")}

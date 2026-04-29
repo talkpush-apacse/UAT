@@ -381,7 +381,7 @@ export default function ChecklistWizardView({
                       {item.action}
                     </p>
                     {isHeader ? (
-                      <span className="text-xs text-brand-lavender-darker">Phase header</span>
+                      <span className="text-xs text-brand-lavender-darker">Section header</span>
                     ) : previewMode ? (
                       <span className="text-xs text-gray-400">Preview only</span>
                     ) : stepStatus ? (

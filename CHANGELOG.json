@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.15.3",
+    "name": "Version 2.15.3 - Section Header",
+    "changes": [
+      "Renamed 'Phase Header' to 'Section Header' across the admin editor and tester UI",
+      "'+ Add Phase Header' button is now '+ Add Section Header'",
+      "Field label 'Phase Label' is now 'Section Label'"
+    ],
+    "deployed_at": "2026-04-29"
+  },
+  {
     "version": "2.15.2",
     "name": "Version 2.15.2 - Link Fix",
     "changes": [
