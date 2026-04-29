@@ -24,6 +24,7 @@ import {
   ClipboardCheck,
   ChevronRight,
 } from "lucide-react"
+import MarkdownRenderer from "@/components/ui/markdown-renderer"
 
 import { ACTOR_COLORS as ACTOR_STYLES } from "@/lib/constants"
 
@@ -210,7 +211,7 @@ export default async function ProjectDetailPage({
             </a>
           </p>
           {project.test_scenario && (
-            <p className="text-sm text-gray-600 mt-2 leading-relaxed">{project.test_scenario}</p>
+            <MarkdownRenderer content={project.test_scenario} className="mt-2" />
           )}
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[220px] sm:items-stretch">
