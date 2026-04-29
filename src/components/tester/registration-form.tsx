@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useFormState } from "react-dom"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { registerTester, type RegisterTesterState } from "@/lib/actions/testers"
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import PhoneInput from "react-phone-input-2"
 import "react-phone-input-2/lib/style.css"
-import { ClipboardCheck } from "lucide-react"
+import { ClipboardCheck, Eye } from "lucide-react"
 import { getCountryByCode, DEFAULT_COUNTRY_CODE } from "@/lib/countries"
 
 const initialState: RegisterTesterState = {}
@@ -164,6 +165,12 @@ export default function RegistrationForm({
 
         <Button type="submit" className="w-full h-10">
           Start Testing
+        </Button>
+        <Button asChild type="button" variant="outline" className="w-full h-10">
+          <Link href={`/test/${slug}/preview`}>
+            <Eye className="h-4 w-4" />
+            Preview Checklist
+          </Link>
         </Button>
       </form>
     </div>

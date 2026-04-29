@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, List, Bookmark } from "lucide-react"
+import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, List, Bookmark, Eye } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
@@ -62,6 +62,7 @@ type Props = {
   responses: ResponseData[]
   attachments: AttachmentData[]
   testCompleted?: string | null
+  previewMode?: boolean
 }
 
 function TalkpushVerifyHeader({ item }: { item: ChecklistItemData }) {
@@ -88,6 +89,7 @@ export default function ChecklistWizardView({
   responses: initialResponses,
   attachments,
   testCompleted = null,
+  previewMode = false,
 }: Props) {
   const [responses, setResponses] = useState<Record<string, ResponseData>>(() => {
     const map: Record<string, ResponseData> = {}
@@ -116,13 +118,14 @@ export default function ChecklistWizardView({
   // Start at the first un-answered *answerable* step (skip phase headers)
   const initialIndex = useMemo(() => {
     if (totalCount === 0) return 0
+    if (previewMode) return 0
     const firstUnanswered = checklistItems.findIndex((item) => {
       if (!isAnswerable(item)) return false
       const resp = initialResponses.find((r) => r.checklist_item_id === item.id)
       return !resp || resp.status === null
     })
     return firstUnanswered === -1 ? 0 : firstUnanswered
-  }, [checklistItems, initialResponses, totalCount])
+  }, [checklistItems, initialResponses, previewMode, totalCount])
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
 
@@ -141,24 +144,25 @@ export default function ChecklistWizardView({
   const isHeaderStep = currentItem?.item_type === "phase_header"
   const isTalkpushStep = !isHeaderStep && currentItem?.actor === "Talkpush"
   const currentResponse = currentItem ? responses[currentItem.id] : undefined
-  const currentHasStatus = currentResponse?.status != null
+  const currentHasStatus = previewMode || currentResponse?.status != null
 
   const COMMENT_REQUIRED_STATUSES = ["Fail", "Blocked", "Up For Review"]
   const currentRequiresComment =
+    !previewMode &&
     !isHeaderStep &&
     currentResponse?.status != null &&
     COMMENT_REQUIRED_STATUSES.includes(currentResponse.status)
   const currentCommentMissing =
     currentRequiresComment && !currentResponse?.comment?.trim()
 
-  const completedCount = answerableItems.filter(
-    (i) => responses[i.id]?.status != null
-  ).length
+  const completedCount = previewMode
+    ? totalAnswerable
+    : answerableItems.filter((i) => responses[i.id]?.status != null).length
   const allAnswered = completedCount === totalAnswerable
 
   const isLastStep = currentIndex === totalCount - 1
   // Phase headers: no status required to advance. Steps: require status + comment if applicable.
-  const canSubmit = (isHeaderStep || currentHasStatus) && allAnswered
+  const canSubmit = !previewMode && (isHeaderStep || currentHasStatus) && allAnswered
 
   const progressPct = totalCount > 0 ? ((currentIndex + 1) / totalCount) * 100 : 0
 
@@ -241,6 +245,7 @@ export default function ChecklistWizardView({
   }
 
   const nextDisabled =
+    !previewMode &&
     !isHeaderStep && (!currentHasStatus || currentCommentMissing)
   const submitDisabled =
     !canSubmit ||
@@ -257,7 +262,9 @@ export default function ChecklistWizardView({
         >
           <div className="min-w-0">
             <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
-            <p className="text-sm text-gray-500">Hi {tester.name}</p>
+            <p className="text-sm text-gray-500">
+              {previewMode ? "Checklist Preview" : `Hi ${tester.name}`}
+            </p>
           </div>
           <button
             type="button"
@@ -278,6 +285,15 @@ export default function ChecklistWizardView({
           aria-valuemax={totalCount}
         />
       </div>
+
+      {previewMode && (
+        <div className="mt-4 rounded-xl border border-brand-sage-lighter bg-brand-sage-lightest px-4 py-3 text-sm text-brand-sage-darker flex items-start gap-2.5">
+          <Eye className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <p>
+            You are previewing the checklist steps. Register when you are ready to save responses, upload screenshots, and submit your test.
+          </p>
+        </div>
+      )}
 
       {/* Step body */}
       <div className="mt-6">
@@ -306,6 +322,7 @@ export default function ChecklistWizardView({
                   ? project.talkpush_login_link
                   : null
               }
+              previewMode={previewMode}
             />
           </>
         )}
@@ -365,6 +382,8 @@ export default function ChecklistWizardView({
                     </p>
                     {isHeader ? (
                       <span className="text-xs text-brand-lavender-darker">Phase header</span>
+                    ) : previewMode ? (
+                      <span className="text-xs text-gray-400">Preview only</span>
                     ) : stepStatus ? (
                       <span className={`text-xs font-medium ${statusColors[stepStatus] ?? "text-gray-500"}`}>
                         {stepStatus}
@@ -397,7 +416,15 @@ export default function ChecklistWizardView({
             Back
           </button>
 
-          {isLastStep ? (
+          {isLastStep && previewMode ? (
+            <Link
+              href={`/test/${project.slug}`}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary py-3 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 active:bg-primary/80"
+            >
+              Register to Start Testing
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : isLastStep ? (
             <button
               type="button"
               onClick={handleSubmit}

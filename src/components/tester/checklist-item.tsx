@@ -168,6 +168,7 @@ export default function ChecklistItem({
   attachments,
   onResponseUpdate,
   talkpushLoginLink,
+  previewMode = false,
 }: {
   item: ChecklistItemData
   testerId: string
@@ -175,6 +176,7 @@ export default function ChecklistItem({
   attachments: AttachmentData[]
   onResponseUpdate: (itemId: string, response: ResponseData) => void
   talkpushLoginLink?: string | null
+  previewMode?: boolean
 }) {
   const [status, setStatus] = useState<string | null>(response?.status || null)
   const [comment, setComment] = useState(response?.comment || "")
@@ -189,6 +191,8 @@ export default function ChecklistItem({
 
   const save = useCallback(
     async (newStatus: string | null, newComment: string) => {
+      if (previewMode) return
+
       setSaveStatus("saving")
 
       try {
@@ -230,10 +234,12 @@ export default function ChecklistItem({
         setSaveStatus("error")
       }
     },
-    [testerId, item.id, responseId, onResponseUpdate]
+    [testerId, item.id, responseId, onResponseUpdate, previewMode]
   )
 
   const handleStatusChange = (newStatus: string) => {
+    if (previewMode) return
+
     const finalStatus = newStatus === status ? null : newStatus
     setStatus(finalStatus)
 
@@ -246,6 +252,8 @@ export default function ChecklistItem({
   }
 
   const handleCommentChange = (value: string) => {
+    if (previewMode) return
+
     setComment(value)
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -314,6 +322,9 @@ export default function ChecklistItem({
                 )}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
+                {previewMode && (
+                  <span className="text-xs text-gray-400">Preview only</span>
+                )}
                 {saveStatus === "saving" && (
                   <span className="text-xs text-gray-400 animate-pulse">Saving...</span>
                 )}
@@ -487,31 +498,33 @@ export default function ChecklistItem({
         )}
 
         {/* === STATUS BUTTONS — Issue #2: active style applied via STATUS_STYLES[value].active === */}
-        <div className="flex gap-2 mb-4">
-          {STATUS_OPTIONS.map(({ value, label }) => {
-            const isActive = status === value
-            const styles = STATUS_STYLES[value]
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => handleStatusChange(value)}
-                aria-pressed={isActive}
-                className={`
-                  px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
-                  min-h-[44px] flex-1
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2
-                  ${isActive ? styles.active : styles.inactive}
-                `}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
+        {!previewMode && (
+          <div className="flex gap-2 mb-4">
+            {STATUS_OPTIONS.map(({ value, label }) => {
+              const isActive = status === value
+              const styles = STATUS_STYLES[value]
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => handleStatusChange(value)}
+                  aria-pressed={isActive}
+                  className={`
+                    px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
+                    min-h-[44px] flex-1
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2
+                    ${isActive ? styles.active : styles.inactive}
+                  `}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* === COMMENT SECTION === */}
-        {!showComment && !status && (
+        {!previewMode && !showComment && !status && (
           <button
             type="button"
             onClick={() => setShowComment(true)}
@@ -520,7 +533,7 @@ export default function ChecklistItem({
             + Add comment
           </button>
         )}
-        {(showComment || status === "Fail" || status === "Blocked" || status === "Up For Review") && (
+        {!previewMode && (showComment || status === "Fail" || status === "Blocked" || status === "Up For Review") && (
           <div>
             {(status === "Fail" || status === "Blocked" || status === "Up For Review") && (
               <p className={`text-xs font-medium mb-1 ${status === "Fail" ? "text-red-600" : status === "Blocked" ? "text-orange-600" : "text-amber-600"}`}>
@@ -536,7 +549,7 @@ export default function ChecklistItem({
             />
           </div>
         )}
-        {!showComment && status && status !== "Fail" && status !== "Blocked" && status !== "Up For Review" && (
+        {!previewMode && !showComment && status && status !== "Fail" && status !== "Blocked" && status !== "Up For Review" && (
           <button
             type="button"
             onClick={() => setShowComment(true)}
@@ -547,7 +560,7 @@ export default function ChecklistItem({
         )}
 
         {/* === FILE UPLOAD === */}
-        {responseId && (
+        {!previewMode && responseId && (
           <div className="mt-3">
             <FileUpload
               responseId={responseId}

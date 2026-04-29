@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useId } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight, CheckCircle, XCircle, MinusCircle, Ban, HelpCircle } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight, CheckCircle, XCircle, MinusCircle, Ban, HelpCircle, Eye } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
@@ -62,6 +62,7 @@ type ChecklistViewProps = {
   responses: ResponseData[]
   attachments: AttachmentData[]
   testCompleted?: string | null
+  previewMode?: boolean
 }
 
 export default function ChecklistView(props: ChecklistViewProps) {
@@ -78,6 +79,7 @@ function ClassicChecklistView({
   responses: initialResponses,
   attachments: initialAttachments,
   testCompleted = null,
+  previewMode = false,
 }: ChecklistViewProps) {
   const [responses, setResponses] = useState<Record<string, ResponseData>>(() => {
     const map: Record<string, ResponseData> = {}
@@ -117,6 +119,8 @@ function ClassicChecklistView({
 
   // Issue #3 — CTA is only active when every step has a status
   const allStepsCompleted = totalCount > 0 && completedCount === totalCount
+  const displayCompletedCount = previewMode ? totalCount : completedCount
+  const displayProgressPct = previewMode && totalCount > 0 ? 100 : progressPct
 
   // Find the first Talkpush actor *step* (not a phase header that defaults to Talkpush)
   // to show the login link.
@@ -156,23 +160,34 @@ function ClassicChecklistView({
         <div className="flex items-center justify-between mb-3">
           <div className="min-w-0">
             <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
-            <p className="text-sm text-gray-500">Hi {tester.name}</p>
+            <p className="text-sm text-gray-500">
+              {previewMode ? "Checklist Preview" : `Hi ${tester.name}`}
+            </p>
           </div>
           {/* Issue #5: keep fraction counter only; removed "X% complete" text */}
           <p className="text-sm sm:text-base font-semibold text-brand-sage-darker flex-shrink-0 ml-4">
-            {completedCount} / {totalCount}
+            {displayCompletedCount} / {totalCount}
           </p>
         </div>
         {/* Issue #7: ARIA attributes on progress bar; Issue #5: removed standalone "X%" label */}
         <Progress
-          value={progressPct}
+          value={displayProgressPct}
           className="h-2.5"
           aria-label="Test completion progress"
-          aria-valuenow={completedCount}
+          aria-valuenow={displayCompletedCount}
           aria-valuemin={0}
           aria-valuemax={totalCount}
         />
       </div>
+
+      {previewMode && (
+        <div className="mt-4 rounded-xl border border-brand-sage-lighter bg-brand-sage-lightest px-4 py-3 text-sm text-brand-sage-darker flex items-start gap-2.5">
+          <Eye className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <p>
+            You are previewing the checklist steps. Register when you are ready to save responses, upload screenshots, and submit your test.
+          </p>
+        </div>
+      )}
 
       {/* Before You Begin — collapsible guide */}
       <div className="mt-4">
@@ -329,12 +344,13 @@ function ClassicChecklistView({
                   ? project.talkpush_login_link
                   : null
               }
+              previewMode={previewMode}
             />
           )
         })}
 
         {/* Mark Test Complete — Issue #3: disabled until all steps have a status */}
-        {checklistItems.length > 0 && (
+        {!previewMode && checklistItems.length > 0 && (
           <div className="pt-4 pb-6 border-t border-gray-200 mt-2">
             {isTestComplete ? (
               <div className="space-y-3">
