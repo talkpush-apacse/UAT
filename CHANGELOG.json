@@ -1,5 +1,13 @@
 [
   {
+    "version": "2.15.2",
+    "name": "Version 2.15.2 - Link Fix",
+    "changes": [
+      "Fixed Copy Tester Link generating a broken URL with a line break"
+    ],
+    "deployed_at": "2026-04-29"
+  },
+  {
     "version": "2.15.1",
     "codename": "Clean Signal",
     "changes": [
