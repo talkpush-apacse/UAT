@@ -36,7 +36,6 @@ import {
   Link as LinkIcon,
   Lightbulb,
   X,
-  ExternalLink,
   FileText,
   Bookmark,
 } from "lucide-react"
@@ -44,6 +43,7 @@ import MDEditor from "@uiw/react-md-editor"
 import ReactMarkdown from "react-markdown"
 import rehypeRaw from "rehype-raw"
 import RichActionEditor from "./RichActionEditor"
+import { SampleMediaInput, validateSampleFile } from "./sample-media-input"
 import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES, isPhaseHeader } from "./types"
 import type { Actor } from "@/lib/constants"
 
@@ -72,6 +72,8 @@ export function SortableStepCard({
 }) {
   const [editing, setEditing] = useState(false)
   const [editData, setEditData] = useState(item)
+  const [pendingSampleFile, setPendingSampleFile] = useState<File | null>(null)
+  const [saving, setSaving] = useState(false)
 
   const {
     attributes,
@@ -89,36 +91,100 @@ export function SortableStepCard({
 
   const isHeader = isPhaseHeader(item)
 
+  const uploadSampleFile = async (file: File): Promise<string> => {
+    const validationError = validateSampleFile(file)
+    if (validationError) {
+      throw new Error(validationError)
+    }
+
+    const response = await fetch("/api/admin/sample-upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        projectId: item.project_id,
+        checklistItemId: item.id,
+      }),
+    })
+
+    const data = await response.json().catch(() => ({
+      error: "Unable to prepare sample upload",
+    })) as {
+      signedUrl?: string
+      publicUrl?: string
+      error?: string
+    }
+
+    if (!response.ok || !data.signedUrl || !data.publicUrl) {
+      throw new Error(data.error || "Unable to prepare sample upload")
+    }
+
+    const uploadResponse = await fetch(data.signedUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    })
+
+    if (!uploadResponse.ok) {
+      throw new Error("Unable to upload sample image")
+    }
+
+    return data.publicUrl
+  }
+
   const handleSave = async () => {
-    const result = isHeader
-      ? await updateChecklistItem(slug, {
-          id: item.id,
-          itemType: "phase_header",
-          action: editData.action,
-          tip: editData.tip || "",
-          headerLabel: editData.header_label || "",
-        })
-      : await updateChecklistItem(slug, {
-          id: item.id,
-          path: editData.path as "Happy" | "Non-Happy" | null,
-          actor: editData.actor as Actor,
-          action: editData.action,
-          viewSample: editData.view_sample || "",
-          crmModule: editData.crm_module || "",
-          tip: editData.tip || "",
-        })
-    if (result.error) {
-      toast.error(result.error)
-    } else {
-      onUpdate(editData)
-      setEditing(false)
-      toast.success(isHeader ? "Section header updated" : "Step updated")
+    if (saving) return
+
+    setSaving(true)
+
+    try {
+      let dataToSave = editData
+
+      if (!isHeader && pendingSampleFile) {
+        const publicUrl = await uploadSampleFile(pendingSampleFile)
+        dataToSave = { ...editData, view_sample: publicUrl }
+        setEditData(dataToSave)
+        setPendingSampleFile(null)
+      }
+
+      const result = isHeader
+        ? await updateChecklistItem(slug, {
+            id: item.id,
+            itemType: "phase_header",
+            action: dataToSave.action,
+            tip: dataToSave.tip || "",
+            headerLabel: dataToSave.header_label || "",
+          })
+        : await updateChecklistItem(slug, {
+            id: item.id,
+            path: dataToSave.path as "Happy" | "Non-Happy" | null,
+            actor: dataToSave.actor as Actor,
+            action: dataToSave.action,
+            viewSample: dataToSave.view_sample || "",
+            crmModule: dataToSave.crm_module || "",
+            tip: dataToSave.tip || "",
+          })
+
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        onUpdate(dataToSave)
+        setEditing(false)
+        toast.success(isHeader ? "Section header updated" : "Step updated")
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save changes")
+    } finally {
+      setSaving(false)
     }
   }
 
   const handleCancel = () => {
     setEditing(false)
     setEditData(item)
+    setPendingSampleFile(null)
   }
 
   /* ---------- EDIT MODE — phase header variant ---------- */
@@ -136,6 +202,7 @@ export function SortableStepCard({
               size="sm"
               className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
               onClick={handleCancel}
+              disabled={saving}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -184,6 +251,7 @@ export function SortableStepCard({
                 variant="ghost"
                 size="sm"
                 onClick={handleCancel}
+                disabled={saving}
                 className="text-gray-500"
               >
                 Cancel
@@ -191,9 +259,10 @@ export function SortableStepCard({
               <Button
                 size="sm"
                 onClick={handleSave}
+                disabled={saving}
                 className="bg-brand-lavender-darker hover:bg-brand-lavender text-white"
               >
-                Save Changes
+                {saving ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>
@@ -216,6 +285,7 @@ export function SortableStepCard({
               size="sm"
               className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
               onClick={handleCancel}
+              disabled={saving}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -271,25 +341,16 @@ export function SortableStepCard({
               />
             </div>
 
-            {/* Row 3: Link to Sample/Guide */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-gray-500">Link to Sample / Guide</Label>
-              <div className="relative">
-                <Input
-                  type="url"
-                  value={editData.view_sample || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, view_sample: e.target.value })
-                  }
-                  placeholder="https://example.com/sample-screenshot.png"
-                  className="pl-9"
-                />
-                <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
-              <p className="text-xs text-gray-400">
-                URL to a screenshot or guide testers should review for this step
-              </p>
-            </div>
+            {/* Row 3: Sample/Guide */}
+            <SampleMediaInput
+              value={editData.view_sample || ""}
+              onValueChange={(viewSample) =>
+                setEditData({ ...editData, view_sample: viewSample })
+              }
+              pendingFile={pendingSampleFile}
+              onPendingFileChange={setPendingSampleFile}
+              disabled={saving}
+            />
 
             {/* Row 4: Module | Tip */}
             <div className="grid grid-cols-2 gap-4">
@@ -321,6 +382,7 @@ export function SortableStepCard({
                 variant="ghost"
                 size="sm"
                 onClick={handleCancel}
+                disabled={saving}
                 className="text-gray-500"
               >
                 Cancel
@@ -328,9 +390,14 @@ export function SortableStepCard({
               <Button
                 size="sm"
                 onClick={handleSave}
+                disabled={saving}
                 className="bg-primary hover:bg-primary/90 text-white"
               >
-                Save Changes
+                {saving
+                  ? pendingSampleFile
+                    ? "Uploading..."
+                    : "Saving..."
+                  : "Save Changes"}
               </Button>
             </div>
           </div>
@@ -409,7 +476,11 @@ export function SortableStepCard({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 text-gray-400 hover:text-brand-lavender-darker hover:bg-brand-lavender-lighter/50"
-                  onClick={() => setEditing(true)}
+                  onClick={() => {
+                    setEditData(item)
+                    setPendingSampleFile(null)
+                    setEditing(true)
+                  }}
                   title="Edit section header"
                 >
                   <Pencil className="h-4 w-4" />
@@ -557,7 +628,11 @@ export function SortableStepCard({
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 text-gray-400 hover:text-brand-sage-darker hover:bg-brand-sage-lightest"
-                onClick={() => setEditing(true)}
+                onClick={() => {
+                  setEditData(item)
+                  setPendingSampleFile(null)
+                  setEditing(true)
+                }}
                 title="Edit step"
               >
                 <Pencil className="h-4 w-4" />
