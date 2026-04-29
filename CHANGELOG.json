@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.15.4",
+    "name": "Version 2.15.4 - Rich Text Scenario",
+    "changes": [
+      "Test Scenario field now supports markdown formatting (bold, bullets, headers, links)",
+      "Edit Project form uses a WYSIWYG markdown editor with live split preview",
+      "Test Scenario renders formatted on the admin detail page and tester registration page"
+    ],
+    "deployed_at": "2026-04-29"
+  },
+  {
     "version": "2.15.3",
     "name": "Version 2.15.3 - Section Header",
     "changes": [

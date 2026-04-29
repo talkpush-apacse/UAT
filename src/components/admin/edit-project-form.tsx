@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useFormState } from "react-dom"
+import dynamic from "next/dynamic"
 import { updateProject, type ProjectActionState } from "@/lib/actions/projects"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -19,6 +19,8 @@ import {
 import { CountryPicker } from "@/components/ui/country-picker"
 import { DEFAULT_COUNTRY_CODE } from "@/lib/countries"
 import { Pencil } from "lucide-react"
+
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false })
 
 interface Project {
   id: string
@@ -41,6 +43,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
   const [clientNames, setClientNames] = useState<string[]>([])
   const [country, setCountry] = useState(project.country || DEFAULT_COUNTRY_CODE)
   const [wizardMode, setWizardMode] = useState(project.wizard_mode ?? false)
+  const [testScenario, setTestScenario] = useState(project.test_scenario || "")
 
   useEffect(() => {
     fetch("/api/clients")
@@ -117,13 +120,16 @@ export default function EditProjectForm({ project }: { project: Project }) {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="testScenario" className="text-xs text-gray-500">Test Scenario</Label>
-            <Textarea
-              id="testScenario"
-              name="testScenario"
-              defaultValue={project.test_scenario || ""}
-              rows={3}
-            />
+            <Label className="text-xs text-gray-500">Test Scenario</Label>
+            <input type="hidden" name="testScenario" value={testScenario} />
+            <div data-color-mode="light">
+              <MDEditor
+                value={testScenario}
+                onChange={(v) => setTestScenario(v || "")}
+                height={200}
+                preview="live"
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="talkpushLoginLink" className="text-xs text-gray-500">Talkpush Login Link</Label>
