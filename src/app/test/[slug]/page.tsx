@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { createAnonSupabaseClient } from "@/lib/supabase/server"
 import RegistrationForm from "@/components/tester/registration-form"
 import { ClipboardList } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 
 export default async function TesterRegistrationPage({
   params,
@@ -46,9 +47,9 @@ export default async function TesterRegistrationPage({
                 {project.title}
               </h2>
             )}
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <ReactMarkdown className="prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-brand-sage-darker prose-strong:text-gray-900 prose-li:my-0.5 prose-p:my-1">
               {project.test_scenario}
-            </p>
+            </ReactMarkdown>
           </div>
         )}
 
