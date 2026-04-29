@@ -87,6 +87,7 @@ export default async function TesterResultsPage({
         project={{ slug: project.slug, companyName: project.company_name }}
         testerName={tester.name}
         testerId={tester.id}
+        submittedAt={tester.test_completed}
         checklistItems={items}
         responses={responses}
         adminReviews={adminReviews}

@@ -1,5 +1,18 @@
 [
   {
+    "version": "2.16.0",
+    "name": "Version 2.16.0 - Tester Results Redesign",
+    "changes": [
+      "Redesigned the tester results page with stronger visual hierarchy",
+      "Added a colored left rail on each issue card keyed to resolution state",
+      "Surfaced Talkpush admin response as its own clearly-labelled block",
+      "Stripped raw ═══ divider characters from rendered step text",
+      "Compacted summary stats into a single inline strip",
+      "Added 'Submitted [date]' to the results page header"
+    ],
+    "deployed_at": "2026-04-29"
+  },
+  {
     "version": "2.15.3",
     "name": "Version 2.15.3 - Section Header",
     "changes": [
