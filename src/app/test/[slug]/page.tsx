@@ -47,9 +47,9 @@ export default async function TesterRegistrationPage({
                 {project.title}
               </h2>
             )}
-            <ReactMarkdown className="prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-brand-sage-darker prose-strong:text-gray-900 prose-li:my-0.5 prose-p:my-1">
-              {project.test_scenario}
-            </ReactMarkdown>
+            <div className="prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-brand-sage-darker prose-strong:text-gray-900 prose-li:my-0.5 prose-p:my-1">
+              <ReactMarkdown>{project.test_scenario}</ReactMarkdown>
+            </div>
           </div>
         )}
 
