@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import LiveProgressTable from "@/components/admin/live-progress-table"
 import type { TesterProgress } from "@/components/admin/live-progress-table"
 import CopyLinkButton from "@/components/admin/copy-link-button"
-import CopyAnalyticsLinkButton from "@/components/admin/copy-analytics-link-button"
+import PreviewChecklistButton from "@/components/admin/preview-checklist-button"
 import { generateShareToken } from "@/lib/utils/share-token"
 import MoreActionsDropdown from "@/components/admin/more-actions-dropdown"
 import {
@@ -213,18 +213,25 @@ export default async function ProjectDetailPage({
             <p className="text-sm text-gray-600 mt-2 leading-relaxed">{project.test_scenario}</p>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <CopyLinkButton slug={project.slug} />
-          <CopyAnalyticsLinkButton slug={project.slug} />
-          {/* Visual separator between share actions and management actions */}
-          <div className="hidden sm:block w-px h-6 bg-gray-200" />
-          <Link href={`/admin/projects/${project.slug}/edit`}>
-            <Button variant="outline" size="sm" className="text-gray-600 border-gray-200 hover:bg-gray-50">
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit Project
-            </Button>
-          </Link>
-          <MoreActionsDropdown projectId={project.id} companyName={project.company_name} title={project.title} />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[220px] sm:items-stretch">
+          <div className="flex flex-col gap-2">
+            <CopyLinkButton slug={project.slug} />
+            <PreviewChecklistButton slug={project.slug} />
+          </div>
+          <div className="flex items-center gap-2 sm:justify-end">
+            <Link href={`/admin/projects/${project.slug}/edit`} className="flex-1 sm:flex-none">
+              <Button variant="outline" size="sm" className="w-full text-gray-600 border-gray-200 hover:bg-gray-50">
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Edit Project
+              </Button>
+            </Link>
+            <MoreActionsDropdown
+              projectId={project.id}
+              companyName={project.company_name}
+              title={project.title}
+              slug={project.slug}
+            />
+          </div>
         </div>
       </div>
 
