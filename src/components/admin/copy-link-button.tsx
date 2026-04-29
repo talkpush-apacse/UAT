@@ -8,7 +8,7 @@ export default function CopyLinkButton({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
-    const base = process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com"
+    const base = (process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com").trim()
     const url = `${base}/test/${slug}`
     navigator.clipboard.writeText(url)
     setCopied(true)
