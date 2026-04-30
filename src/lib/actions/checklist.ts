@@ -217,12 +217,29 @@ export async function updateChecklistItem(
       updates.step_number = null
     }
 
+    // Resolve project_id before updating if item_type is changing. A step→header
+    // removes one numbered slot; a header→step adds one. Either way the remaining
+    // steps need to be renumbered to close the gap or fill it in.
+    let projectId: string | undefined
+    if (parsed.data.itemType !== undefined) {
+      const { data: existing } = await supabase
+        .from('checklist_items')
+        .select('project_id')
+        .eq('id', parsed.data.id)
+        .single()
+      projectId = existing?.project_id
+    }
+
     const { error } = await supabase
       .from('checklist_items')
       .update(updates)
       .eq('id', parsed.data.id)
 
     if (error) return { error: error.message }
+
+    if (projectId) {
+      await renumberSteps(projectId, supabase)
+    }
 
     revalidatePath(`/admin/projects/${slug}`)
     return {}

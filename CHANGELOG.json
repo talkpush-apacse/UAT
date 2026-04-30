@@ -1,5 +1,29 @@
 [
   {
+    "version": "2.16.3",
+    "name": "Version 2.16.3 - Step Number Fix",
+    "changes": [
+      "Fixed MCP reorder_checklist: now uses the reorder_checklist_steps RPC so step_number is always recomputed after a reorder",
+      "Fixed MCP delete_checklist_items: renumbers remaining steps after deletion so no gaps appear",
+      "Fixed MCP update_checklist_item: renumbers steps when item_type changes (step↔header)",
+      "Fixed admin server action: updateChecklistItem now renumbers steps on item_type change",
+      "Added backfill migration to repair stale step_numbers left by past MCP reorders"
+    ],
+    "deployed_at": "2026-04-30"
+  },
+  {
+    "version": "2.16.2",
+    "name": "Version 2.16.2 - Header Button Polish",
+    "changes": [
+      "Improved visual hierarchy of action buttons on project detail page",
+      "Edit Project is now a solid teal primary button — clearly the dominant action",
+      "Copy Tester Link and Preview Checklist demoted to ghost buttons with teal hover tint",
+      "Buttons now sit in a single horizontal row with a divider separating utility vs edit actions",
+      "Mobile layout uses two clean stacked rows maintaining the same hierarchy"
+    ],
+    "deployed_at": "2026-04-30"
+  },
+  {
     "version": "2.16.1",
     "name": "Version 2.16.1 - Rich Text Scenario",
     "changes": [

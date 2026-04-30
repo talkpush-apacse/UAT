@@ -502,6 +502,19 @@ const handler = createMcpHandler(
           throw new Error("No fields provided to update");
         }
 
+        // Resolve project_id before updating if item_type is changing so we
+        // can renumber after — a step→header removes one numbered slot and a
+        // header→step adds one, so remaining steps need to shift.
+        let projectId: string | undefined;
+        if ("item_type" in cleanUpdates) {
+          const { data: existing } = await supabase
+            .from("checklist_items")
+            .select("project_id")
+            .eq("id", id)
+            .single();
+          projectId = existing?.project_id;
+        }
+
         const { data, error } = await supabase
           .from("checklist_items")
           .update(cleanUpdates)
@@ -510,6 +523,10 @@ const handler = createMcpHandler(
           .single();
 
         if (error) throw new Error(error.message);
+
+        if (projectId) {
+          await supabase.rpc("renumber_steps", { p_project_id: projectId });
+        }
 
         return {
           content: [
@@ -538,12 +555,27 @@ const handler = createMcpHandler(
       },
       async ({ ids }) => {
         const supabase = createAdminClient();
+
+        // Resolve project_id before deleting so we can renumber afterward
+        const { data: first } = await supabase
+          .from("checklist_items")
+          .select("project_id")
+          .eq("id", ids[0])
+          .single();
+
+        const projectId = first?.project_id;
+
         const { error } = await supabase
           .from("checklist_items")
           .delete()
           .in("id", ids);
 
         if (error) throw new Error(error.message);
+
+        // Renumber remaining steps so there are no gaps after deletion
+        if (projectId) {
+          await supabase.rpc("renumber_steps", { p_project_id: projectId });
+        }
 
         return {
           content: [
@@ -564,7 +596,7 @@ const handler = createMcpHandler(
       {
         title: "Reorder Checklist",
         description:
-          "Reorder checklist items by providing an array of IDs in the desired order. Updates sort_order values accordingly.",
+          "Reorder checklist items by providing an array of IDs in the desired order. Updates sort_order and recomputes step_number for all steps.",
         inputSchema: {
           ids: z
             .array(z.string().uuid())
@@ -575,14 +607,26 @@ const handler = createMcpHandler(
       },
       async ({ ids }) => {
         const supabase = createAdminClient();
-        const updates = ids.map((id, index) =>
-          supabase
-            .from("checklist_items")
-            .update({ sort_order: index + 1 })
-            .eq("id", id)
-        );
 
-        await Promise.all(updates);
+        // Resolve project_id from the first item so we can use the RPC
+        const { data: first, error: lookupError } = await supabase
+          .from("checklist_items")
+          .select("project_id")
+          .eq("id", ids[0])
+          .single();
+
+        if (lookupError || !first) throw new Error("Item not found");
+
+        // Single RPC call: updates sort_order for all items in one statement,
+        // then recomputes step_number (steps only, headers stay NULL).
+        // This replaces the former N parallel individual UPDATEs that left
+        // step_number stale after every MCP reorder.
+        const { error } = await supabase.rpc("reorder_checklist_steps", {
+          p_project_id: first.project_id,
+          p_items: ids.map((id, index) => ({ id, sort_order: index + 1 })),
+        });
+
+        if (error) throw new Error(error.message);
 
         return {
           content: [
