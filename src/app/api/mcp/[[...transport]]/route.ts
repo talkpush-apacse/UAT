@@ -2,6 +2,7 @@ import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateUniqueProjectSlug } from "@/lib/utils/project-slug";
+import { generateShareToken } from "@/lib/utils/share-token";
 
 // --- Helper ---
 async function getProjectBySlug(slug: string) {
@@ -14,6 +15,13 @@ async function getProjectBySlug(slug: string) {
 
   if (error || !data) throw new Error(`Project not found: ${slug}`);
   return data;
+}
+
+function getAppBaseUrl() {
+  return (process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com").replace(
+    /\/+$/,
+    ""
+  );
 }
 
 // --- MCP Handler ---
@@ -273,6 +281,43 @@ const handler = createMcpHandler(
         return {
           content: [
             { type: "text" as const, text: JSON.stringify(project, null, 2) },
+          ],
+        };
+      }
+    );
+
+    // ===========================
+    // TOOL 3A: get_share_link
+    // ===========================
+    server.registerTool(
+      "get_share_link",
+      {
+        title: "Get Share Link",
+        description:
+          "Returns a public, read-only share link for the project's UAT results — safe to send to clients.",
+        inputSchema: {
+          slug: z.string().describe("The project slug"),
+        },
+      },
+      async ({ slug }) => {
+        const project = await getProjectBySlug(slug);
+        const token = await generateShareToken(project.slug);
+        const shareUrl = `${getAppBaseUrl()}/share/analytics/${project.slug}/${token}`;
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  share_url: shareUrl,
+                  slug: project.slug,
+                  expires_at: null,
+                },
+                null,
+                2
+              ),
+            },
           ],
         };
       }
