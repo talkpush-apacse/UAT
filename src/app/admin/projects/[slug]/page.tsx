@@ -188,7 +188,7 @@ export default async function ProjectDetailPage({
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           {/* P3 — Client name as meta overline */}
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">
@@ -214,14 +214,34 @@ export default async function ProjectDetailPage({
             <MarkdownRenderer content={project.test_scenario} className="mt-2" />
           )}
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[220px] sm:items-stretch">
-          <div className="flex flex-col gap-2">
-            <CopyLinkButton slug={project.slug} />
-            <PreviewChecklistButton slug={project.slug} />
+        {/* Desktop: single row with 3-tier visual hierarchy */}
+        <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
+          <CopyLinkButton slug={project.slug} />
+          <PreviewChecklistButton slug={project.slug} />
+          <div className="mx-1 h-5 w-px bg-gray-200" />
+          <Link href={`/admin/projects/${project.slug}/edit`}>
+            <Button size="sm" className="bg-[#00BFA5] text-white hover:bg-[#00A896] border-0 shadow-sm">
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              Edit Project
+            </Button>
+          </Link>
+          <MoreActionsDropdown
+            projectId={project.id}
+            companyName={project.company_name}
+            title={project.title}
+            slug={project.slug}
+          />
+        </div>
+
+        {/* Mobile: two stacked rows */}
+        <div className="flex sm:hidden flex-col gap-2 w-full">
+          <div className="flex gap-2">
+            <CopyLinkButton slug={project.slug} className="flex-1 justify-center" />
+            <PreviewChecklistButton slug={project.slug} className="flex-1 justify-center" />
           </div>
-          <div className="flex items-center gap-2 sm:justify-end">
-            <Link href={`/admin/projects/${project.slug}/edit`} className="flex-1 sm:flex-none">
-              <Button variant="outline" size="sm" className="w-full text-gray-600 border-gray-200 hover:bg-gray-50">
+          <div className="flex gap-2">
+            <Link href={`/admin/projects/${project.slug}/edit`} className="flex-1">
+              <Button size="sm" className="w-full bg-[#00BFA5] text-white hover:bg-[#00A896] border-0 shadow-sm">
                 <Pencil className="h-3.5 w-3.5 mr-1.5" />
                 Edit Project
               </Button>

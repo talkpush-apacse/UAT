@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Link as LinkIcon, Check } from "lucide-react"
 
-export default function CopyLinkButton({ slug }: { slug: string }) {
+export default function CopyLinkButton({ slug, className }: { slug: string; className?: string }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
@@ -17,10 +17,10 @@ export default function CopyLinkButton({ slug }: { slug: string }) {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="sm"
       onClick={handleCopy}
-      className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest transition-colors"
+      className={`text-gray-500 hover:text-[#00BFA5] hover:bg-teal-50 transition-colors ${className ?? ""}`}
     >
       {copied ? (
         <>
