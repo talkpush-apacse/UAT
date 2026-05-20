@@ -270,20 +270,34 @@ export async function addChecklistItem(
 
     const isHeader = parsed.data.itemType === 'phase_header'
 
-    // Get max sort_order (and step_number, for non-header insert) for this project
-    const { data: maxItem } = await supabase
+    // Get max sort_order for this project
+    const { data: maxSortItem } = await supabase
       .from('checklist_items')
-      .select('sort_order, step_number')
+      .select('sort_order')
       .eq('project_id', parsed.data.projectId)
       .order('sort_order', { ascending: false })
       .limit(1)
       .single()
 
-    const sortOrder = (maxItem?.sort_order || 0) + 1
+    // Get max step_number from step-type items only — phase_headers have NULL
+    // step_number so ordering by sort_order could yield NULL if the last item
+    // is a header, causing (null || 0) + 1 = 1 to collide with an existing step.
+    const { data: maxStepItem } = isHeader
+      ? { data: null }
+      : await supabase
+          .from('checklist_items')
+          .select('step_number')
+          .eq('project_id', parsed.data.projectId)
+          .eq('item_type', 'step')
+          .order('step_number', { ascending: false })
+          .limit(1)
+          .single()
+
+    const sortOrder = (maxSortItem?.sort_order || 0) + 1
     // Headers have NULL step_number; for steps, use provided or auto-calc (renumber fixes it)
     const stepNumber = isHeader
       ? null
-      : parsed.data.stepNumber ?? (maxItem?.step_number || 0) + 1
+      : parsed.data.stepNumber ?? (maxStepItem?.step_number || 0) + 1
 
     const { data: newItem, error } = await supabase
       .from('checklist_items')
