@@ -11,18 +11,20 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <nav className="bg-white border-b border-gray-200 shadow-sm">
+    <div className="min-h-screen bg-background">
+      {/* Talkpush Sign brand gradient strip */}
+      <div className="h-1.5 brand-gradient-strip" />
+      <nav className="bg-card border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-14 items-center gap-4">
             {/* Left: logo + dynamic breadcrumb trail */}
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-                <LayoutDashboard className="h-4 w-4 text-white" />
+                <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
               </div>
               <Link
                 href="/admin"
-                className="font-semibold text-base text-gray-900 hover:text-brand-sage-darker transition-colors flex-shrink-0"
+                className="font-nav font-semibold text-base text-foreground hover:text-brand-sage-darker transition-colors flex-shrink-0"
               >
                 UAT Admin
               </Link>

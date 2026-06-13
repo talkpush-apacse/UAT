@@ -294,29 +294,45 @@ export default async function AdminDashboard({
   // ── Default: Client grid view ────────────────────────────────────────────────
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-[28px] font-bold text-gray-900 leading-tight">UAT Checklists</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            <span className="tabular-nums">{groupedByClient.length}</span>{" "}
-            {groupedByClient.length === 1 ? "client" : "clients"} ·{" "}
-            <span className="tabular-nums">{projectsWithCounts.length}</span>{" "}
-            {projectsWithCounts.length === 1 ? "checklist" : "checklists"} total
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/admin/clients">
-            <Button variant="outline" className="text-gray-600">
-              <Building2 className="h-4 w-4 mr-1.5" />
-              Manage Clients
-            </Button>
-          </Link>
-          <Link href="/admin/projects/new">
-            <Button>
-              <Plus className="h-4 w-4 mr-1.5" />
-              New UAT Checklist
-            </Button>
-          </Link>
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card mb-8 animate-in fade-in slide-in-from-top-2 duration-500">
+        {/* Brand gradient strip */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 brand-gradient-strip" />
+        {/* Decorative confetti squares */}
+        <div className="pointer-events-none absolute top-9 left-12 w-3 h-3 bg-brand-amber rotate-12 opacity-40" />
+        <div className="pointer-events-none absolute top-16 right-1/3 w-2.5 h-2.5 bg-brand-pink -rotate-6 opacity-40 hidden sm:block" />
+        <div className="pointer-events-none absolute bottom-8 left-1/4 w-3 h-3 bg-brand-lavender rotate-[15deg] opacity-40 hidden sm:block" />
+        <div className="pointer-events-none absolute top-12 right-1/4 w-2 h-2 bg-brand-sage -rotate-12 opacity-50 hidden md:block" />
+        <div className="pointer-events-none absolute bottom-10 right-16 w-3.5 h-3.5 bg-brand-amber rotate-6 opacity-30 hidden md:block" />
+
+        <div className="relative z-10 p-6 md:p-8 pt-7 md:pt-9 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <p className="font-nav text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">
+              Talkpush UAT
+            </p>
+            <h1 className="text-[28px] md:text-4xl font-bold text-foreground leading-tight">
+              UAT Checklists
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              <span className="tabular-nums">{groupedByClient.length}</span>{" "}
+              {groupedByClient.length === 1 ? "client" : "clients"} ·{" "}
+              <span className="tabular-nums">{projectsWithCounts.length}</span>{" "}
+              {projectsWithCounts.length === 1 ? "checklist" : "checklists"} total
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/admin/clients">
+              <Button variant="outline">
+                <Building2 className="h-4 w-4 mr-1.5" />
+                Manage Clients
+              </Button>
+            </Link>
+            <Link href="/admin/projects/new">
+              <Button variant="cta">
+                <Plus className="h-4 w-4 mr-1.5" />
+                New UAT Checklist
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 

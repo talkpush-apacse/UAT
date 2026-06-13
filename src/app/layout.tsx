@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { DM_Sans } from "next/font/google"
+import { DM_Sans, Space_Grotesk } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -9,11 +9,18 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "600", "700"],
 })
 
+// Space Grotesk — used for navigation, wordmark, and section headers (font-nav).
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  weight: ["400", "500", "600", "700"],
+})
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#6B9E7A",
+  themeColor: "#FEFEF2",
 }
 
 export const metadata: Metadata = {
@@ -38,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${dmSans.variable} font-sans antialiased`}
+        className={`${dmSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}
       >
         {children}
         <Toaster />

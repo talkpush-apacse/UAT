@@ -20,7 +20,9 @@ export default async function TesterRegistrationPage({
   if (!project) notFound()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-sage-lightest to-gray-50 flex flex-col items-center justify-center px-4 py-8">
+    <div className="relative min-h-screen bg-gradient-to-b from-brand-sage-lightest to-background flex flex-col items-center justify-center px-4 py-8">
+      {/* Talkpush Sign brand gradient strip */}
+      <div className="fixed top-0 left-0 right-0 h-1.5 brand-gradient-strip z-10" />
       <div className="w-full max-w-md space-y-5">
 
         {/* Talkpush Logo */}

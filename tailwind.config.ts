@@ -12,6 +12,7 @@ const config: Config = {
   	extend: {
   		fontFamily: {
   			sans: ['var(--font-dm-sans)', ...defaultTheme.fontFamily.sans],
+  			nav: ['var(--font-space-grotesk)', ...defaultTheme.fontFamily.sans],
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -84,7 +85,9 @@ const config: Config = {
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			xl: 'calc(var(--radius) + 3px)',
+  			'2xl': 'calc(var(--radius) + 6px)'
   		}
   	}
   },

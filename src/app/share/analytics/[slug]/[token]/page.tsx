@@ -127,7 +127,9 @@ export default async function PublicAnalyticsPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
+      {/* Talkpush Sign brand gradient strip */}
+      <div className="h-1.5 brand-gradient-strip" />
       <div className="max-w-6xl mx-auto px-6 py-10">
         <AnalyticsCharts
           checklistItems={checklistItems || []}

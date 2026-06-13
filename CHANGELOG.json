@@ -1,5 +1,19 @@
 [
   {
+    "version": "2.17.0",
+    "name": "Version 2.17.0 - Talkpush Sign Rebrand",
+    "changes": [
+      "Rebranded UI to the Talkpush Sign design system",
+      "Warm-beige surface, near-black primary, pink CTA accent",
+      "Added brand gradient strip across nav and landing pages",
+      "Added Space Grotesk for nav and headings (DM Sans body)",
+      "New dashboard hero banner with brand confetti accents",
+      "Added cta, accent and sage button variants",
+      "Kept semantic Pass/Fail status colors for clarity"
+    ],
+    "deployed_at": "2026-06-13"
+  },
+  {
     "version": "2.16.3",
     "name": "Version 2.16.3 - Step Number Fix",
     "changes": [
