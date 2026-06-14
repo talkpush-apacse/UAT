@@ -10,7 +10,7 @@ export default function PreviewChecklistButton({ slug, className }: { slug: stri
       asChild
       variant="ghost"
       size="sm"
-      className={`text-gray-500 hover:text-[#00BFA5] hover:bg-teal-50 transition-colors ${className ?? ""}`}
+      className={`text-gray-500 hover:text-brand-sage-darker hover:bg-brand-sage-lightest transition-colors ${className ?? ""}`}
     >
       <Link href={`/test/${slug}/preview`} target="_blank" rel="noopener noreferrer">
         <Eye className="h-3.5 w-3.5 mr-1.5" />

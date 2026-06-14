@@ -28,7 +28,7 @@ export function AboutDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2.5">
             UAT Web Interface
-            <span className="bg-teal-50 text-teal-700 font-mono text-xs rounded-full px-2.5 py-0.5">
+            <span className="bg-brand-lavender-lightest text-brand-lavender-darker font-mono text-xs rounded-full px-2.5 py-0.5">
               v{latestVersion}
             </span>
           </DialogTitle>

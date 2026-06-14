@@ -113,7 +113,7 @@ export default function ClientsManager({
           onChange={(e) => setNewName(e.target.value)}
           placeholder="New client name..."
           maxLength={200}
-          className="border border-gray-300 bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+          className="border border-gray-300 bg-white focus:ring-2 focus:ring-ring focus:border-ring"
         />
         <Button type="submit" disabled={!newName.trim() || adding}>
           <Plus className="h-4 w-4 mr-1.5" />

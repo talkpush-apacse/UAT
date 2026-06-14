@@ -20,7 +20,7 @@ export default function CopyLinkButton({ slug, className }: { slug: string; clas
       variant="ghost"
       size="sm"
       onClick={handleCopy}
-      className={`text-gray-500 hover:text-[#00BFA5] hover:bg-teal-50 transition-colors ${className ?? ""}`}
+      className={`text-gray-500 hover:text-brand-sage-darker hover:bg-brand-sage-lightest transition-colors ${className ?? ""}`}
     >
       {copied ? (
         <>

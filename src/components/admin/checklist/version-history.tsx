@@ -202,7 +202,7 @@ export function VersionHistory({ slug, initialSnapshots }: VersionHistoryProps) 
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Version badge */}
-                    <span className="shrink-0 bg-teal-50 text-teal-700 font-mono text-xs rounded-full px-2.5 py-0.5 border border-teal-100">
+                    <span className="shrink-0 bg-brand-lavender-lightest text-brand-lavender-darker font-mono text-xs rounded-full px-2.5 py-0.5 border border-brand-lavender-lighter">
                       v{snap.version_number}
                     </span>
                     <div className="min-w-0">
@@ -266,7 +266,7 @@ export function VersionHistory({ slug, initialSnapshots }: VersionHistoryProps) 
               onChange={(e) => setLabelInput(e.target.value)}
               placeholder="e.g. Before QA review, After client walkthrough"
               maxLength={100}
-              className="border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:outline-none placeholder:text-gray-400"
+              className="border border-gray-300 rounded-md focus:ring-2 focus:ring-ring focus:border-ring focus:outline-none placeholder:text-gray-400"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && labelInput.trim()) handleSave()
               }}

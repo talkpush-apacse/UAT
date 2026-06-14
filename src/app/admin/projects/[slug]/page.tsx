@@ -220,7 +220,7 @@ export default async function ProjectDetailPage({
           <PreviewChecklistButton slug={project.slug} />
           <div className="mx-1 h-5 w-px bg-gray-200" />
           <Link href={`/admin/projects/${project.slug}/edit`}>
-            <Button size="sm" className="bg-[#00BFA5] text-white hover:bg-[#00A896] border-0 shadow-sm">
+            <Button size="sm">
               <Pencil className="h-3.5 w-3.5 mr-1.5" />
               Edit Project
             </Button>
@@ -241,7 +241,7 @@ export default async function ProjectDetailPage({
           </div>
           <div className="flex gap-2">
             <Link href={`/admin/projects/${project.slug}/edit`} className="flex-1">
-              <Button size="sm" className="w-full bg-[#00BFA5] text-white hover:bg-[#00A896] border-0 shadow-sm">
+              <Button size="sm" className="w-full">
                 <Pencil className="h-3.5 w-3.5 mr-1.5" />
                 Edit Project
               </Button>

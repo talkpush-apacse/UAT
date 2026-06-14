@@ -29,7 +29,7 @@ export function ChangelogSection({ entries }: { entries: ChangelogEntry[] }) {
               className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="bg-teal-50 text-teal-700 font-mono text-xs rounded-full px-2.5 py-0.5 shrink-0">
+                <span className="bg-brand-lavender-lightest text-brand-lavender-darker font-mono text-xs rounded-full px-2.5 py-0.5 shrink-0">
                   v{entry.version}
                 </span>
                 <span className="text-sm font-medium text-gray-800 truncate">
