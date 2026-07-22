@@ -46,6 +46,17 @@ const handler = createMcpHandler(
               "Search query — matches project title or company name (case-insensitive, partial match)"
             ),
         },
+        outputSchema: {
+          results: z
+            .array(
+              z.object({
+                id: z.string().describe("Project slug — pass this as `id` to the fetch tool"),
+                title: z.string().describe("Display title formatted as 'Company — Project Title'"),
+                url: z.string().describe("Public tester URL for the project"),
+              })
+            )
+            .describe("Matching projects, up to 20, ordered by creation date descending"),
+        },
       },
       async ({ query }) => {
         const supabase = createAdminClient();
@@ -96,6 +107,19 @@ const handler = createMcpHandler(
             .describe(
               "The project id (slug) returned from the search tool"
             ),
+        },
+        outputSchema: {
+          id: z.string().describe("Project slug"),
+          title: z.string().describe("Display title formatted as 'Company — Project Title'"),
+          text: z.string().describe("Full project document as markdown-formatted text including test scenario and all checklist steps"),
+          url: z.string().describe("Public tester URL for the project"),
+          metadata: z.object({
+            company_name: z.string(),
+            project_title: z.string().nullable(),
+            slug: z.string(),
+            created_at: z.string().nullable().describe("ISO 8601 timestamp"),
+            total_steps: z.number().describe("Number of testable steps (phase headers excluded)"),
+          }),
         },
       },
       async ({ id }) => {
@@ -173,7 +197,20 @@ const handler = createMcpHandler(
           company: z
             .string()
             .optional()
-            .describe("Filter by company name (partial match)"),
+            .describe("Filter by company name (case-insensitive partial match). Omit to return all projects."),
+        },
+        outputSchema: {
+          count: z.number().describe("Total number of projects returned"),
+          projects: z.array(
+            z.object({
+              id: z.string().describe("Internal UUID"),
+              slug: z.string().describe("URL-friendly identifier used in all other tools"),
+              company_name: z.string(),
+              title: z.string().nullable(),
+              test_scenario: z.string().nullable(),
+              created_at: z.string().nullable().describe("ISO 8601 timestamp"),
+            })
+          ),
         },
       },
       async ({ company }) => {
@@ -233,6 +270,20 @@ const handler = createMcpHandler(
             .optional()
             .describe("ISO 3166-1 alpha-2 country code for the tester phone input default (e.g. 'PH', 'IN', 'US'). Defaults to 'PH'."),
         },
+        outputSchema: {
+          created: z.literal(true),
+          project: z.object({
+            id: z.string().describe("Internal UUID"),
+            slug: z.string().describe("Auto-generated URL-friendly identifier"),
+            company_name: z.string(),
+            title: z.string().nullable(),
+            test_scenario: z.string().nullable(),
+            talkpush_login_link: z.string().nullable(),
+            country: z.string().describe("Uppercase ISO 3166-1 alpha-2 code"),
+            created_at: z.string().nullable().describe("ISO 8601 timestamp"),
+            wizard_mode: z.boolean().describe("When true, tester sees one step at a time"),
+          }),
+        },
       },
       async ({ company_name, title, test_scenario, talkpush_login_link, country }) => {
         const supabase = createAdminClient();
@@ -264,6 +315,136 @@ const handler = createMcpHandler(
       }
     );
 
+    // ========================
+    // TOOL 2A: update_project
+    // ========================
+    server.registerTool(
+      "update_project",
+      {
+        title: "Update Project",
+        description:
+          "Edit project-level metadata on an existing UAT project. Identifies the project by slug. Only fields explicitly passed are updated.",
+        inputSchema: {
+          slug: z
+            .string()
+            .min(1)
+            .describe("The project slug (URL identifier)"),
+          title: z
+            .string()
+            .min(1)
+            .max(300)
+            .optional()
+            .describe("Replacement project title (1–300 chars). Only pass if changing."),
+          company_name: z
+            .string()
+            .min(1)
+            .max(200)
+            .optional()
+            .describe("Replacement client/company name (1–200 chars). Only pass if changing."),
+          test_scenario: z
+            .string()
+            .max(2000)
+            .optional()
+            .describe("Replacement description of what is being tested (max 2000 chars). Pass an empty string to clear it."),
+          talkpush_login_link: z
+            .union([z.string().url().max(500), z.literal("")])
+            .optional()
+            .describe("Replacement Talkpush login URL (max 500 chars). Pass an empty string to clear it."),
+          country: z
+            .string()
+            .regex(/^[A-Za-z]{2}$/)
+            .optional()
+            .describe("Replacement ISO 3166-1 alpha-2 country code (e.g. 'PH', 'IN', 'US'). Only pass if changing."),
+        },
+      },
+      async ({
+        slug,
+        title,
+        company_name,
+        test_scenario,
+        talkpush_login_link,
+        country,
+      }) => {
+        const supabase = createAdminClient();
+
+        const cleanUpdates: Record<string, string | null> = {};
+
+        if (title !== undefined) cleanUpdates.title = title;
+        if (company_name !== undefined) cleanUpdates.company_name = company_name;
+        if (test_scenario !== undefined) {
+          cleanUpdates.test_scenario = test_scenario || null;
+        }
+        if (talkpush_login_link !== undefined) {
+          cleanUpdates.talkpush_login_link = talkpush_login_link || null;
+        }
+        if (country !== undefined) cleanUpdates.country = country.toUpperCase();
+
+        if (Object.keys(cleanUpdates).length === 0) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(
+                  {
+                    updated: false,
+                    error:
+                      "No fields to update. Pass at least one of: title, company_name, test_scenario, talkpush_login_link, country",
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        }
+
+        const { data: existingProject, error: lookupError } = await supabase
+          .from("projects")
+          .select("id")
+          .eq("slug", slug)
+          .maybeSingle();
+
+        if (lookupError) throw new Error(lookupError.message);
+
+        if (!existingProject) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(
+                  {
+                    updated: false,
+                    error: "Project not found",
+                    slug,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        }
+
+        const { data, error } = await supabase
+          .from("projects")
+          .update(cleanUpdates)
+          .eq("id", existingProject.id)
+          .select()
+          .single();
+
+        if (error) throw new Error(error.message);
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ updated: true, project: data }, null, 2),
+            },
+          ],
+        };
+      }
+    );
+
     // =====================
     // TOOL 3: get_project
     // =====================
@@ -274,6 +455,17 @@ const handler = createMcpHandler(
         description: "Get full details of a UAT project by its slug.",
         inputSchema: {
           slug: z.string().describe("The project slug (URL identifier)"),
+        },
+        outputSchema: {
+          id: z.string().describe("Internal UUID"),
+          slug: z.string(),
+          company_name: z.string(),
+          title: z.string().nullable(),
+          test_scenario: z.string().nullable(),
+          talkpush_login_link: z.string().nullable(),
+          country: z.string().describe("Uppercase ISO 3166-1 alpha-2 code"),
+          created_at: z.string().nullable().describe("ISO 8601 timestamp"),
+          wizard_mode: z.boolean().describe("When true, tester sees one step at a time"),
         },
       },
       async ({ slug }) => {
@@ -297,6 +489,11 @@ const handler = createMcpHandler(
           "Returns a public, read-only share link for the project's UAT results — safe to send to clients.",
         inputSchema: {
           slug: z.string().describe("The project slug"),
+        },
+        outputSchema: {
+          share_url: z.string().describe("Fully-qualified public URL — safe to send to clients; no login required"),
+          slug: z.string(),
+          expires_at: z.null().describe("Always null — share links do not expire"),
         },
       },
       async ({ slug }) => {
@@ -334,6 +531,26 @@ const handler = createMcpHandler(
           "Get all checklist steps for a project, ordered by sort_order.",
         inputSchema: {
           slug: z.string().describe("The project slug"),
+        },
+        outputSchema: {
+          project_slug: z.string(),
+          project_title: z.string().nullable(),
+          total_steps: z.number().describe("Count of items returned (includes both steps and phase headers)"),
+          items: z.array(
+            z.object({
+              id: z.string().describe("UUID — use this in update_checklist_item, delete_checklist_items, and reorder_checklist"),
+              actor: z.string().describe("Who performs this step: Candidate, Talkpush, Recruiter, or Referrer/Vendor"),
+              action: z.string().describe("Instruction text shown to the tester"),
+              path: z.string().nullable().describe("URL path or app location for this step"),
+              crm_module: z.string().nullable(),
+              tip: z.string().nullable().describe("Optional helper text shown to testers"),
+              view_sample: z.string().nullable().describe("URL to a sample screenshot"),
+              sort_order: z.number().describe("1-based display position; drives ordering"),
+              step_number: z.number().nullable().describe("Sequential number shown to testers; null for phase_header items"),
+              item_type: z.string().describe("'step' (testable) or 'phase_header' (section label only)"),
+              header_label: z.string().nullable().describe("Short uppercase label for phase_header items (e.g. 'PHASE 1'); null for steps"),
+            })
+          ),
         },
       },
       async ({ slug }) => {
@@ -430,6 +647,26 @@ const handler = createMcpHandler(
             )
             .describe("Array of checklist items to create"),
         },
+        outputSchema: {
+          created: z.number().describe("Count of items successfully inserted"),
+          project_slug: z.string(),
+          items: z.array(
+            z.object({
+              id: z.string().describe("UUID of the newly created item"),
+              project_id: z.string().describe("Internal project UUID"),
+              actor: z.string(),
+              action: z.string(),
+              path: z.string().nullable(),
+              crm_module: z.string().nullable(),
+              tip: z.string().nullable(),
+              view_sample: z.string().nullable(),
+              sort_order: z.number(),
+              step_number: z.number().nullable().describe("Sequential step number after renumbering; null for phase_header items"),
+              item_type: z.string(),
+              header_label: z.string().nullable(),
+            })
+          ),
+        },
       },
       async ({ slug, items }) => {
         const supabase = createAdminClient();
@@ -510,12 +747,12 @@ const handler = createMcpHandler(
           actor: z
             .enum(["Candidate", "Talkpush", "Recruiter", "Referrer/Vendor"])
             .optional()
-            .describe("Updated actor"),
-          action: z.string().optional().describe("Updated action text"),
-          path: z.string().optional().describe("Updated path"),
-          crm_module: z.string().optional().describe("Updated CRM module"),
-          tip: z.string().optional().describe("Updated tip"),
-          view_sample: z.string().optional().describe("Updated sample URL"),
+            .describe("Replacement actor role — who performs this step. Only pass if changing."),
+          action: z.string().optional().describe("Replacement instruction text shown to the tester. Only pass if changing."),
+          path: z.string().optional().describe("Replacement URL path or app location for this step. Only pass if changing."),
+          crm_module: z.string().optional().describe("Replacement CRM module name where this step is performed. Only pass if changing."),
+          tip: z.string().optional().describe("Replacement helper text displayed to testers. Only pass if changing."),
+          view_sample: z.string().optional().describe("Replacement URL to a screenshot or sample demonstrating the expected result. Only pass if changing."),
           item_type: z
             .enum(["step", "phase_header"])
             .optional()
@@ -526,8 +763,25 @@ const handler = createMcpHandler(
             .string()
             .optional()
             .describe(
-              "Short uppercase label for a section header (e.g. 'PHASE 1' or 'SECTION A')."
+              "Short uppercase label for a section header (e.g. 'PHASE 1' or 'SECTION A'). Ignored when item_type is 'step'."
             ),
+        },
+        outputSchema: {
+          updated: z.literal(true),
+          item: z.object({
+            id: z.string(),
+            project_id: z.string().describe("Internal project UUID"),
+            actor: z.string(),
+            action: z.string(),
+            path: z.string().nullable(),
+            crm_module: z.string().nullable(),
+            tip: z.string().nullable(),
+            view_sample: z.string().nullable(),
+            sort_order: z.number(),
+            step_number: z.number().nullable().describe("Recomputed sequential number; null for phase_header items"),
+            item_type: z.string(),
+            header_label: z.string().nullable(),
+          }),
         },
       },
       async ({ id, ...updates }) => {
@@ -597,6 +851,10 @@ const handler = createMcpHandler(
             .array(z.string().uuid())
             .describe("Array of checklist item UUIDs to delete"),
         },
+        outputSchema: {
+          deleted: z.number().describe("Count of items deleted"),
+          ids: z.array(z.string()).describe("The UUIDs that were deleted"),
+        },
       },
       async ({ ids }) => {
         const supabase = createAdminClient();
@@ -646,8 +904,12 @@ const handler = createMcpHandler(
           ids: z
             .array(z.string().uuid())
             .describe(
-              "Checklist item UUIDs in the desired order (first = sort_order 1)"
+              "Checklist item UUIDs in the desired order (first = sort_order 1). Must include ALL items for the project — any item omitted will be left at its current position."
             ),
+        },
+        outputSchema: {
+          reordered: z.literal(true),
+          count: z.number().describe("Number of items whose sort_order was updated"),
         },
       },
       async ({ ids }) => {
@@ -695,6 +957,16 @@ const handler = createMcpHandler(
           "Get testing progress for a project — completion percentage, status breakdown, and tester count.",
         inputSchema: {
           slug: z.string().describe("The project slug"),
+        },
+        outputSchema: {
+          project_slug: z.string(),
+          project_title: z.string().nullable(),
+          total_steps: z.number().describe("Count of testable steps (phase headers excluded)"),
+          total_testers: z.number(),
+          total_expected_responses: z.number().describe("total_steps × total_testers — maximum possible responses"),
+          total_responses: z.number().describe("Responses actually submitted so far"),
+          completion_percentage: z.number().describe("Integer 0–100: (total_responses / total_expected_responses) × 100"),
+          status_breakdown: z.record(z.string(), z.number()).describe("Count per status value (e.g. {Pass: 10, Fail: 2, 'N/A': 1, Blocked: 0})"),
         },
       },
       async ({ slug }) => {
@@ -777,6 +1049,20 @@ const handler = createMcpHandler(
         inputSchema: {
           slug: z.string().describe("The project slug"),
         },
+        outputSchema: {
+          project_slug: z.string(),
+          total_testers: z.number(),
+          testers: z.array(
+            z.object({
+              id: z.string().describe("Tester UUID"),
+              name: z.string(),
+              email: z.string(),
+              mobile: z.string(),
+              test_completed: z.string().nullable().describe("ISO 8601 timestamp when the tester submitted; null if not yet completed"),
+              created_at: z.string().nullable().describe("ISO 8601 timestamp of tester registration"),
+            })
+          ),
+        },
       },
       async ({ slug }) => {
         const supabase = createAdminClient();
@@ -820,6 +1106,39 @@ const handler = createMcpHandler(
           "Get admin review data for all non-pass checklist items in a project, grouped by tester. Returns behavior type, resolution status, and findings/comments for each flagged item. Used for generating AI summaries of UAT testing results.",
         inputSchema: {
           slug: z.string().describe("The project slug"),
+        },
+        outputSchema: {
+          project_slug: z.string(),
+          project_title: z.string().nullable(),
+          total_steps: z.number().describe("Total checklist items (steps + phase headers)"),
+          total_testers: z.number(),
+          summary_stats: z.object({
+            total_responses: z.number(),
+            pass: z.number(),
+            fail: z.number(),
+            na: z.number(),
+            pass_rate: z.string().describe("Formatted percentage string e.g. '87.5%'"),
+          }),
+          admin_reviews: z.array(
+            z.object({
+              tester_name: z.string(),
+              tester_email: z.string(),
+              total_steps_assigned: z.number(),
+              total_flagged: z.number().describe("Count of non-pass responses for this tester"),
+              resolved_count: z.number().describe("Count of flagged items whose resolution_status is 'Done'"),
+              items: z.array(
+                z.object({
+                  step_number: z.number().nullable(),
+                  actor: z.string().nullable(),
+                  action: z.string().nullable(),
+                  status: z.string().nullable().describe("Response status: Fail, N/A, or Blocked"),
+                  finding_type: z.string().nullable().describe("Admin-assigned finding category"),
+                  resolution_status: z.string().nullable().describe("Admin resolution state (e.g. 'Done', 'In Progress')"),
+                  findings: z.string().nullable().describe("Admin notes/comments for this item"),
+                })
+              ).describe("Non-pass items sorted by step_number ascending"),
+            })
+          ),
         },
       },
       async ({ slug }) => {
@@ -976,23 +1295,46 @@ const handler = createMcpHandler(
   }
 );
 
-// --- API Key Middleware Wrapper ---
+// --- Auth Middleware Wrapper ---
+// Accepts either a static API key (header or query param — used by Claude
+// Code / direct integrations) or an OAuth Bearer access token issued by the
+// /oauth/authorize + /api/oauth/token flow (used by claude.ai custom
+// connectors, which require OAuth and ignore a query-param key).
 async function withApiKeyAuth(
   req: Request,
   handlerFn: (req: Request) => Promise<Response>
 ): Promise<Response> {
   const url = new URL(req.url);
+  const authHeader = req.headers.get("authorization");
+  const bearerToken = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1];
+
+  if (bearerToken) {
+    const { validateAccessToken } = await import("@/lib/oauth/store");
+    const expectedResource = `${url.origin}/api/mcp`;
+    const valid = await validateAccessToken(bearerToken, expectedResource);
+    if (valid) return handlerFn(req);
+    return unauthorized(req);
+  }
+
   const apiKey = req.headers.get("x-api-key") || url.searchParams.get("api_key");
   const expectedKey = process.env.MCP_API_KEY;
 
   if (expectedKey && apiKey !== expectedKey) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return unauthorized(req);
   }
 
   return handlerFn(req);
+}
+
+function unauthorized(req: Request): Response {
+  const origin = new URL(req.url).origin;
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401,
+    headers: {
+      "Content-Type": "application/json",
+      "WWW-Authenticate": `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource/api/mcp"`,
+    },
+  });
 }
 
 // Export route handlers with auth wrapper
