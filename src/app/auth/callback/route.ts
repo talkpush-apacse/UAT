@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { isAllowedAdminEmail } from '@/lib/utils/admin-access'
 
+// Only ever redirect back into the OAuth connector consent screen — never an
+// arbitrary caller-supplied path, since that would make this unauthenticated
+// callback an open redirect.
+function resolvePostLoginPath(request: Request, requestUrl: URL): string {
+  const next = requestUrl.searchParams.get('next')
+  if (next && next.startsWith('/oauth/authorize?')) return next
+  return '/admin/projects'
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
@@ -27,5 +36,5 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/admin/login?error=unauthorized', request.url))
   }
 
-  return NextResponse.redirect(new URL('/admin/projects', request.url))
+  return NextResponse.redirect(new URL(resolvePostLoginPath(request, requestUrl), request.url))
 }

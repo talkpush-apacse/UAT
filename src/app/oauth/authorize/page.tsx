@@ -5,6 +5,7 @@ import {
   createAdminSession,
 } from "@/lib/utils/admin-auth"
 import { getClient, createAuthorizationCode } from "@/lib/oauth/store"
+import { GoogleSignInButton } from "./google-sign-in-button"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -174,6 +175,14 @@ export default async function OAuthAuthorizePage({ searchParams }: PageProps) {
                   Sign in
                 </Button>
               </form>
+
+              <div className="my-6 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gray-200" />
+                <span className="text-xs text-gray-500">or</span>
+                <div className="h-px flex-1 bg-gray-200" />
+              </div>
+
+              <GoogleSignInButton returnUrl={returnUrl} />
             </CardContent>
           </Card>
         </div>
