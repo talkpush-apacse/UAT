@@ -24,6 +24,18 @@ function getAppBaseUrl() {
   );
 }
 
+// Every tool below declares an `outputSchema`, which per the MCP spec means
+// the result MUST include a matching `structuredContent` object — a plain
+// `content` text block alone gets rejected by the client with "Tool has an
+// output schema but no structured content was provided". This wraps both in
+// one place so `data` always ends up in both fields, consistently.
+function toolResult(data: Record<string, unknown>) {
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+    structuredContent: data,
+  };
+}
+
 // --- MCP Handler ---
 const handler = createMcpHandler(
   (server) => {
@@ -79,14 +91,7 @@ const handler = createMcpHandler(
           url: `${baseUrl}/test/${p.slug}`,
         }));
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({ results }, null, 2),
-            },
-          ],
-        };
+        return toolResult({ results });
       }
     );
 
@@ -173,14 +178,7 @@ const handler = createMcpHandler(
           },
         };
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(document, null, 2),
-            },
-          ],
-        };
+        return toolResult(document);
       }
     );
 
@@ -225,18 +223,7 @@ const handler = createMcpHandler(
         const { data, error } = await query;
         if (error) throw new Error(error.message);
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                { count: data.length, projects: data },
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        return toolResult({ count: data.length, projects: data });
       }
     );
 
@@ -304,14 +291,7 @@ const handler = createMcpHandler(
 
         if (error) throw new Error(error.message);
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({ created: true, project: data }, null, 2),
-            },
-          ],
-        };
+        return toolResult({ created: true, project: data });
       }
     );
 
@@ -470,11 +450,7 @@ const handler = createMcpHandler(
       },
       async ({ slug }) => {
         const project = await getProjectBySlug(slug);
-        return {
-          content: [
-            { type: "text" as const, text: JSON.stringify(project, null, 2) },
-          ],
-        };
+        return toolResult(project);
       }
     );
 
@@ -501,22 +477,11 @@ const handler = createMcpHandler(
         const token = await generateShareToken(project.slug);
         const shareUrl = `${getAppBaseUrl()}/share/analytics/${project.slug}/${token}`;
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  share_url: shareUrl,
-                  slug: project.slug,
-                  expires_at: null,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        return toolResult({
+          share_url: shareUrl,
+          slug: project.slug,
+          expires_at: null,
+        });
       }
     );
 
@@ -567,23 +532,12 @@ const handler = createMcpHandler(
 
         if (error) throw new Error(error.message);
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  project_slug: slug,
-                  project_title: project.title,
-                  total_steps: data.length,
-                  items: data,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        return toolResult({
+          project_slug: slug,
+          project_title: project.title,
+          total_steps: data.length,
+          items: data,
+        });
       }
     );
 
@@ -715,22 +669,11 @@ const handler = createMcpHandler(
         // and phase headers stay at NULL.
         await supabase.rpc("renumber_steps", { p_project_id: project.id });
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  created: data.length,
-                  project_slug: slug,
-                  items: data,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        return toolResult({
+          created: data.length,
+          project_slug: slug,
+          items: data,
+        });
       }
     );
 
@@ -827,14 +770,7 @@ const handler = createMcpHandler(
           await supabase.rpc("renumber_steps", { p_project_id: projectId });
         }
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({ updated: true, item: data }, null, 2),
-            },
-          ],
-        };
+        return toolResult({ updated: true, item: data });
       }
     );
 
@@ -880,14 +816,7 @@ const handler = createMcpHandler(
           await supabase.rpc("renumber_steps", { p_project_id: projectId });
         }
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({ deleted: ids.length, ids }),
-            },
-          ],
-        };
+        return toolResult({ deleted: ids.length, ids });
       }
     );
 
@@ -935,14 +864,7 @@ const handler = createMcpHandler(
 
         if (error) throw new Error(error.message);
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({ reordered: true, count: ids.length }),
-            },
-          ],
-        };
+        return toolResult({ reordered: true, count: ids.length });
       }
     );
 
@@ -1011,30 +933,19 @@ const handler = createMcpHandler(
           {}
         );
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  project_slug: slug,
-                  project_title: project.title,
-                  total_steps: totalSteps,
-                  total_testers: totalTesters,
-                  total_expected_responses: totalExpected,
-                  total_responses: totalResponses,
-                  completion_percentage:
-                    totalExpected > 0
-                      ? Math.round((totalResponses / totalExpected) * 100)
-                      : 0,
-                  status_breakdown: statusBreakdown,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        return toolResult({
+          project_slug: slug,
+          project_title: project.title,
+          total_steps: totalSteps,
+          total_testers: totalTesters,
+          total_expected_responses: totalExpected,
+          total_responses: totalResponses,
+          completion_percentage:
+            totalExpected > 0
+              ? Math.round((totalResponses / totalExpected) * 100)
+              : 0,
+          status_breakdown: statusBreakdown,
+        });
       }
     );
 
@@ -1076,22 +987,11 @@ const handler = createMcpHandler(
 
         if (error) throw new Error(error.message);
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  project_slug: slug,
-                  total_testers: data.length,
-                  testers: data,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        return toolResult({
+          project_slug: slug,
+          total_testers: data.length,
+          testers: data,
+        });
       }
     );
 
@@ -1257,31 +1157,20 @@ const handler = createMcpHandler(
           };
         });
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  project_slug: slug,
-                  project_title: project.title,
-                  total_steps: allItems?.length ?? 0,
-                  total_testers: allTesters?.length ?? 0,
-                  summary_stats: {
-                    total_responses: totalResponses,
-                    pass: passCount,
-                    fail: failCount,
-                    na: naCount,
-                    pass_rate: passRate,
-                  },
-                  admin_reviews: adminReviews,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
+        return toolResult({
+          project_slug: slug,
+          project_title: project.title,
+          total_steps: allItems?.length ?? 0,
+          total_testers: allTesters?.length ?? 0,
+          summary_stats: {
+            total_responses: totalResponses,
+            pass: passCount,
+            fail: failCount,
+            na: naCount,
+            pass_rate: passRate,
+          },
+          admin_reviews: adminReviews,
+        });
       }
     );
   },
