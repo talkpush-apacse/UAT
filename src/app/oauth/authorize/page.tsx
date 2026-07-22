@@ -5,6 +5,7 @@ import {
   createAdminSession,
 } from "@/lib/utils/admin-auth"
 import { getClient, createAuthorizationCode } from "@/lib/oauth/store"
+import { isAllowedRedirectUri } from "@/lib/oauth/allowed-hosts"
 import { GoogleSignInButton } from "./google-sign-in-button"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -64,19 +65,25 @@ export default async function OAuthAuthorizePage({ searchParams }: PageProps) {
     return <ErrorScreen title="Invalid request" message="Missing required OAuth parameters." />
   }
 
+  // The client_id must be one that actually went through registration (so
+  // it's a real, tracked row), and the redirect_uri must point at a trusted
+  // host — not necessarily the exact path string that client registered
+  // with. Different claude.ai surfaces (personal, Team/org-scoped, desktop)
+  // use different callback paths under the same trusted host, and requiring
+  // an exact match here was rejecting legitimate org-scoped connections.
   const client = await getClient(clientId)
-  if (!client || !client.redirect_uris.includes(redirectUri)) {
+  if (!client || !isAllowedRedirectUri(redirectUri)) {
     return (
       <ErrorScreen
         title="Unknown connector"
-        message="This connector isn't registered, or its redirect URL doesn't match what was registered."
+        message="This connector isn't registered, or its redirect URL isn't from a trusted host."
       />
     )
   }
 
-  // From here on redirect_uri is trusted (it matched the client's registered
-  // list), so further validation failures can be safely reported back to the
-  // client via redirect instead of a local error page.
+  // From here on redirect_uri is trusted (its host is allowlisted), so
+  // further validation failures can be safely reported back to the client
+  // via redirect instead of a local error page.
   if (codeChallengeMethod !== "S256") {
     const params = new URLSearchParams({ error: "invalid_request" })
     if (state) params.set("state", state)

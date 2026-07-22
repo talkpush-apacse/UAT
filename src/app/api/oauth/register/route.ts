@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { registerClient } from "@/lib/oauth/store"
+import { isAllowedRedirectUri } from "@/lib/oauth/allowed-hosts"
 
 // RFC 7591 Dynamic Client Registration. Only public clients (PKCE, no
 // client secret) are supported — this server issues no client_secret and
@@ -12,28 +13,13 @@ import { registerClient } from "@/lib/oauth/store"
 // That means redirect_uri validation is the ONLY thing standing between an
 // anonymous caller and registering a client that points at a domain they
 // control — which, combined with an approval click, hands over a full
-// service-role access token. So the host allowlist below is a hard security
-// boundary, not a config nicety: only known real MCP client callback hosts
-// may be registered.
-const ALLOWED_REDIRECT_HOSTS = ["claude.ai"]
-
+// service-role access token. So the host allowlist (in allowed-hosts.ts) is
+// a hard security boundary, not a config nicety: only known real MCP client
+// callback hosts may be registered.
 const registerSchema = z.object({
   client_name: z.string().max(200).optional(),
   redirect_uris: z.array(z.string().url().max(2000)).min(1).max(10),
 })
-
-function isAllowedRedirectUri(uri: string): boolean {
-  try {
-    const parsed = new URL(uri)
-    if (parsed.protocol === "https:" && ALLOWED_REDIRECT_HOSTS.includes(parsed.hostname)) {
-      return true
-    }
-    if (parsed.protocol === "http:" && parsed.hostname === "localhost") return true
-    return false
-  } catch {
-    return false
-  }
-}
 
 export async function POST(req: Request) {
   let body: unknown
