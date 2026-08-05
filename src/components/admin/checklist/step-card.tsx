@@ -511,7 +511,7 @@ export function SortableStepCard({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Section Header</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will remove the section header from the checklist. Step
+                        This will remove the section header from the UAT steps. Step
                         numbers will be unchanged.
                       </AlertDialogDescription>
                     </AlertDialogHeader>

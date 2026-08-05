@@ -52,7 +52,7 @@ export default function UploadForm({
       <CardHeader className="px-5 py-4 bg-gray-50/50 rounded-t-xl border-b border-gray-100">
         <div className="flex items-center gap-2">
           <Upload className="h-4 w-4 text-brand-sage-darker" />
-          <CardTitle className="text-base font-semibold text-gray-900">Upload Checklist</CardTitle>
+          <CardTitle className="text-base font-semibold text-gray-900">Upload UAT Steps</CardTitle>
         </div>
         <p className="text-xs text-gray-400 mt-1 leading-relaxed">
           Upload an XLSX or CSV file with your test steps. Expected columns:
@@ -62,7 +62,7 @@ export default function UploadForm({
       <CardContent className="p-5">
         <form ref={formRef} action={formAction} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="file" className="text-xs text-gray-500">Checklist File</Label>
+            <Label htmlFor="file" className="text-xs text-gray-500">UAT Steps File</Label>
             <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-brand-lavender-lighter hover:bg-brand-lavender-lightest transition-all duration-200">
               <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
               <p className="text-sm font-medium text-gray-600 mb-1">Drop your file here or click to browse</p>
@@ -94,7 +94,7 @@ export default function UploadForm({
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle2 className="h-4 w-4" />
-                Successfully imported {state.itemCount} checklist items. Redirecting...
+                Successfully imported {state.itemCount} UAT steps. Redirecting...
               </div>
               {state.autoSnapshotVersion !== undefined && (
                 <p className="text-xs text-gray-500 pl-6">
@@ -118,9 +118,9 @@ export default function UploadForm({
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Replace Checklist?</AlertDialogTitle>
+                <AlertDialogTitle>Replace UAT Steps?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently replace all existing checklist steps. This action cannot be undone.
+                  This will permanently replace all existing UAT steps. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

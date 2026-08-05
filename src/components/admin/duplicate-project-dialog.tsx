@@ -56,7 +56,7 @@ export default function DuplicateProjectDialog({
     if (result.error) {
       toast.error(result.error)
     } else if (result.newSlug) {
-      toast.success("Project duplicated")
+      toast.success("UAT checklist duplicated")
       router.push(`/admin/projects/${result.newSlug}`)
     }
   }
@@ -65,11 +65,11 @@ export default function DuplicateProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Duplicate Project</DialogTitle>
+          <DialogTitle>Duplicate UAT Checklist</DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <label className="text-sm font-medium text-gray-700 mb-1 block">
-            New project title
+            New UAT checklist title
           </label>
           <Input
             value={renameTitle}

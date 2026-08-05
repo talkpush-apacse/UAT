@@ -59,7 +59,7 @@ export default function EditProjectForm({ project }: { project: Project }) {
       <CardHeader className="px-5 py-4 bg-gray-50/50 rounded-t-xl border-b border-gray-100">
         <div className="flex items-center gap-2">
           <Pencil className="h-4 w-4 text-brand-sage-darker" />
-          <CardTitle className="text-base font-semibold text-gray-900">Edit Project</CardTitle>
+          <CardTitle className="text-base font-semibold text-gray-900">Edit UAT Checklist</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="p-5">

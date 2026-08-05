@@ -276,7 +276,7 @@ export default async function ReviewPage({
           className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Project
+          Back to UAT Checklist
         </Link>
       </div>
 

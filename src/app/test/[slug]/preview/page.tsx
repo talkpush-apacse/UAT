@@ -34,7 +34,7 @@ export default async function ChecklistPreviewPage({
               <ClipboardList className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">Checklist Preview</p>
+              <p className="text-sm font-semibold text-gray-900">UAT Steps Preview</p>
               <p className="text-sm text-gray-500">
                 Review the steps before registering. Your responses will be saved after you start testing.
               </p>

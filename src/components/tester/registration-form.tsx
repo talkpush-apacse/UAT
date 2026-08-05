@@ -76,7 +76,7 @@ export default function RegistrationForm({
 
         {state.returning && state.testerName && (
           <div className="p-3 bg-brand-sage-lightest border border-brand-sage-lighter rounded-lg text-sm text-brand-sage-darker">
-            Welcome back, {state.testerName}! Redirecting to your checklist...
+            Welcome back, {state.testerName}! Redirecting to your UAT steps...
           </div>
         )}
 
@@ -169,7 +169,7 @@ export default function RegistrationForm({
         <Button asChild type="button" variant="outline" className="w-full h-10">
           <Link href={`/test/${slug}/preview`}>
             <Eye className="h-4 w-4" />
-            Preview Checklist
+            Preview UAT Steps
           </Link>
         </Button>
       </form>

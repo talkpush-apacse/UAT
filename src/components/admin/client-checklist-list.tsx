@@ -74,7 +74,7 @@ function TableDuplicateButton({
         onClick={() => setOpen(true)}
         disabled={loading}
         className="h-7 w-7 p-0 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-        aria-label="Duplicate checklist"
+        aria-label="Duplicate UAT checklist"
       >
         {loading ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -111,7 +111,7 @@ function TableDeleteButton({
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success("Project deleted")
+      toast.success("UAT checklist deleted")
       router.refresh()
     }
   }
@@ -132,14 +132,14 @@ function TableDeleteButton({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete &ldquo;{projectName}&rdquo;?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete this project and all its checklist steps,
+            This will permanently delete this UAT checklist and all its UAT steps,
             testers, responses, attachments, and sign-offs. This cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-            Delete Project
+            Delete UAT Checklist
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -171,7 +171,7 @@ export default function ClientChecklistList({ group }: Props) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Filter checklists..."
+            placeholder="Filter UAT checklists..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md bg-white placeholder:text-gray-400 focus:ring-2 focus:ring-brand-lavender-darker focus:border-brand-lavender-darker focus:outline-none"
@@ -210,7 +210,7 @@ export default function ClientChecklistList({ group }: Props) {
         <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
           <SearchX className="h-10 w-10 text-gray-300 mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-600 mb-1">
-            No checklists match &ldquo;{searchQuery}&rdquo;
+            No UAT checklists match &ldquo;{searchQuery}&rdquo;
           </p>
           <p className="text-xs text-gray-400 mb-5">Try a different title or slug.</p>
           <div className="flex items-center justify-center gap-3">
@@ -240,7 +240,7 @@ export default function ClientChecklistList({ group }: Props) {
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Checklist Name
+                    UAT Checklist Name
                   </th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Status

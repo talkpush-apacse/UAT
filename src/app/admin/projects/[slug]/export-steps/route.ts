@@ -21,7 +21,7 @@ export async function GET(
     .single()
 
   if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 })
+    return NextResponse.json({ error: "UAT checklist not found" }, { status: 404 })
   }
 
   const { data: checklistItems, error } = await supabase
@@ -33,13 +33,13 @@ export async function GET(
   if (error) {
     console.error("Failed to fetch checklist items:", error.message)
     return NextResponse.json(
-      { error: "Failed to fetch checklist items" },
+      { error: "Failed to fetch UAT steps" },
       { status: 500 }
     )
   }
 
   const workbook = new ExcelJS.Workbook()
-  const sheet = workbook.addWorksheet("Checklist Steps")
+  const sheet = workbook.addWorksheet("UAT Steps")
 
   sheet.columns = [
     { header: "Step #", key: "stepNumber", width: 10 },

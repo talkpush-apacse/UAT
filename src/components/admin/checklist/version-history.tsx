@@ -306,7 +306,7 @@ export function VersionHistory({ slug, initialSnapshots }: VersionHistoryProps) 
           <AlertDialogHeader>
             <AlertDialogTitle>Restore to &quot;{restoreTarget?.label}&quot;?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will replace all current checklist steps with the{" "}
+              This will replace all current UAT steps with the{" "}
               <strong>{restoreTarget?.item_count} step{restoreTarget?.item_count === 1 ? "" : "s"}</strong>{" "}
               saved in this version. The restore is blocked if any tester responses exist — remove
               all testers first if needed. This cannot be undone.
@@ -336,7 +336,7 @@ export function VersionHistory({ slug, initialSnapshots }: VersionHistoryProps) 
           <AlertDialogHeader>
             <AlertDialogTitle>Delete &quot;{deleteTarget?.label}&quot;?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the saved snapshot permanently. Current checklist steps are not
+              This removes the saved snapshot permanently. Current UAT steps are not
               affected.
             </AlertDialogDescription>
           </AlertDialogHeader>

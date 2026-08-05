@@ -47,7 +47,7 @@ export async function POST(
       .single()
 
     if (projectError || !project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+      return NextResponse.json({ error: "UAT checklist not found" }, { status: 404 })
     }
 
     // 2. Fetch testers

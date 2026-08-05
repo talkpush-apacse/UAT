@@ -56,7 +56,7 @@ export default function MoreActionsDropdown({
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success("Project deleted")
+      toast.success("UAT checklist deleted")
       router.push("/admin")
     }
   }
@@ -119,7 +119,7 @@ export default function MoreActionsDropdown({
             className="gap-2 cursor-pointer"
           >
             <Copy className="h-3.5 w-3.5" />
-            Duplicate Project
+            Duplicate UAT Checklist
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -127,7 +127,7 @@ export default function MoreActionsDropdown({
             className="gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Delete Project
+            Delete UAT Checklist
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -149,8 +149,8 @@ export default function MoreActionsDropdown({
               Delete &ldquo;{companyName}&rdquo;?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this project and all its checklist
-              steps, testers, responses, attachments, and sign-offs. This
+              This will permanently delete this UAT checklist and all its
+              UAT steps, testers, responses, attachments, and sign-offs. This
               cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -160,7 +160,7 @@ export default function MoreActionsDropdown({
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete Project
+              Delete UAT Checklist
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

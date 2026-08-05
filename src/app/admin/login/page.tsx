@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
             <LayoutDashboard className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">UAT Admin</h1>
-          <p className="text-sm text-gray-500 mt-1">Sign in to manage your projects</p>
+          <p className="text-sm text-gray-500 mt-1">Sign in to manage your UAT checklists</p>
         </div>
 
         {isUnauthorized && (

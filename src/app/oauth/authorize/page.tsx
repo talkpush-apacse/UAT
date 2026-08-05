@@ -211,7 +211,7 @@ export default async function OAuthAuthorizePage({ searchParams }: PageProps) {
             <p className="text-sm text-gray-700">
               <span className="font-medium">{client.client_name || "An unnamed connector"}</span>{" "}
               is requesting access to UAT Talkpush. If approved, it will have the same
-              level of access as an admin — full read/write on all UAT projects, checklists,
+              level of access as an admin — full read/write on all UAT checklists, steps,
               and tester data.
             </p>
             <p className="text-xs text-gray-500">

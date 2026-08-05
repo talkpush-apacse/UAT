@@ -14,7 +14,7 @@ export default function PreviewChecklistButton({ slug, className }: { slug: stri
     >
       <Link href={`/test/${slug}/preview`} target="_blank" rel="noopener noreferrer">
         <Eye className="h-3.5 w-3.5 mr-1.5" />
-        Preview Checklist
+        Preview UAT Steps
       </Link>
     </Button>
   )

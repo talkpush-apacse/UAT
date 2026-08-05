@@ -32,7 +32,7 @@ export default async function UploadChecklistPage({
           {project.company_name}
         </Link>
         <span>/</span>
-        <span className="text-gray-600 font-medium">Upload Checklist</span>
+        <span className="text-gray-600 font-medium">Upload UAT Steps</span>
       </nav>
       <UploadForm projectId={project.id} slug={project.slug} />
     </div>

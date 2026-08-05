@@ -46,7 +46,7 @@ interface SnapshotItem {
   header_label?: string | null
 }
 
-/** Minimal step shape used for the "Copy from Project" step-selection dialog */
+/** Minimal step shape used for the "Copy from UAT Checklist" step-selection dialog */
 export interface StepPreview {
   id: string
   step_number: number | null

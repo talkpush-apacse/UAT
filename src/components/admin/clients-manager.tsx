@@ -141,7 +141,7 @@ export default function ClientsManager({
                   Client Name
                 </TableHead>
                 <TableHead className="text-xs font-medium text-gray-500 text-center w-[120px]">
-                  Projects
+                  UAT Checklists
                 </TableHead>
                 <TableHead className="w-[60px]" />
               </TableRow>
@@ -167,7 +167,7 @@ export default function ClientsManager({
                       className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-inset"
                       title={
                         client.projectCount > 0
-                          ? `Cannot delete — used by ${client.projectCount} project(s)`
+                          ? `Cannot delete — used by ${client.projectCount} UAT checklist(s)`
                           : `Delete ${client.name}`
                       }
                     >
@@ -193,7 +193,7 @@ export default function ClientsManager({
             <AlertDialogTitle>Delete client</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteTarget?.projectCount
-                ? `"${deleteTarget.name}" is used by ${deleteTarget.projectCount} project(s) and cannot be deleted. Remove or reassign those projects first.`
+                ? `"${deleteTarget.name}" is used by ${deleteTarget.projectCount} UAT checklist(s) and cannot be deleted. Remove or reassign those UAT checklists first.`
                 : `This will permanently delete "${deleteTarget?.name}". This cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>

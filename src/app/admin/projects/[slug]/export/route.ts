@@ -21,7 +21,7 @@ export async function GET(
     .single()
 
   if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 })
+    return NextResponse.json({ error: "UAT checklist not found" }, { status: 404 })
   }
 
   const { data: checklistItems } = await supabase

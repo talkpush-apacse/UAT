@@ -157,7 +157,7 @@ export default async function ProjectDetailPage({
     {
       href: `/admin/projects/${project.slug}/checklist`,
       icon: ListChecks,
-      label: "Manage Steps",
+      label: "Manage UAT Steps",
       sub: "Add/Edit/Reorder Steps",
     },
     {
@@ -222,7 +222,7 @@ export default async function ProjectDetailPage({
           <Link href={`/admin/projects/${project.slug}/edit`}>
             <Button size="sm">
               <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit Project
+              Edit UAT Checklist
             </Button>
           </Link>
           <MoreActionsDropdown
@@ -243,7 +243,7 @@ export default async function ProjectDetailPage({
             <Link href={`/admin/projects/${project.slug}/edit`} className="flex-1">
               <Button size="sm" className="w-full">
                 <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Edit Project
+                Edit UAT Checklist
               </Button>
             </Link>
             <MoreActionsDropdown
@@ -294,7 +294,7 @@ export default async function ProjectDetailPage({
         <div className="mb-8">
           {/* P3 — Section header at 16px/600 */}
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-gray-900">Checklist Summary</h2>
+            <h2 className="text-base font-semibold text-gray-900">UAT Steps Summary</h2>
             <a href={`/admin/projects/${project.slug}/export-steps`}>
               <Button size="sm" className="bg-brand-sage-darker hover:opacity-90 text-white">
                 <Download className="h-3.5 w-3.5 mr-1.5" />

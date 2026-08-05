@@ -119,7 +119,7 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                       <span className="tabular-nums font-semibold text-gray-800">
                         {group.projects.length}
                       </span>{" "}
-                      {group.projects.length === 1 ? "checklist" : "checklists"}
+                      {group.projects.length === 1 ? "UAT checklist" : "UAT checklists"}
                     </p>
 
                     {/* Status summary badges */}

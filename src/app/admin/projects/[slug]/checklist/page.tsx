@@ -45,7 +45,7 @@ export default async function ManageChecklistPage({
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors mb-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Back to Project
+        Back to UAT Checklist
       </Link>
       <ChecklistEditor
         items={items || []}

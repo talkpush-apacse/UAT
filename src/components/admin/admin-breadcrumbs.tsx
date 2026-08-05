@@ -6,14 +6,14 @@ import { usePathname } from "next/navigation"
 import { ChevronRight } from "lucide-react"
 
 const SECTION_LABELS: Record<string, string> = {
-  checklist: "Manage Steps",
+  checklist: "Manage UAT Steps",
   upload: "Upload UAT Sheet",
   review: "Review",
   signoff: "Sign Off",
   "ai-summary": "AI Summary",
   "training-plan": "Training Plan",
-  edit: "Edit Project",
-  new: "New Project",
+  edit: "Edit UAT Checklist",
+  new: "New UAT Checklist",
 }
 
 interface ProjectInfo {

@@ -174,7 +174,7 @@ export default function ChecklistEditor({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">
-            Checklist Steps
+            UAT Steps
           </h2>
           <p className="text-sm text-gray-500 mt-0.5">
             {(() => {
@@ -281,10 +281,10 @@ export default function ChecklistEditor({
         <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
           <FileText className="h-10 w-10 text-gray-300 mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-500">
-            No checklist steps yet
+            No UAT steps yet
           </p>
           <p className="text-xs text-gray-400 mt-1 mb-4">
-            Upload an XLSX file, copy from another project, or add steps manually
+            Upload an XLSX file, copy from another UAT checklist, or add steps manually
           </p>
           <div className="flex items-center justify-center gap-2">
             <CopyStepsDialog

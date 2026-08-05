@@ -256,7 +256,7 @@ export default async function AdminDashboard({
                 {matchingGroup && (
                   <span className="text-sm font-normal text-gray-500 bg-gray-100 rounded-full px-2.5 py-0.5 flex-shrink-0">
                     {matchingGroup.projects.length}{" "}
-                    {matchingGroup.projects.length === 1 ? "checklist" : "checklists"}
+                    {matchingGroup.projects.length === 1 ? "UAT checklist" : "UAT checklists"}
                   </span>
                 )}
               </h1>
@@ -275,7 +275,7 @@ export default async function AdminDashboard({
             <Building2 className="h-10 w-10 text-gray-300 mx-auto mb-3" />
             <p className="text-sm font-medium text-gray-500">Client not found</p>
             <p className="text-xs text-gray-400 mt-1 mb-4">
-              No checklists exist for &ldquo;{decodedClient}&rdquo;
+              No UAT checklists exist for &ldquo;{decodedClient}&rdquo;
             </p>
             <Link href="/admin">
               <Button variant="outline" size="sm">
@@ -316,7 +316,7 @@ export default async function AdminDashboard({
               <span className="tabular-nums">{groupedByClient.length}</span>{" "}
               {groupedByClient.length === 1 ? "client" : "clients"} ·{" "}
               <span className="tabular-nums">{projectsWithCounts.length}</span>{" "}
-              {projectsWithCounts.length === 1 ? "checklist" : "checklists"} total
+              {projectsWithCounts.length === 1 ? "UAT checklist" : "UAT checklists"} total
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -339,7 +339,7 @@ export default async function AdminDashboard({
       {projectsWithCounts.length === 0 ? (
         <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
           <FolderOpen className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-gray-500">No projects yet</p>
+          <p className="text-sm font-medium text-gray-500">No UAT checklists yet</p>
           <p className="text-xs text-gray-400 mt-1 mb-4">Create your first UAT checklist to get started</p>
           <Link href="/admin/projects/new">
             <Button variant="outline" size="sm" className="text-brand-sage-darker border-brand-sage-lighter hover:bg-brand-sage-lightest">

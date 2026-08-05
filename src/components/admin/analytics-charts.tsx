@@ -417,8 +417,8 @@ export default function AnalyticsCharts({
     return (
       <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
         <BarChart3 className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-        <p className="text-sm font-medium text-gray-500">No checklist items to analyze</p>
-        <p className="text-xs text-gray-400 mt-1">Upload a checklist first</p>
+        <p className="text-sm font-medium text-gray-500">No UAT steps to analyze</p>
+        <p className="text-xs text-gray-400 mt-1">Upload UAT steps first</p>
       </div>
     )
   }

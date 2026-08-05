@@ -35,7 +35,7 @@ export default function DeleteProjectButton({
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success("Project deleted")
+      toast.success("UAT checklist deleted")
       router.push("/admin")
     }
   }
@@ -50,14 +50,14 @@ export default function DeleteProjectButton({
           className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
         >
           <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-          Delete Project
+          Delete UAT Checklist
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete &ldquo;{companyName}&rdquo;?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete this project and all its checklist steps,
+            This will permanently delete this UAT checklist and all its UAT steps,
             testers, responses, attachments, and sign-offs. This cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -67,7 +67,7 @@ export default function DeleteProjectButton({
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700"
           >
-            Delete Project
+            Delete UAT Checklist
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

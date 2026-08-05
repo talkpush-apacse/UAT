@@ -30,7 +30,7 @@ export default async function EditProjectPage({
           href={`/admin/projects/${params.slug}`}
           className="text-sm text-muted-foreground hover:underline"
         >
-          &larr; Back to Project
+          &larr; Back to UAT Checklist
         </Link>
       </div>
       <EditProjectForm project={project} />

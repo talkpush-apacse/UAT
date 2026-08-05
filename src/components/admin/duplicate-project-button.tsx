@@ -31,7 +31,7 @@ export default function DuplicateProjectButton({
         ) : (
           <Copy className="h-3.5 w-3.5 mr-1.5" />
         )}
-        {loading ? "Duplicating..." : "Duplicate Project"}
+        {loading ? "Duplicating..." : "Duplicate UAT Checklist"}
       </Button>
       <DuplicateProjectDialog
         projectId={projectId}

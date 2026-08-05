@@ -24,11 +24,11 @@ export async function GET(
 
     if (projectError) {
       console.error("Progress API - project lookup error:", projectError.message, "slug:", params.slug)
-      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+      return NextResponse.json({ error: "UAT checklist not found" }, { status: 404 })
     }
 
     if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+      return NextResponse.json({ error: "UAT checklist not found" }, { status: 404 })
     }
 
     const { data: testers, error: testersError } = await supabase

@@ -55,7 +55,7 @@ export default async function TesterRegistrationPage({
 
         {project.test_scenario && (
           <p className="text-sm text-gray-500 text-center">
-            Please fill in your details below to begin the checklist.
+            Please fill in your details below to begin the UAT steps.
           </p>
         )}
 

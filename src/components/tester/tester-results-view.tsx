@@ -183,7 +183,7 @@ export default function TesterResultsView({
         className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-sage-darker transition-colors mb-6"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Back to Checklist
+        Back to UAT Steps
       </Link>
 
       {/* Header */}

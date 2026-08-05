@@ -53,7 +53,7 @@ export async function POST(
       .single()
 
     if (projectError || !project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+      return NextResponse.json({ error: "UAT checklist not found" }, { status: 404 })
     }
 
     // 2. Fetch checklist items
@@ -71,7 +71,7 @@ export async function POST(
 
     if (totalSteps === 0) {
       return NextResponse.json(
-        { error: "No checklist items found for this project." },
+        { error: "No UAT steps found for this UAT checklist." },
         { status: 400 }
       )
     }
@@ -200,13 +200,13 @@ ${reports}`
       })
       .join("\n\n")
 
-    const prompt = `You are a QA analyst summarizing User Acceptance Testing (UAT) results for a Talkpush implementation project.
+    const prompt = `You are a QA analyst summarizing User Acceptance Testing (UAT) results for a Talkpush implementation UAT checklist.
 
-PROJECT: ${project.company_name}
+UAT CHECKLIST: ${project.company_name}
 ${project.test_scenario ? `SCENARIO: ${project.test_scenario}` : ""}
 
 UAT STATISTICS:
-- Total checklist steps: ${totalSteps}
+- Total UAT steps: ${totalSteps}
 - Number of testers: ${totalTesters}
 - Total test executions (steps × testers): ${totalExecutions}
 - Pass: ${passCount} (${totalExecutions > 0 ? Math.round((passCount / totalExecutions) * 100) : 0}%)
@@ -226,7 +226,7 @@ TESTER NAMES: ${testerList.map((t) => t.name).join(", ")}
 
 Write a concise executive summary of this UAT in the following structure. Use markdown formatting.
 
-1. **Overview** — One paragraph: project name, number of testers, total test executions, and overall pass rate. Mention how many test executions passed versus how many were flagged (Fail + Blocked + Up For Review combined).
+1. **Overview** — One paragraph: UAT checklist name, number of testers, total test executions, and overall pass rate. Mention how many test executions passed versus how many were flagged (Fail + Blocked + Up For Review combined).
 
 2. **Key Findings** — Analyze the steps with issues. Group by recurring patterns (i.e., steps reported by multiple testers or steps with similar findings). For each finding:
    - Mention the step number and what the step does

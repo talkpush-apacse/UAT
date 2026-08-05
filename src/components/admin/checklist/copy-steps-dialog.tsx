@@ -206,17 +206,17 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
           className="text-gray-600 border-gray-200 hover:bg-gray-50"
         >
           <Copy className="h-4 w-4 mr-1.5" />
-          Copy from Project
+          Copy from UAT Checklist
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Copy Steps from Another Project</DialogTitle>
+          <DialogTitle>Copy Steps from Another UAT Checklist</DialogTitle>
           <DialogDescription>
             {dialogStep === "project-select"
-              ? "Choose a source project to browse its steps."
-              : `Select which steps to copy from ${selectedProject?.company_name ?? "this project"}. Copied steps will be appended to the end of this checklist.`}
+              ? "Choose a source UAT checklist to browse its steps."
+              : `Select which steps to copy from ${selectedProject?.company_name ?? "this UAT checklist"}. Copied steps will be appended to the end of this UAT checklist.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -226,18 +226,18 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
             {loadingProjects ? (
               <div className="flex items-center gap-2 text-sm text-gray-500 py-4">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Loading projects…
+                Loading UAT checklists…
               </div>
             ) : fetchError ? (
               <p className="text-sm text-red-600 py-2">{fetchError}</p>
             ) : projects.length === 0 ? (
               <p className="text-sm text-gray-500 py-2">
-                No other projects found. Create another project first to copy steps from it.
+                No other UAT checklists found. Create another UAT checklist first to copy steps from it.
               </p>
             ) : (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="source-project">
-                  Source project
+                  Source UAT checklist
                 </label>
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -247,7 +247,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                     onChange={(e) => handleProjectSearchChange(e.target.value)}
                     placeholder="Search by company, title, or slug..."
                     className="pl-9"
-                    aria-label="Search source projects"
+                    aria-label="Search source UAT checklists"
                   />
                 </div>
                 <div className="relative">
@@ -261,7 +261,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                       disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">
-                      {filteredProjects.length === 0 ? "No matching projects" : "— Select a project —"}
+                      {filteredProjects.length === 0 ? "No matching UAT checklists" : "— Select a UAT checklist —"}
                     </option>
                     {filteredProjects.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -273,13 +273,13 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                 </div>
                 {projectSearchQuery && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Showing {filteredProjects.length} of {projects.length} projects.
+                    Showing {filteredProjects.length} of {projects.length} UAT checklists.
                   </p>
                 )}
 
                 {selectedProject && selectedProject.itemCount === 0 && (
                   <p className="text-xs text-amber-600 mt-1">
-                    This project has no steps to copy.
+                    This UAT checklist has no steps to copy.
                   </p>
                 )}
                 {selectedProject && selectedProject.itemCount > 0 && (
@@ -333,7 +333,7 @@ export function CopyStepsDialog({ projectId, slug, disabled, onCopied }: Props) 
                 <p className="text-sm text-red-600 p-4">{stepsError}</p>
               ) : steps.length === 0 ? (
                 <p className="text-sm text-gray-400 p-4 text-center">
-                  This project has no steps.
+                  This UAT checklist has no steps.
                 </p>
               ) : (
                 stepGroups.map((group, gi) => (

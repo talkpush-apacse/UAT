@@ -263,7 +263,7 @@ export default function ChecklistWizardView({
           <div className="min-w-0">
             <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
             <p className="text-sm text-gray-500">
-              {previewMode ? "Checklist Preview" : `Hi ${tester.name}`}
+              {previewMode ? "UAT Steps Preview" : `Hi ${tester.name}`}
             </p>
           </div>
           <button
@@ -290,7 +290,7 @@ export default function ChecklistWizardView({
         <div className="mt-4 rounded-xl border border-brand-sage-lighter bg-brand-sage-lightest px-4 py-3 text-sm text-brand-sage-darker flex items-start gap-2.5">
           <Eye className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <p>
-            You are previewing the checklist steps. Register when you are ready to save responses, upload screenshots, and submit your test.
+            You are previewing the UAT steps. Register when you are ready to save responses, upload screenshots, and submit your test.
           </p>
         </div>
       )}
