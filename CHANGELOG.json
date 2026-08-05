@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.18.0",
+    "name": "Version 2.18.0 - UAT Checklist Terminology",
+    "changes": [
+      "Renamed MCP tools from project/checklist to UAT checklist/steps",
+      "Renamed admin dashboard buttons, labels, and toasts to match",
+      "Renamed tester-facing pages and preview mode to match",
+      "Renamed export spreadsheet tabs and error messages to match"
+    ],
+    "deployed_at": "2026-08-06"
+  },
+  {
     "version": "2.17.1",
     "name": "Version 2.17.1 - Rebrand Polish",
     "changes": [
