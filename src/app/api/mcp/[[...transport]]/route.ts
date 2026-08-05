@@ -13,7 +13,7 @@ async function getProjectBySlug(slug: string) {
     .eq("slug", slug)
     .single();
 
-  if (error || !data) throw new Error(`Project not found: ${slug}`);
+  if (error || !data) throw new Error(`UAT checklist not found: ${slug}`);
   return data;
 }
 
@@ -41,33 +41,33 @@ const handler = createMcpHandler(
   (server) => {
     // ============================================================
     // TOOL: search (required by ChatGPT MCP Apps spec)
-    // Returns matching projects as {id, title, url} results.
+    // Returns matching UAT checklists as {id, title, url} results.
     // ChatGPT and Claude.ai both support this; domain-specific tools
-    // below (list_projects, get_project, etc.) still work as before.
+    // below (list_uat_checklists, get_uat_checklist, etc.) still work as before.
     // ============================================================
     server.registerTool(
       "search",
       {
-        title: "Search Projects",
+        title: "Search UAT Checklists",
         description:
-          "Search UAT projects by query string. Matches against project title and company name. Returns up to 20 results with id, title, and public URL. Use this for quick lookups; use get_project for full detail.",
+          "Search UAT checklists by query string. Matches against checklist title and company name. Returns up to 20 results with id, title, and public URL. Use this for quick lookups; use get_uat_checklist for full detail.",
         inputSchema: {
           query: z
             .string()
             .describe(
-              "Search query — matches project title or company name (case-insensitive, partial match)"
+              "Search query — matches UAT checklist title or company name (case-insensitive, partial match)"
             ),
         },
         outputSchema: {
           results: z
             .array(
               z.object({
-                id: z.string().describe("Project slug — pass this as `id` to the fetch tool"),
-                title: z.string().describe("Display title formatted as 'Company — Project Title'"),
-                url: z.string().describe("Public tester URL for the project"),
+                id: z.string().describe("UAT checklist slug — pass this as `id` to the fetch tool"),
+                title: z.string().describe("Display title formatted as 'Company — Checklist Title'"),
+                url: z.string().describe("Public tester URL for the UAT checklist"),
               })
             )
-            .describe("Matching projects, up to 20, ordered by creation date descending"),
+            .describe("Matching UAT checklists, up to 20, ordered by creation date descending"),
         },
       },
       async ({ query }) => {
@@ -97,33 +97,33 @@ const handler = createMcpHandler(
 
     // ============================================================
     // TOOL: fetch (required by ChatGPT MCP Apps spec)
-    // Takes an id (project slug) and returns full project detail
-    // including its checklist steps as a structured text document.
+    // Takes an id (UAT checklist slug) and returns full checklist detail
+    // including its UAT steps as a structured text document.
     // ============================================================
     server.registerTool(
       "fetch",
       {
-        title: "Fetch Project Document",
+        title: "Fetch UAT Checklist Document",
         description:
-          "Fetch full details of a UAT project by id (the project slug). Returns project metadata, test scenario, and all checklist steps as a single document. Use this after search to retrieve full content.",
+          "Fetch full details of a UAT checklist by id (the checklist slug). Returns checklist metadata, test scenario, and all UAT steps as a single document. Use this after search to retrieve full content.",
         inputSchema: {
           id: z
             .string()
             .describe(
-              "The project id (slug) returned from the search tool"
+              "The UAT checklist id (slug) returned from the search tool"
             ),
         },
         outputSchema: {
-          id: z.string().describe("Project slug"),
-          title: z.string().describe("Display title formatted as 'Company — Project Title'"),
-          text: z.string().describe("Full project document as markdown-formatted text including test scenario and all checklist steps"),
-          url: z.string().describe("Public tester URL for the project"),
+          id: z.string().describe("UAT checklist slug"),
+          title: z.string().describe("Display title formatted as 'Company — Checklist Title'"),
+          text: z.string().describe("Full UAT checklist document as markdown-formatted text including test scenario and all UAT steps"),
+          url: z.string().describe("Public tester URL for the UAT checklist"),
           metadata: z.object({
             company_name: z.string(),
             project_title: z.string().nullable(),
             slug: z.string(),
             created_at: z.string().nullable().describe("ISO 8601 timestamp"),
-            total_steps: z.number().describe("Number of testable steps (phase headers excluded)"),
+            total_steps: z.number().describe("Number of testable UAT steps (phase headers excluded)"),
           }),
         },
       },
@@ -153,7 +153,7 @@ const handler = createMcpHandler(
           lines.push(project.test_scenario);
           lines.push("");
         }
-        lines.push(`## Checklist (${items?.length ?? 0} steps)`);
+        lines.push(`## UAT Steps (${items?.length ?? 0} steps)`);
         (items ?? []).forEach((it) => {
           lines.push(`### Step ${it.step_number} — ${it.actor}`);
           lines.push(it.action);
@@ -182,23 +182,23 @@ const handler = createMcpHandler(
       }
     );
 
-    // =====================
-    // TOOL 1: list_projects
-    // =====================
+    // ===========================
+    // TOOL 1: list_uat_checklists
+    // ===========================
     server.registerTool(
-      "list_projects",
+      "list_uat_checklists",
       {
-        title: "List Projects",
+        title: "List UAT Checklists",
         description:
-          "List all UAT projects. Optionally filter by company name.",
+          "List all UAT checklists. Optionally filter by company name.",
         inputSchema: {
           company: z
             .string()
             .optional()
-            .describe("Filter by company name (case-insensitive partial match). Omit to return all projects."),
+            .describe("Filter by company name (case-insensitive partial match). Omit to return all UAT checklists."),
         },
         outputSchema: {
-          count: z.number().describe("Total number of projects returned"),
+          count: z.number().describe("Total number of UAT checklists returned"),
           projects: z.array(
             z.object({
               id: z.string().describe("Internal UUID"),
@@ -227,22 +227,22 @@ const handler = createMcpHandler(
       }
     );
 
-    // ========================
-    // TOOL 2: create_project
-    // ========================
+    // =============================
+    // TOOL 2: create_uat_checklist
+    // =============================
     server.registerTool(
-      "create_project",
+      "create_uat_checklist",
       {
-        title: "Create Project",
+        title: "Create UAT Checklist",
         description:
-          "Create a new UAT project. Generates a URL-friendly slug from the title automatically.",
+          "Create a new UAT checklist. Generates a URL-friendly slug from the title automatically.",
         inputSchema: {
           company_name: z
             .string()
             .describe("The client/company name (e.g., 'Accenture')"),
           title: z
             .string()
-            .describe("The project title (e.g., 'ERP Link Generator UAT')"),
+            .describe("The UAT checklist title (e.g., 'ERP Link Generator UAT')"),
           test_scenario: z
             .string()
             .optional()
@@ -250,7 +250,7 @@ const handler = createMcpHandler(
           talkpush_login_link: z
             .string()
             .optional()
-            .describe("Talkpush login link for the project (optional)"),
+            .describe("Talkpush login link for the UAT checklist (optional)"),
           country: z
             .string()
             .regex(/^[A-Za-z]{2}$/)
@@ -295,26 +295,26 @@ const handler = createMcpHandler(
       }
     );
 
-    // ========================
-    // TOOL 2A: update_project
-    // ========================
+    // =============================
+    // TOOL 2A: update_uat_checklist
+    // =============================
     server.registerTool(
-      "update_project",
+      "update_uat_checklist",
       {
-        title: "Update Project",
+        title: "Update UAT Checklist",
         description:
-          "Edit project-level metadata on an existing UAT project. Identifies the project by slug. Only fields explicitly passed are updated.",
+          "Edit checklist-level metadata on an existing UAT checklist. Identifies the checklist by slug. Only fields explicitly passed are updated.",
         inputSchema: {
           slug: z
             .string()
             .min(1)
-            .describe("The project slug (URL identifier)"),
+            .describe("The UAT checklist slug (URL identifier)"),
           title: z
             .string()
             .min(1)
             .max(300)
             .optional()
-            .describe("Replacement project title (1–300 chars). Only pass if changing."),
+            .describe("Replacement UAT checklist title (1–300 chars). Only pass if changing."),
           company_name: z
             .string()
             .min(1)
@@ -394,7 +394,7 @@ const handler = createMcpHandler(
                 text: JSON.stringify(
                   {
                     updated: false,
-                    error: "Project not found",
+                    error: "UAT checklist not found",
                     slug,
                   },
                   null,
@@ -425,16 +425,16 @@ const handler = createMcpHandler(
       }
     );
 
-    // =====================
-    // TOOL 3: get_project
-    // =====================
+    // ===========================
+    // TOOL 3: get_uat_checklist
+    // ===========================
     server.registerTool(
-      "get_project",
+      "get_uat_checklist",
       {
-        title: "Get Project Details",
-        description: "Get full details of a UAT project by its slug.",
+        title: "Get UAT Checklist Details",
+        description: "Get full details of a UAT checklist by its slug.",
         inputSchema: {
-          slug: z.string().describe("The project slug (URL identifier)"),
+          slug: z.string().describe("The UAT checklist slug (URL identifier)"),
         },
         outputSchema: {
           id: z.string().describe("Internal UUID"),
@@ -462,9 +462,9 @@ const handler = createMcpHandler(
       {
         title: "Get Share Link",
         description:
-          "Returns a public, read-only share link for the project's UAT results — safe to send to clients.",
+          "Returns a public, read-only share link for the UAT checklist's results — safe to send to clients.",
         inputSchema: {
-          slug: z.string().describe("The project slug"),
+          slug: z.string().describe("The UAT checklist slug"),
         },
         outputSchema: {
           share_url: z.string().describe("Fully-qualified public URL — safe to send to clients; no login required"),
@@ -486,16 +486,16 @@ const handler = createMcpHandler(
     );
 
     // =====================
-    // TOOL 4: get_checklist
+    // TOOL 4: get_uat_steps
     // =====================
     server.registerTool(
-      "get_checklist",
+      "get_uat_steps",
       {
-        title: "Get Checklist",
+        title: "Get UAT Steps",
         description:
-          "Get all checklist steps for a project, ordered by sort_order.",
+          "Get all UAT steps for a checklist, ordered by sort_order.",
         inputSchema: {
-          slug: z.string().describe("The project slug"),
+          slug: z.string().describe("The UAT checklist slug"),
         },
         outputSchema: {
           project_slug: z.string(),
@@ -503,7 +503,7 @@ const handler = createMcpHandler(
           total_steps: z.number().describe("Count of items returned (includes both steps and phase headers)"),
           items: z.array(
             z.object({
-              id: z.string().describe("UUID — use this in update_checklist_item, delete_checklist_items, and reorder_checklist"),
+              id: z.string().describe("UUID — use this in update_uat_step, delete_uat_steps, and reorder_uat_steps"),
               actor: z.string().describe("Who performs this step: Candidate, Talkpush, Recruiter, or Referrer/Vendor"),
               action: z.string().describe("Instruction text shown to the tester"),
               path: z.string().nullable().describe("URL path or app location for this step"),
@@ -541,17 +541,17 @@ const handler = createMcpHandler(
       }
     );
 
-    // ==============================
-    // TOOL 5: create_checklist_items
-    // ==============================
+    // ==========================
+    // TOOL 5: create_uat_steps
+    // ==========================
     server.registerTool(
-      "create_checklist_items",
+      "create_uat_steps",
       {
-        title: "Create Checklist Items",
+        title: "Create UAT Steps",
         description:
-          "Add new checklist steps or section headers to a project. Auto-increments sort_order; step_number is sequential for testable steps and NULL for section headers.",
+          "Add new UAT steps or section headers to a checklist. Auto-increments sort_order; step_number is sequential for testable steps and NULL for section headers.",
         inputSchema: {
-          slug: z.string().describe("The project slug"),
+          slug: z.string().describe("The UAT checklist slug"),
           items: z
             .array(
               z.object({
@@ -559,7 +559,7 @@ const handler = createMcpHandler(
                   .enum(["step", "phase_header"])
                   .default("step")
                   .describe(
-                    "'step' (default) creates a testable step; 'phase_header' creates a non-testable section header (UI label: Section Header)"
+                    "'step' (default) creates a testable UAT step; 'phase_header' creates a non-testable section header (UI label: Section Header)"
                   ),
                 actor: z
                   .enum([
@@ -599,7 +599,7 @@ const handler = createMcpHandler(
                   ),
               })
             )
-            .describe("Array of checklist items to create"),
+            .describe("Array of UAT steps to create"),
         },
         outputSchema: {
           created: z.number().describe("Count of items successfully inserted"),
@@ -607,7 +607,7 @@ const handler = createMcpHandler(
           items: z.array(
             z.object({
               id: z.string().describe("UUID of the newly created item"),
-              project_id: z.string().describe("Internal project UUID"),
+              project_id: z.string().describe("Internal UAT checklist UUID"),
               actor: z.string(),
               action: z.string(),
               path: z.string().nullable(),
@@ -678,15 +678,15 @@ const handler = createMcpHandler(
     );
 
     // ==============================
-    // TOOL 6: update_checklist_item
+    // TOOL 6: update_uat_step
     // ==============================
     server.registerTool(
-      "update_checklist_item",
+      "update_uat_step",
       {
-        title: "Update Checklist Item",
-        description: "Edit a specific checklist item by its ID.",
+        title: "Update UAT Step",
+        description: "Edit a specific UAT step by its ID.",
         inputSchema: {
-          id: z.string().uuid().describe("The checklist item UUID"),
+          id: z.string().uuid().describe("The UAT step UUID"),
           actor: z
             .enum(["Candidate", "Talkpush", "Recruiter", "Referrer/Vendor"])
             .optional()
@@ -713,7 +713,7 @@ const handler = createMcpHandler(
           updated: z.literal(true),
           item: z.object({
             id: z.string(),
-            project_id: z.string().describe("Internal project UUID"),
+            project_id: z.string().describe("Internal UAT checklist UUID"),
             actor: z.string(),
             action: z.string(),
             path: z.string().nullable(),
@@ -774,18 +774,18 @@ const handler = createMcpHandler(
       }
     );
 
-    // ================================
-    // TOOL 7: delete_checklist_items
-    // ================================
+    // ==========================
+    // TOOL 7: delete_uat_steps
+    // ==========================
     server.registerTool(
-      "delete_checklist_items",
+      "delete_uat_steps",
       {
-        title: "Delete Checklist Items",
-        description: "Delete one or more checklist items by their IDs.",
+        title: "Delete UAT Steps",
+        description: "Delete one or more UAT steps by their IDs.",
         inputSchema: {
           ids: z
             .array(z.string().uuid())
-            .describe("Array of checklist item UUIDs to delete"),
+            .describe("Array of UAT step UUIDs to delete"),
         },
         outputSchema: {
           deleted: z.number().describe("Count of items deleted"),
@@ -820,20 +820,20 @@ const handler = createMcpHandler(
       }
     );
 
-    // ============================
-    // TOOL 8: reorder_checklist
-    // ============================
+    // ==========================
+    // TOOL 8: reorder_uat_steps
+    // ==========================
     server.registerTool(
-      "reorder_checklist",
+      "reorder_uat_steps",
       {
-        title: "Reorder Checklist",
+        title: "Reorder UAT Steps",
         description:
-          "Reorder checklist items by providing an array of IDs in the desired order. Updates sort_order and recomputes step_number for all steps.",
+          "Reorder UAT steps by providing an array of IDs in the desired order. Updates sort_order and recomputes step_number for all steps.",
         inputSchema: {
           ids: z
             .array(z.string().uuid())
             .describe(
-              "Checklist item UUIDs in the desired order (first = sort_order 1). Must include ALL items for the project — any item omitted will be left at its current position."
+              "UAT step UUIDs in the desired order (first = sort_order 1). Must include ALL steps for the UAT checklist — any step omitted will be left at its current position."
             ),
         },
         outputSchema: {
@@ -868,17 +868,17 @@ const handler = createMcpHandler(
       }
     );
 
-    // ===============================
-    // TOOL 9: get_project_progress
-    // ===============================
+    // =====================================
+    // TOOL 9: get_uat_checklist_progress
+    // =====================================
     server.registerTool(
-      "get_project_progress",
+      "get_uat_checklist_progress",
       {
-        title: "Get Project Progress",
+        title: "Get UAT Checklist Progress",
         description:
-          "Get testing progress for a project — completion percentage, status breakdown, and tester count.",
+          "Get testing progress for a UAT checklist — completion percentage, status breakdown, and tester count.",
         inputSchema: {
-          slug: z.string().describe("The project slug"),
+          slug: z.string().describe("The UAT checklist slug"),
         },
         outputSchema: {
           project_slug: z.string(),
@@ -956,9 +956,9 @@ const handler = createMcpHandler(
       "list_testers",
       {
         title: "List Testers",
-        description: "List all registered testers for a project.",
+        description: "List all registered testers for a UAT checklist.",
         inputSchema: {
-          slug: z.string().describe("The project slug"),
+          slug: z.string().describe("The UAT checklist slug"),
         },
         outputSchema: {
           project_slug: z.string(),
@@ -1003,14 +1003,14 @@ const handler = createMcpHandler(
       {
         title: "Get Admin Reviews",
         description:
-          "Get admin review data for all non-pass checklist items in a project, grouped by tester. Returns behavior type, resolution status, and findings/comments for each flagged item. Used for generating AI summaries of UAT testing results.",
+          "Get admin review data for all non-pass UAT steps in a checklist, grouped by tester. Returns behavior type, resolution status, and findings/comments for each flagged step. Used for generating AI summaries of UAT testing results.",
         inputSchema: {
-          slug: z.string().describe("The project slug"),
+          slug: z.string().describe("The UAT checklist slug"),
         },
         outputSchema: {
           project_slug: z.string(),
           project_title: z.string().nullable(),
-          total_steps: z.number().describe("Total checklist items (steps + phase headers)"),
+          total_steps: z.number().describe("Total UAT steps (steps + phase headers)"),
           total_testers: z.number(),
           summary_stats: z.object({
             total_responses: z.number(),
