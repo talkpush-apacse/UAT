@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, List, Bookma
 import ChecklistItem from "./checklist-item"
 import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
+import { getStepsMissingEvidence, EVIDENCE_REQUIRED_STATUSES } from "@/lib/utils/response-validation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 interface ChecklistItemData {
@@ -87,7 +88,7 @@ export default function ChecklistWizardView({
   tester,
   checklistItems,
   responses: initialResponses,
-  attachments,
+  attachments: initialAttachments,
   testCompleted = null,
   previewMode = false,
 }: Props) {
@@ -99,10 +100,20 @@ export default function ChecklistWizardView({
     return map
   })
 
+  const [attachments, setAttachments] = useState<AttachmentData[]>(initialAttachments)
+
   const [isTestComplete, setIsTestComplete] = useState(testCompleted === "Yes")
   const [isMarkingComplete, setIsMarkingComplete] = useState(false)
+  const [completeError, setCompleteError] = useState<string | null>(null)
   const [isAdvancing, setIsAdvancing] = useState(false)
   const [isNavOpen, setIsNavOpen] = useState(false)
+
+  const handleAttachmentsChange = (responseId: string, newAttachments: AttachmentData[]) => {
+    setAttachments((prev) => [
+      ...prev.filter((a) => a.response_id !== responseId),
+      ...newAttachments,
+    ])
+  }
 
   const totalCount = checklistItems.length
   // Phase headers are not answerable — they don't require a status and don't
@@ -146,14 +157,18 @@ export default function ChecklistWizardView({
   const currentResponse = currentItem ? responses[currentItem.id] : undefined
   const currentHasStatus = previewMode || currentResponse?.status != null
 
-  const COMMENT_REQUIRED_STATUSES = ["Fail", "Blocked", "Up For Review"]
+  // Fail/Blocked/Up For Review steps must have a comment or an attachment before advancing/submitting.
+  const stepsMissingEvidence = useMemo(
+    () => getStepsMissingEvidence(Object.values(responses), attachments),
+    [responses, attachments]
+  )
   const currentRequiresComment =
     !previewMode &&
     !isHeaderStep &&
     currentResponse?.status != null &&
-    COMMENT_REQUIRED_STATUSES.includes(currentResponse.status)
+    EVIDENCE_REQUIRED_STATUSES.includes(currentResponse.status as (typeof EVIDENCE_REQUIRED_STATUSES)[number])
   const currentCommentMissing =
-    currentRequiresComment && !currentResponse?.comment?.trim()
+    currentRequiresComment && stepsMissingEvidence.includes(currentItem.id)
 
   const completedCount = previewMode
     ? totalAnswerable
@@ -161,8 +176,13 @@ export default function ChecklistWizardView({
   const allAnswered = completedCount === totalAnswerable
 
   const isLastStep = currentIndex === totalCount - 1
-  // Phase headers: no status required to advance. Steps: require status + comment if applicable.
-  const canSubmit = !previewMode && (isHeaderStep || currentHasStatus) && allAnswered
+  // Phase headers: no status required to advance. Steps: require status + comment/screenshot if applicable,
+  // and no other flagged step (e.g. one the tester jumped back to and edited) may be missing evidence either.
+  const canSubmit =
+    !previewMode &&
+    (isHeaderStep || currentHasStatus) &&
+    allAnswered &&
+    stepsMissingEvidence.length === 0
 
   const progressPct = totalCount > 0 ? ((currentIndex + 1) / totalCount) * 100 : 0
 
@@ -194,10 +214,13 @@ export default function ChecklistWizardView({
   const handleSubmit = async () => {
     if (isMarkingComplete) return
     setIsMarkingComplete(true)
+    setCompleteError(null)
     await doSaveCurrentStep()
     const result = await markTestComplete(tester.id)
     if (!result.error) {
       setIsTestComplete(true)
+    } else {
+      setCompleteError(result.error)
     }
     setIsMarkingComplete(false)
   }
@@ -317,6 +340,7 @@ export default function ChecklistWizardView({
                   a.response_id === responses[currentItem.id].id
               )}
               onResponseUpdate={handleResponseUpdate}
+              onAttachmentsChange={handleAttachmentsChange}
               talkpushLoginLink={
                 currentItem.id === firstTalkpushItemId
                   ? project.talkpush_login_link
@@ -458,19 +482,24 @@ export default function ChecklistWizardView({
         </div>
 
         {/* Helper text */}
-        {isLastStep && (!allAnswered || (!isHeaderStep && currentCommentMissing)) ? (
+        {isLastStep && (!allAnswered || stepsMissingEvidence.length > 0) ? (
           <p className="text-xs text-gray-400 text-center">
             {!isHeaderStep && currentCommentMissing
-              ? "Please add a comment before submitting."
-              : `${completedCount} of ${totalAnswerable} steps answered — finish all to submit.`}
+              ? "Please add a comment or screenshot before submitting."
+              : stepsMissingEvidence.length > 0
+                ? `${stepsMissingEvidence.length} earlier step${stepsMissingEvidence.length === 1 ? "" : "s"} need a comment or screenshot — open the step list to go back and add one.`
+                : `${completedCount} of ${totalAnswerable} steps answered — finish all to submit.`}
           </p>
         ) : nextDisabled && !isLastStep ? (
           <p className="text-xs text-gray-400 text-center">
             {currentCommentMissing
-              ? "Please add a comment before continuing."
+              ? "Please add a comment or screenshot before continuing."
               : "Choose a status (Pass / Fail / N/A / Blocked / Up For Review) to continue."}
           </p>
         ) : null}
+        {completeError && (
+          <p className="text-xs text-red-600 text-center">{completeError}</p>
+        )}
       </div>
     </div>
   )

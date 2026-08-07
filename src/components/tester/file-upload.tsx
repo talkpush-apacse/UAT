@@ -28,6 +28,15 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const ACCEPT_STRING = ".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx"
 
+/** Only http/https URLs are safe to render as a clickable link */
+function isSafeAttachmentUrl(url: string): boolean {
+  try {
+    return ["http:", "https:"].includes(new URL(url).protocol)
+  } catch {
+    return false
+  }
+}
+
 /** Icon for non-image attachments */
 function AttachmentIcon({ mimeType }: { mimeType: string }) {
   if (mimeType === "application/pdf") {
@@ -44,11 +53,13 @@ export default function FileUpload({
   testerId,
   projectId,
   existingAttachments,
+  onAttachmentsChange,
 }: {
   responseId: string
   testerId: string
   projectId: string
   existingAttachments: AttachmentData[]
+  onAttachmentsChange?: (attachments: AttachmentData[]) => void
 }) {
   const [attachments, setAttachments] = useState<AttachmentData[]>(existingAttachments)
   const [uploading, setUploading] = useState(false)
@@ -140,12 +151,16 @@ export default function FileUpload({
         }
       })
 
-      setAttachments((prev) => [...prev, ...newAttachments])
+      setAttachments((prev) => {
+        const next = [...prev, ...newAttachments]
+        onAttachmentsChange?.(next)
+        return next
+      })
       setUploadErrors(errors)
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
     },
-    [uploadSingleFile]
+    [uploadSingleFile, onAttachmentsChange]
   )
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,7 +204,11 @@ export default function FileUpload({
     })
 
     if (res.ok) {
-      setAttachments((prev) => prev.filter((a) => a.id !== attachment.id))
+      setAttachments((prev) => {
+        const next = prev.filter((a) => a.id !== attachment.id)
+        onAttachmentsChange?.(next)
+        return next
+      })
     } else {
       toast.error("Failed to remove attachment")
     }
@@ -205,26 +224,21 @@ export default function FileUpload({
               key={att.id}
               className="group flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-gray-200 text-xs hover:bg-gray-50 transition-colors"
             >
-              {att.mime_type.startsWith("image/") ? (
+              {isSafeAttachmentUrl(att.file_url) ? (
                 <a
                   href={att.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5"
                 >
-                  <span>🖼</span>
+                  {att.mime_type.startsWith("image/") ? <span>🖼</span> : <AttachmentIcon mimeType={att.mime_type} />}
                   <span className="max-w-[140px] truncate text-gray-700">{att.file_name}</span>
                 </a>
               ) : (
-                <a
-                  href={att.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5"
-                >
-                  <AttachmentIcon mimeType={att.mime_type} />
-                  <span className="max-w-[140px] truncate text-gray-700">{att.file_name}</span>
-                </a>
+                <span className="flex items-center gap-1.5 text-gray-400" title="This file's link couldn't be verified as safe to open">
+                  {att.mime_type.startsWith("image/") ? <span>🖼</span> : <AttachmentIcon mimeType={att.mime_type} />}
+                  <span className="max-w-[140px] truncate">{att.file_name}</span>
+                </span>
               )}
               <button
                 type="button"

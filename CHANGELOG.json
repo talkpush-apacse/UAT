@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.19.0",
+    "name": "Version 2.19.0 - Evidence Required",
+    "changes": [
+      "Testers must add a comment or screenshot before completing Fail/Blocked/Up For Review steps",
+      "Fixed a bug where Mark Test Complete never actually saved to the database",
+      "Hardened file attachment links against unsafe URLs"
+    ],
+    "deployed_at": "2026-08-07"
+  },
+  {
     "version": "2.18.0",
     "name": "Version 2.18.0 - UAT Checklist Terminology",
     "changes": [

@@ -5,6 +5,7 @@ import { createAnonSupabaseClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyAdminSession } from '@/lib/utils/admin-auth'
 import { registerTesterSchema } from '@/lib/schemas/tester'
+import { getStepsMissingEvidence } from '@/lib/utils/response-validation'
 
 export interface RegisterTesterState {
   error?: string
@@ -105,6 +106,28 @@ export async function markTestComplete(
     .single()
 
   if (!tester) return { error: 'Tester not found' }
+
+  const { data: responses, error: responsesError } = await supabase
+    .from('responses')
+    .select('id, checklist_item_id, status, comment')
+    .eq('tester_id', testerId)
+
+  if (responsesError) return { error: responsesError.message }
+
+  const responseIds = (responses ?? []).map((r) => r.id)
+  const { data: attachments, error: attachmentsError } = responseIds.length
+    ? await supabase
+        .from('attachments')
+        .select('response_id')
+        .in('response_id', responseIds)
+    : { data: [], error: null }
+
+  if (attachmentsError) return { error: attachmentsError.message }
+
+  const stepsMissingEvidence = getStepsMissingEvidence(responses ?? [], attachments ?? [])
+  if (stepsMissingEvidence.length > 0) {
+    return { error: 'Some failed, blocked, or up-for-review steps are missing a comment or screenshot.' }
+  }
 
   const { error } = await supabase
     .from('testers')

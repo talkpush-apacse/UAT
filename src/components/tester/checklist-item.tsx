@@ -9,6 +9,7 @@ import { Lightbulb, Eye, ExternalLink } from "lucide-react"
 import FileUpload from "./file-upload"
 import ReactMarkdown from "react-markdown"
 import rehypeSanitize from "rehype-sanitize"
+import { resolveViewSampleUrl } from "@/lib/utils/sample-url"
 
 interface ChecklistItemData {
   id: string
@@ -84,6 +85,7 @@ function isValidGuideUrl(url: string | null | undefined): boolean {
   if (trimmed.startsWith("[")) return false
   // Reject strings containing newline characters
   if (/[\r\n]/.test(trimmed)) return false
+  if (trimmed.startsWith("/")) return true
   // Must be a valid http or https URL
   try {
     const parsed = new URL(trimmed)
@@ -167,6 +169,7 @@ export default function ChecklistItem({
   response,
   attachments,
   onResponseUpdate,
+  onAttachmentsChange,
   talkpushLoginLink,
   previewMode = false,
 }: {
@@ -175,6 +178,7 @@ export default function ChecklistItem({
   response: ResponseData | null
   attachments: AttachmentData[]
   onResponseUpdate: (itemId: string, response: ResponseData) => void
+  onAttachmentsChange?: (responseId: string, attachments: AttachmentData[]) => void
   talkpushLoginLink?: string | null
   previewMode?: boolean
 }) {
@@ -270,7 +274,8 @@ export default function ChecklistItem({
 
   // Validate the guide URL before deciding which embed variant to show — #1
   const rawSample = item.view_sample?.trim() || null
-  const viewSample = isValidGuideUrl(rawSample) ? rawSample : null
+  const normalizedSample = rawSample ? resolveViewSampleUrl(rawSample) : null
+  const viewSample = isValidGuideUrl(normalizedSample) ? normalizedSample : null
 
   const hasImageSample = viewSample && isImageUrl(viewSample)
   const isDescriptSample = viewSample ? isDescriptUrl(viewSample) : false
@@ -567,6 +572,7 @@ export default function ChecklistItem({
               testerId={testerId}
               projectId={item.id}
               existingAttachments={attachments}
+              onAttachmentsChange={(next) => onAttachmentsChange?.(responseId, next)}
             />
           </div>
         )}

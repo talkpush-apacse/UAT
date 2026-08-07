@@ -7,6 +7,7 @@ import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircl
 import ChecklistItem from "./checklist-item"
 import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
+import { getStepsMissingEvidence } from "@/lib/utils/response-validation"
 import ChecklistWizardView from "./checklist-wizard-view"
 
 interface ChecklistItemData {
@@ -89,16 +90,29 @@ function ClassicChecklistView({
     return map
   })
 
+  const [attachments, setAttachments] = useState<AttachmentData[]>(initialAttachments)
+
   const [isTestComplete, setIsTestComplete] = useState(testCompleted === "Yes")
   const [isMarkingComplete, setIsMarkingComplete] = useState(false)
+  const [completeError, setCompleteError] = useState<string | null>(null)
 
   const handleMarkComplete = async () => {
     setIsMarkingComplete(true)
+    setCompleteError(null)
     const result = await markTestComplete(tester.id)
     if (!result.error) {
       setIsTestComplete(true)
+    } else {
+      setCompleteError(result.error)
     }
     setIsMarkingComplete(false)
+  }
+
+  const handleAttachmentsChange = (responseId: string, newAttachments: AttachmentData[]) => {
+    setAttachments((prev) => [
+      ...prev.filter((a) => a.response_id !== responseId),
+      ...newAttachments,
+    ])
   }
 
   // Phase headers don't count toward progress — they have no status to set.
@@ -117,8 +131,15 @@ function ClassicChecklistView({
   const totalCount = stepItems.length
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
-  // Issue #3 — CTA is only active when every step has a status
-  const allStepsCompleted = totalCount > 0 && completedCount === totalCount
+  // Fail/Blocked/Up For Review steps must have a comment or an attachment before completion.
+  const stepsMissingEvidence = useMemo(
+    () => getStepsMissingEvidence(Object.values(responses), attachments),
+    [responses, attachments]
+  )
+
+  // Issue #3 — CTA is only active when every step has a status and no flagged step is missing evidence
+  const allStepsCompleted =
+    totalCount > 0 && completedCount === totalCount && stepsMissingEvidence.length === 0
   const displayCompletedCount = previewMode ? totalCount : completedCount
   const displayProgressPct = previewMode && totalCount > 0 ? 100 : progressPct
 
@@ -335,10 +356,11 @@ function ClassicChecklistView({
               item={item as ChecklistItemData & { step_number: number }}
               testerId={tester.id}
               response={responses[item.id] || null}
-              attachments={initialAttachments.filter(
+              attachments={attachments.filter(
                 (a) => responses[item.id] && a.response_id === responses[item.id].id
               )}
               onResponseUpdate={handleResponseUpdate}
+              onAttachmentsChange={handleAttachmentsChange}
               talkpushLoginLink={
                 item.id === firstTalkpushItemId
                   ? project.talkpush_login_link
@@ -388,9 +410,14 @@ function ClassicChecklistView({
                 <p className="text-xs text-gray-400 text-center mt-2">
                   {allStepsCompleted
                     ? "All steps completed — ready to mark as complete"
-                    : `${completedCount} of ${totalCount} steps completed — finish all steps before marking complete`
+                    : completedCount < totalCount
+                      ? `${completedCount} of ${totalCount} steps completed — finish all steps before marking complete`
+                      : `${stepsMissingEvidence.length} step${stepsMissingEvidence.length === 1 ? "" : "s"} need a comment or screenshot before you can finish`
                   }
                 </p>
+                {completeError && (
+                  <p className="text-xs text-red-600 text-center mt-2">{completeError}</p>
+                )}
               </>
             )}
           </div>

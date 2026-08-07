@@ -138,30 +138,51 @@ function ActivityTimeline({ history }: { history: HistoryEntry[] }) {
 /*  Attachment display (read-only, admin view)                          */
 /* ------------------------------------------------------------------ */
 
+/** Only http/https URLs are safe to render as a clickable link */
+function isSafeAttachmentUrl(url: string): boolean {
+  try {
+    return ["http:", "https:"].includes(new URL(url).protocol)
+  } catch {
+    return false
+  }
+}
+
 function AttachmentList({ attachments }: { attachments: AttachmentData[] }) {
   if (attachments.length === 0) return null
   return (
     <div className="flex flex-wrap gap-1.5 mt-1.5">
-      {attachments.map((att) => (
-        <a
-          key={att.id}
-          href={att.file_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
-        >
-          {att.mime_type.startsWith("image/") ? (
-            <span>🖼</span>
-          ) : att.mime_type === "application/pdf" ? (
-            <FileText className="h-3 w-3 text-red-500 flex-shrink-0" />
-          ) : att.mime_type.includes("word") || att.mime_type.includes("document") ? (
-            <FileText className="h-3 w-3 text-blue-500 flex-shrink-0" />
-          ) : (
-            <File className="h-3 w-3 text-gray-400 flex-shrink-0" />
-          )}
-          <span className="max-w-[140px] truncate">{att.file_name}</span>
-        </a>
-      ))}
+      {attachments.map((att) => {
+        const icon = att.mime_type.startsWith("image/") ? (
+          <span>🖼</span>
+        ) : att.mime_type === "application/pdf" ? (
+          <FileText className="h-3 w-3 text-red-500 flex-shrink-0" />
+        ) : att.mime_type.includes("word") || att.mime_type.includes("document") ? (
+          <FileText className="h-3 w-3 text-blue-500 flex-shrink-0" />
+        ) : (
+          <File className="h-3 w-3 text-gray-400 flex-shrink-0" />
+        )
+        return isSafeAttachmentUrl(att.file_url) ? (
+          <a
+            key={att.id}
+            href={att.file_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            {icon}
+            <span className="max-w-[140px] truncate">{att.file_name}</span>
+          </a>
+        ) : (
+          <span
+            key={att.id}
+            title="This file's link couldn't be verified as safe to open"
+            className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded border border-gray-200 text-xs text-gray-400"
+          >
+            {icon}
+            <span className="max-w-[140px] truncate">{att.file_name}</span>
+          </span>
+        )
+      })}
     </div>
   )
 }
