@@ -1173,68 +1173,6 @@ const handler = createMcpHandler(
         });
       }
     );
-
-    // ==========================================================
-    // TEMP SPIKE TOOL: debug_image_probe — remove after testing.
-    // Answers one question: does claude.ai actually forward a
-    // pasted image's real bytes into a tool call as base64 text,
-    // or does the model just describe/hallucinate the data?
-    // No DB access — pure inspection, safe to leave live briefly.
-    // ==========================================================
-    server.registerTool(
-      "debug_image_probe",
-      {
-        title: "[SPIKE] Debug Image Probe",
-        description:
-          "TEMPORARY diagnostic tool. Call this with the base64-encoded content of an image the user just pasted into this chat, so we can verify whether real image bytes make it through. Pass the full base64 string (no data: URL prefix) as image_data.",
-        inputSchema: {
-          image_data: z
-            .string()
-            .describe(
-              "The image's raw bytes, base64-encoded (strip any 'data:image/png;base64,' prefix first). Send the full string, not a truncated sample."
-            ),
-          filename: z
-            .string()
-            .optional()
-            .describe("Original filename, if known"),
-        },
-        outputSchema: {
-          received_string_length: z.number().describe("Length of the base64 text as received"),
-          decoded_byte_length: z.number().describe("Length in bytes after base64-decoding"),
-          detected_format: z
-            .string()
-            .describe("Image format detected from magic bytes, or 'unknown/invalid' if the decoded bytes don't match a known image header"),
-          first_16_bytes_hex: z.string().describe("First 16 bytes of decoded data as hex, for manual inspection"),
-        },
-      },
-      async ({ image_data, filename }) => {
-        const cleaned = image_data.replace(/^data:image\/\w+;base64,/, "");
-        const buf = Buffer.from(cleaned, "base64");
-
-        let detectedFormat = "unknown/invalid";
-        if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
-          detectedFormat = "png";
-        } else if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
-          detectedFormat = "jpeg";
-        } else if (buf.length >= 6 && buf.toString("ascii", 0, 3) === "GIF") {
-          detectedFormat = "gif";
-        } else if (
-          buf.length >= 12 &&
-          buf.toString("ascii", 0, 4) === "RIFF" &&
-          buf.toString("ascii", 8, 12) === "WEBP"
-        ) {
-          detectedFormat = "webp";
-        }
-
-        return toolResult({
-          filename: filename ?? null,
-          received_string_length: image_data.length,
-          decoded_byte_length: buf.length,
-          detected_format: detectedFormat,
-          first_16_bytes_hex: buf.subarray(0, 16).toString("hex"),
-        });
-      }
-    );
   },
   {
     capabilities: {},
