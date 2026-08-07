@@ -76,6 +76,8 @@ export default async function ProjectDetailPage({
   }> | null = null
   let initialTesters: TesterProgress[] = []
 
+  let needsTriageCount = 0
+
   try {
     // Group A: checklist_items + signoffs + testers are independent — fetch in parallel
     const [checklistResult, signoffResult, testersResult] = await Promise.all([
@@ -117,13 +119,34 @@ export default async function ProjectDetailPage({
         .filter((ci) => ci.item_type === "step")
         .map((ci) => ci.id)
 
-      const { data: responses } = itemIds.length > 0
-        ? await supabase
-            .from("responses")
-            .select("tester_id, status")
-            .in("tester_id", testers.map((t) => t.id))
-            .in("checklist_item_id", itemIds)
-        : { data: [] }
+      const [{ data: responses }, { data: reviews }] = itemIds.length > 0
+        ? await Promise.all([
+            supabase
+              .from("responses")
+              .select("tester_id, checklist_item_id, status")
+              .in("tester_id", testers.map((t) => t.id))
+              .in("checklist_item_id", itemIds),
+            supabase
+              .from("admin_reviews")
+              .select("tester_id, checklist_item_id, resolution_status")
+              .in("tester_id", testers.map((t) => t.id))
+              .in("checklist_item_id", itemIds),
+          ])
+        : [{ data: [] }, { data: [] }]
+
+      // A finding "needs triage" when it's a Fail/Blocked response with no
+      // review yet, or a review that hasn't been marked "Done" — mirrors how
+      // review-panel.tsx and analytics-charts.tsx already treat unresolved reviews.
+      const doneKeys = new Set(
+        (reviews || [])
+          .filter((r) => r.resolution_status === "Done")
+          .map((r) => `${r.tester_id}:${r.checklist_item_id}`)
+      )
+      needsTriageCount = (responses || []).filter(
+        (r) =>
+          (r.status === "Fail" || r.status === "Blocked") &&
+          !doneKeys.has(`${r.tester_id}:${r.checklist_item_id}`)
+      ).length
 
       initialTesters = testers.map((tester) => {
         const testerResponses = (responses || []).filter(
@@ -153,6 +176,17 @@ export default async function ProjectDetailPage({
   const itemCount =
     checklistItems?.filter((ci) => ci.item_type === "step").length || 0
 
+  // Aggregate totals across all testers, for the header health ring
+  const totalPass = initialTesters.reduce((sum, t) => sum + t.pass, 0)
+  const totalFail = initialTesters.reduce((sum, t) => sum + t.fail, 0)
+  const totalBlocked = initialTesters.reduce((sum, t) => sum + t.blocked, 0)
+  const totalDecided = totalPass + totalFail + totalBlocked
+  // "Healthy" = passing steps as a share of steps with a definitive Pass/Fail/Blocked
+  // outcome — N/A and Up For Review are excluded since they aren't a health signal.
+  const healthyPercent = totalDecided > 0 ? Math.round((totalPass / totalDecided) * 100) : 0
+  const RING_RADIUS = 36
+  const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
+
   const actionCards = [
     {
       href: `/admin/projects/${project.slug}/checklist`,
@@ -171,6 +205,7 @@ export default async function ProjectDetailPage({
       icon: ClipboardCheck,
       label: "Review",
       sub: "Triage findings",
+      badge: needsTriageCount > 0 ? needsTriageCount : null,
     },
     {
       href: `/share/analytics/${project.slug}/${shareToken}`,
@@ -188,32 +223,97 @@ export default async function ProjectDetailPage({
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          {/* P3 — Client name as meta overline */}
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">
-            {project.company_name}
-          </p>
-          {/* P3 — Page title at 28px/700 */}
-          <h1 className="text-[28px] font-bold text-gray-900 leading-tight mb-1">
-            {project.title || project.company_name}
-          </h1>
-          {/* P3 — Tester URL as monospace meta */}
-          <p className="text-xs text-gray-400 font-mono">
-            <span className="text-gray-500 not-italic">Tester URL:</span>{" "}
-            <a
-              href={`/test/${project.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-sage-darker underline hover:text-primary"
-            >
-              /test/{project.slug}
-            </a>
-          </p>
-          {project.test_scenario && (
-            <MarkdownRenderer content={project.test_scenario} className="mt-2" />
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-7 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            {/* P3 — Client name as meta overline */}
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">
+              {project.company_name}
+            </p>
+            {/* P3 — Page title at 28px/700 */}
+            <h1 className="text-[28px] font-bold text-gray-900 leading-tight mb-1">
+              {project.title || project.company_name}
+            </h1>
+            {/* P3 — Tester URL as monospace meta */}
+            <p className="text-xs text-gray-400 font-mono">
+              <span className="text-gray-500 not-italic">Tester URL:</span>{" "}
+              <a
+                href={`/test/${project.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-sage-darker underline hover:text-primary"
+              >
+                /test/{project.slug}
+              </a>
+            </p>
+            {project.test_scenario && (
+              project.test_scenario.length > 180 ? (
+                <details className="mt-2 group">
+                  <summary className="cursor-pointer text-sm text-gray-700 leading-relaxed list-none">
+                    <span className="line-clamp-2">
+                      {project.test_scenario.replace(/[#*_>`]/g, "").trim()}
+                    </span>
+                    <span className="text-brand-sage-darker font-semibold whitespace-nowrap ml-1 group-open:hidden">
+                      Show more
+                    </span>
+                  </summary>
+                  <MarkdownRenderer
+                    content={project.test_scenario}
+                    className="mt-3 prose-blockquote:not-italic prose-blockquote:border-amber-400 prose-blockquote:bg-amber-50 prose-blockquote:px-4 prose-blockquote:py-2 prose-blockquote:rounded-r-md"
+                  />
+                </details>
+              ) : (
+                <MarkdownRenderer
+                  content={project.test_scenario}
+                  className="mt-2 prose-blockquote:not-italic prose-blockquote:border-amber-400 prose-blockquote:bg-amber-50 prose-blockquote:px-4 prose-blockquote:py-2 prose-blockquote:rounded-r-md"
+                />
+              )
+            )}
+          </div>
+
+          {totalDecided > 0 && (
+            <div className="flex items-center gap-5 flex-shrink-0">
+              <div className="relative w-[84px] h-[84px] flex-shrink-0">
+                <svg viewBox="0 0 84 84" width={84} height={84}>
+                  <circle cx={42} cy={42} r={RING_RADIUS} fill="none" stroke="hsl(139 25% 91%)" strokeWidth={8} />
+                  <circle
+                    cx={42}
+                    cy={42}
+                    r={RING_RADIUS}
+                    fill="none"
+                    stroke="hsl(139 30% 40%)"
+                    strokeWidth={8}
+                    strokeLinecap="round"
+                    strokeDasharray={RING_CIRCUMFERENCE}
+                    strokeDashoffset={RING_CIRCUMFERENCE * (1 - healthyPercent / 100)}
+                    transform="rotate(-90 42 42)"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[19px] font-bold font-nav">{healthyPercent}%</span>
+                  <span className="text-[9px] text-gray-500">healthy</span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="flex items-center gap-1.5 text-[13px] font-semibold text-green-800">
+                  <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                  {totalPass} Pass
+                </span>
+                <span className="flex items-center gap-1.5 text-[13px] font-semibold text-red-700">
+                  <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                  {totalFail} Fail
+                </span>
+                <span className="flex items-center gap-1.5 text-[13px] font-semibold text-amber-800">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                  {totalBlocked} Blocked
+                </span>
+              </div>
+            </div>
           )}
         </div>
+
+        <Separator className="my-5" />
+
         {/* Desktop: single row with 3-tier visual hierarchy */}
         <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
           <CopyLinkButton slug={project.slug} />
@@ -275,6 +375,11 @@ export default async function ProjectDetailPage({
         {actionCards.map((card) => (
           <Link key={card.href} href={card.href} className="block">
             <div className="group relative flex flex-col items-center justify-center bg-white rounded-xl border-t-4 border-t-brand-sage-darker border border-gray-200 shadow hover:shadow-lg hover:border-brand-sage hover:bg-brand-sage-lightest transition-all duration-200 cursor-pointer px-4 py-5 text-center">
+              {card.badge != null && (
+                <span className="absolute top-2.5 left-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {card.badge}
+                </span>
+              )}
               {/* Arrow affordance — always faintly visible, brightens on hover */}
               <ChevronRight className="absolute top-3 right-3 h-4 w-4 text-gray-300 group-hover:text-brand-sage-darker transition-colors" />
               {/* Icon with colored bg bubble */}
