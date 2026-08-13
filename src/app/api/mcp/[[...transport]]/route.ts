@@ -1003,7 +1003,7 @@ const handler = createMcpHandler(
       {
         title: "Get Admin Reviews",
         description:
-          "Get admin review data for all non-pass UAT steps in a checklist, grouped by tester. Returns behavior type, resolution status, and findings/comments for each flagged step. Used for generating AI summaries of UAT testing results.",
+          "Get admin review data for all non-pass UAT steps in a checklist, grouped by tester. Returns the tester's own remark, behavior type, resolution status, and admin findings/comments for each flagged step. Used for generating AI summaries of UAT testing results.",
         inputSchema: {
           slug: z.string().describe("The UAT checklist slug"),
         },
@@ -1032,6 +1032,7 @@ const handler = createMcpHandler(
                   actor: z.string().nullable(),
                   action: z.string().nullable(),
                   status: z.string().nullable().describe("Response status: Fail, N/A, or Blocked"),
+                  tester_comment: z.string().nullable().describe("The tester's own remark/comment left on this step, if any"),
                   finding_type: z.string().nullable().describe("Admin-assigned finding category"),
                   resolution_status: z.string().nullable().describe("Admin resolution state (e.g. 'Done', 'In Progress')"),
                   findings: z.string().nullable().describe("Admin notes/comments for this item"),
@@ -1070,11 +1071,12 @@ const handler = createMcpHandler(
           tester_id: string;
           checklist_item_id: string;
           status: string | null;
+          comment: string | null;
         }[] = [];
         if (itemIds.length > 0) {
           const { data: resp, error: respError } = await supabase
             .from("responses")
-            .select("tester_id, checklist_item_id, status")
+            .select("tester_id, checklist_item_id, status, comment")
             .in("checklist_item_id", itemIds);
           if (respError) throw new Error(respError.message);
           allResponses = resp ?? [];
@@ -1136,6 +1138,7 @@ const handler = createMcpHandler(
                 actor: item?.actor ?? null,
                 action: item?.action ?? null,
                 status: resp.status,
+                tester_comment: resp.comment ?? null,
                 finding_type: review?.finding_type ?? null,
                 resolution_status: review?.resolution_status ?? null,
                 findings: review?.notes ?? null,
