@@ -163,6 +163,7 @@ export default function LiveProgressTable({
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[140px]">Tester</th>
                 <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[160px]">Email</th>
+                <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[130px]">Mobile</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide w-48">Progress</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[70px]">Pass</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[70px]">Fail</th>
@@ -181,6 +182,7 @@ export default function LiveProgressTable({
                   <tr key={tester.id} className="group border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-3 font-medium text-sm text-gray-800">{tester.name}</td>
                     <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-500">{tester.email}</td>
+                    <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-500">{tester.mobile}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Progress value={pct} className="h-2 flex-1" />
