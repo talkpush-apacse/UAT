@@ -207,6 +207,7 @@ const handler = createMcpHandler(
               title: z.string().nullable(),
               test_scenario: z.string().nullable(),
               created_at: z.string().nullable().describe("ISO 8601 timestamp"),
+              test_url: z.string().describe("Public tester URL — the link testers use to open and complete the checklist"),
             })
           ),
         },
@@ -223,7 +224,12 @@ const handler = createMcpHandler(
         const { data, error } = await query;
         if (error) throw new Error(error.message);
 
-        return toolResult({ count: data.length, projects: data });
+        const projects = data.map((p) => ({
+          ...p,
+          test_url: `${getAppBaseUrl()}/test/${p.slug}`,
+        }));
+
+        return toolResult({ count: projects.length, projects });
       }
     );
 
@@ -270,6 +276,7 @@ const handler = createMcpHandler(
             created_at: z.string().nullable().describe("ISO 8601 timestamp"),
             wizard_mode: z.boolean().describe("When true, tester sees one step at a time"),
           }),
+          test_url: z.string().describe("Public tester URL — send this to testers so they can open and complete the checklist. This is NOT the client share/analytics link."),
         },
       },
       async ({ company_name, title, test_scenario, talkpush_login_link, country }) => {
@@ -291,7 +298,11 @@ const handler = createMcpHandler(
 
         if (error) throw new Error(error.message);
 
-        return toolResult({ created: true, project: data });
+        return toolResult({
+          created: true,
+          project: data,
+          test_url: `${getAppBaseUrl()}/test/${data.slug}`,
+        });
       }
     );
 
@@ -446,11 +457,15 @@ const handler = createMcpHandler(
           country: z.string().describe("Uppercase ISO 3166-1 alpha-2 code"),
           created_at: z.string().nullable().describe("ISO 8601 timestamp"),
           wizard_mode: z.boolean().describe("When true, tester sees one step at a time"),
+          test_url: z.string().describe("Public tester URL — the link testers use to open and complete the checklist. This is NOT the client share/analytics link (see get_share_link for that)."),
         },
       },
       async ({ slug }) => {
         const project = await getProjectBySlug(slug);
-        return toolResult(project);
+        return toolResult({
+          ...project,
+          test_url: `${getAppBaseUrl()}/test/${project.slug}`,
+        });
       }
     );
 
@@ -462,7 +477,7 @@ const handler = createMcpHandler(
       {
         title: "Get Share Link",
         description:
-          "Returns a public, read-only share link for the UAT checklist's results — safe to send to clients.",
+          "Returns the CLIENT-FACING analytics/report share link for a UAT checklist — a read-only results dashboard, safe to send to clients. This is NOT the tester link. To get the link testers use to actually complete the checklist, use the `test_url` field returned by create_uat_checklist or get_uat_checklist instead.",
         inputSchema: {
           slug: z.string().describe("The UAT checklist slug"),
         },
