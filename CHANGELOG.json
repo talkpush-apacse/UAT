@@ -14,7 +14,7 @@
       "Hardened bulk review actions against very large selections",
       "Fixed a broken production deploy caused by a missing file"
     ],
-    "deployed_at": "2026-08-13"
+    "deployed_at": "2026-08-14"
   },
   {
     "version": "2.19.0",
