@@ -130,9 +130,11 @@ export async function bulkMarkResolved(
   const supabase = createAdminClient()
   const now = new Date().toISOString()
 
-  // Build composite keys for the batch lookup
-  const checklistItemIds = items.map((i) => i.checklistItemId)
-  const testerIds = items.map((i) => i.testerId)
+  // Build composite keys for the batch lookup. Deduped — items can repeat the
+  // same checklist item or tester across many pairs, and an unbounded .in()
+  // list is what caused a HeadersOverflowError elsewhere in this codebase.
+  const checklistItemIds = Array.from(new Set(items.map((i) => i.checklistItemId)))
+  const testerIds = Array.from(new Set(items.map((i) => i.testerId)))
 
   // 1. Batch-fetch all existing reviews in one query instead of N individual fetches
   const { data: existingRows, error: fetchError } = await supabase
@@ -241,9 +243,11 @@ export async function completeAllReviews(
   const supabase = createAdminClient()
   const now = new Date().toISOString()
 
-  // Build arrays for the batch lookup
-  const checklistItemIds = items.map((i) => i.checklistItemId)
-  const testerIds = items.map((i) => i.testerId)
+  // Build arrays for the batch lookup. Deduped — items can repeat the same
+  // checklist item or tester across many pairs, and an unbounded .in() list
+  // is what caused a HeadersOverflowError elsewhere in this codebase.
+  const checklistItemIds = Array.from(new Set(items.map((i) => i.checklistItemId)))
+  const testerIds = Array.from(new Set(items.map((i) => i.testerId)))
 
   // 1. Batch-fetch all existing reviews in one query instead of N individual fetches
   const { data: existingRows, error: fetchError } = await supabase
