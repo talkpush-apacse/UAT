@@ -50,12 +50,21 @@ export async function GET(
   }> = []
 
   if (testerIds.length > 0) {
+    // Filter via the testers FK (testers!inner(project_id)) instead of an
+    // .in("tester_id", testerIds) array — a project with enough testers can push
+    // that ID list past the request URL's header size limit (see the
+    // HeadersOverflowError this pattern caused on the admin dashboard).
     const { data } = await supabase
       .from("responses")
-      .select("tester_id, checklist_item_id, status, comment")
-      .in("tester_id", testerIds)
+      .select("tester_id, checklist_item_id, status, comment, testers!inner(project_id)")
+      .eq("testers.project_id", project.id)
 
-    responses = data || []
+    responses = (data || []).map(({ tester_id, checklist_item_id, status, comment }) => ({
+      tester_id,
+      checklist_item_id,
+      status,
+      comment,
+    }))
   }
 
   // Build workbook

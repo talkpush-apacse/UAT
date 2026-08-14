@@ -81,21 +81,22 @@ export default async function AdminDashboard({
   }[] = []
 
   if (projectIds.length > 0) {
+    // No .in("project_id", projectIds) filter here: projectIds already covers every
+    // project in the table (the query above has no filter), so it would be a no-op
+    // that only serves to blow up the request URL — see the HeadersOverflowError this
+    // caused once there were enough testers/projects.
     const [testersResult, signoffsResult, checklistItemsResult] = await Promise.all([
       supabase
         .from("testers")
         .select("id, project_id, created_at")
-        .in("project_id", projectIds)
         .range(0, 9999),
       supabase
         .from("signoffs")
         .select("project_id, created_at")
-        .in("project_id", projectIds)
         .range(0, 9999),
       supabase
         .from("checklist_items")
         .select("project_id")
-        .in("project_id", projectIds)
         .range(0, 9999),
     ])
 
@@ -121,16 +122,16 @@ export default async function AdminDashboard({
   }[] = []
 
   if (testerIds.length > 0) {
+    // Same reasoning as above: testerIds already covers every tester fetched, so
+    // filtering by it again is a no-op that only inflates the request URL.
     const [responsesResult, adminReviewsResult] = await Promise.all([
       supabase
         .from("responses")
         .select("tester_id, updated_at")
-        .in("tester_id", testerIds)
         .range(0, 9999),
       supabase
         .from("admin_reviews")
         .select("tester_id, updated_at")
-        .in("tester_id", testerIds)
         .range(0, 9999),
     ])
 

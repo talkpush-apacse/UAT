@@ -126,21 +126,22 @@ export default async function ReviewPage({
   let attachmentsList: AttachmentData[] = []
 
   if (testerIds.length > 0 && itemIds.length > 0) {
+    // No .in("tester_id", ...) filter here: checklist_item_id is already scoped to
+    // this project's items, which fully determines project membership on its own —
+    // adding the tester_id list too only inflates the request URL (this is what
+    // caused a HeadersOverflowError on the admin dashboard's equivalent query).
     const [responsesResult, adminReviewsResult, reviewHistoryResult] = await Promise.all([
       supabase
         .from("responses")
         .select("id, tester_id, checklist_item_id, status, comment")
-        .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds),
       supabase
         .from("admin_reviews")
         .select("checklist_item_id, tester_id, finding_type, resolution_status, notes")
-        .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds),
       supabase
         .from("admin_review_history")
         .select("checklist_item_id, tester_id, field_changed, old_value, new_value, changed_at")
-        .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds)
         .order("changed_at", { ascending: false }),
     ])
