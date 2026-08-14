@@ -1,5 +1,22 @@
 [
   {
+    "version": "2.20.0",
+    "name": "Version 2.20.0 - Mobile Numbers & Reliability",
+    "changes": [
+      "Added tester mobile numbers to the Tester Progress table",
+      "Added tester mobile numbers to the Review page tester header",
+      "MCP checklist tools now return the tester link (test_url)",
+      "Exposed tester remarks in the MCP get_admin_reviews tool",
+      "Fixed a bug that could crash MCP clients on some tool calls",
+      "Fixed a newline bug that broke generated tester links",
+      "Fixed crashes on Admin, Project, and Review pages with many testers",
+      "Fixed the same crash risk on Analytics, AI Summary, and Notify Testers",
+      "Hardened bulk review actions against very large selections",
+      "Fixed a broken production deploy caused by a missing file"
+    ],
+    "deployed_at": "2026-08-13"
+  },
+  {
     "version": "2.19.0",
     "name": "Version 2.19.0 - Evidence Required",
     "changes": [
