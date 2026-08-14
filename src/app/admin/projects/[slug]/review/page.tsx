@@ -45,7 +45,7 @@ export type ReviewStep = {
 }
 
 export type TesterSection = {
-  tester: { id: string; name: string; email: string }
+  tester: { id: string; name: string; email: string; mobile: string }
   steps: ReviewStep[]
 }
 
@@ -71,7 +71,7 @@ export default async function ReviewPage({
   const [testersResult, checklistItemsResult] = await Promise.all([
     supabase
       .from("testers")
-      .select("id, name, email")
+      .select("id, name, email, mobile")
       .eq("project_id", project.id)
       .order("created_at", { ascending: true }),
     supabase

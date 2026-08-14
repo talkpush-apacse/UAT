@@ -603,6 +603,7 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
                   <div>
                     <p className="text-sm font-semibold text-gray-800">{tester.name}</p>
                     <p className="text-xs text-gray-400">{tester.email}</p>
+                    <p className="text-xs text-gray-400">{tester.mobile}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
