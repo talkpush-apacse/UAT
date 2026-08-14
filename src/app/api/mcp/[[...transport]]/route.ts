@@ -23,11 +23,15 @@ function getAppBaseUrl() {
     .replace(/\/+$/, "");
 }
 
-// Every tool below declares an `outputSchema`, which per the MCP spec means
-// the result MUST include a matching `structuredContent` object — a plain
-// `content` text block alone gets rejected by the client with "Tool has an
-// output schema but no structured content was provided". This wraps both in
-// one place so `data` always ends up in both fields, consistently.
+// Only `search`/`fetch` declare an `outputSchema` now (kept for the ChatGPT
+// MCP Apps spec). All other tools deliberately omit it: the MCP SDK converts
+// Zod schemas to JSON Schema draft-07 with no way to opt into 2020-12, and
+// at least one real MCP client (the official SDK's own Client class) rejects
+// any outputSchema whose declared dialect isn't 2020-12 — which silently
+// broke every tool call's result for that client. Dropping outputSchema
+// sidesteps the incompatibility entirely; `content` still carries the same
+// JSON as text for every client, and `structuredContent` is included too in
+// case a lenient client wants it.
 function toolResult(data: Record<string, unknown>) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
@@ -194,20 +198,6 @@ const handler = createMcpHandler(
             .optional()
             .describe("Filter by company name (case-insensitive partial match). Omit to return all UAT checklists."),
         },
-        outputSchema: {
-          count: z.number().describe("Total number of UAT checklists returned"),
-          projects: z.array(
-            z.object({
-              id: z.string().describe("Internal UUID"),
-              slug: z.string().describe("URL-friendly identifier used in all other tools"),
-              company_name: z.string(),
-              title: z.string().nullable(),
-              test_scenario: z.string().nullable(),
-              created_at: z.string().nullable().describe("ISO 8601 timestamp"),
-              test_url: z.string().describe("Public tester URL — the link testers use to open and complete the checklist"),
-            })
-          ),
-        },
       },
       async ({ company }) => {
         const supabase = createAdminClient();
@@ -259,21 +249,6 @@ const handler = createMcpHandler(
             .regex(/^[A-Za-z]{2}$/)
             .optional()
             .describe("ISO 3166-1 alpha-2 country code for the tester phone input default (e.g. 'PH', 'IN', 'US'). Defaults to 'PH'."),
-        },
-        outputSchema: {
-          created: z.literal(true),
-          project: z.object({
-            id: z.string().describe("Internal UUID"),
-            slug: z.string().describe("Auto-generated URL-friendly identifier"),
-            company_name: z.string(),
-            title: z.string().nullable(),
-            test_scenario: z.string().nullable(),
-            talkpush_login_link: z.string().nullable(),
-            country: z.string().describe("Uppercase ISO 3166-1 alpha-2 code"),
-            created_at: z.string().nullable().describe("ISO 8601 timestamp"),
-            wizard_mode: z.boolean().describe("When true, tester sees one step at a time"),
-          }),
-          test_url: z.string().describe("Public tester URL — send this to testers so they can open and complete the checklist. This is NOT the client share/analytics link."),
         },
       },
       async ({ company_name, title, test_scenario, talkpush_login_link, country }) => {
@@ -444,18 +419,6 @@ const handler = createMcpHandler(
         inputSchema: {
           slug: z.string().describe("The UAT checklist slug (URL identifier)"),
         },
-        outputSchema: {
-          id: z.string().describe("Internal UUID"),
-          slug: z.string(),
-          company_name: z.string(),
-          title: z.string().nullable(),
-          test_scenario: z.string().nullable(),
-          talkpush_login_link: z.string().nullable(),
-          country: z.string().describe("Uppercase ISO 3166-1 alpha-2 code"),
-          created_at: z.string().nullable().describe("ISO 8601 timestamp"),
-          wizard_mode: z.boolean().describe("When true, tester sees one step at a time"),
-          test_url: z.string().describe("Public tester URL — the link testers use to open and complete the checklist. This is NOT the client share/analytics link (see get_share_link for that)."),
-        },
       },
       async ({ slug }) => {
         const project = await getProjectBySlug(slug);
@@ -477,11 +440,6 @@ const handler = createMcpHandler(
           "Returns the CLIENT-FACING analytics/report share link for a UAT checklist — a read-only results dashboard, safe to send to clients. This is NOT the tester link. To get the link testers use to actually complete the checklist, use the `test_url` field returned by create_uat_checklist or get_uat_checklist instead.",
         inputSchema: {
           slug: z.string().describe("The UAT checklist slug"),
-        },
-        outputSchema: {
-          share_url: z.string().describe("Fully-qualified public URL — safe to send to clients; no login required"),
-          slug: z.string(),
-          expires_at: z.null().describe("Always null — share links do not expire"),
         },
       },
       async ({ slug }) => {
@@ -508,26 +466,6 @@ const handler = createMcpHandler(
           "Get all UAT steps for a checklist, ordered by sort_order.",
         inputSchema: {
           slug: z.string().describe("The UAT checklist slug"),
-        },
-        outputSchema: {
-          project_slug: z.string(),
-          project_title: z.string().nullable(),
-          total_steps: z.number().describe("Count of items returned (includes both steps and phase headers)"),
-          items: z.array(
-            z.object({
-              id: z.string().describe("UUID — use this in update_uat_step, delete_uat_steps, and reorder_uat_steps"),
-              actor: z.string().describe("Who performs this step: Candidate, Talkpush, Recruiter, or Referrer/Vendor"),
-              action: z.string().describe("Instruction text shown to the tester"),
-              path: z.string().nullable().describe("URL path or app location for this step"),
-              crm_module: z.string().nullable(),
-              tip: z.string().nullable().describe("Optional helper text shown to testers"),
-              view_sample: z.string().nullable().describe("URL to a sample screenshot"),
-              sort_order: z.number().describe("1-based display position; drives ordering"),
-              step_number: z.number().nullable().describe("Sequential number shown to testers; null for phase_header items"),
-              item_type: z.string().describe("'step' (testable) or 'phase_header' (section label only)"),
-              header_label: z.string().nullable().describe("Short uppercase label for phase_header items (e.g. 'PHASE 1'); null for steps"),
-            })
-          ),
         },
       },
       async ({ slug }) => {
@@ -612,26 +550,6 @@ const handler = createMcpHandler(
               })
             )
             .describe("Array of UAT steps to create"),
-        },
-        outputSchema: {
-          created: z.number().describe("Count of items successfully inserted"),
-          project_slug: z.string(),
-          items: z.array(
-            z.object({
-              id: z.string().describe("UUID of the newly created item"),
-              project_id: z.string().describe("Internal UAT checklist UUID"),
-              actor: z.string(),
-              action: z.string(),
-              path: z.string().nullable(),
-              crm_module: z.string().nullable(),
-              tip: z.string().nullable(),
-              view_sample: z.string().nullable(),
-              sort_order: z.number(),
-              step_number: z.number().nullable().describe("Sequential step number after renumbering; null for phase_header items"),
-              item_type: z.string(),
-              header_label: z.string().nullable(),
-            })
-          ),
         },
       },
       async ({ slug, items }) => {
@@ -721,23 +639,6 @@ const handler = createMcpHandler(
               "Short uppercase label for a section header (e.g. 'PHASE 1' or 'SECTION A'). Ignored when item_type is 'step'."
             ),
         },
-        outputSchema: {
-          updated: z.literal(true),
-          item: z.object({
-            id: z.string(),
-            project_id: z.string().describe("Internal UAT checklist UUID"),
-            actor: z.string(),
-            action: z.string(),
-            path: z.string().nullable(),
-            crm_module: z.string().nullable(),
-            tip: z.string().nullable(),
-            view_sample: z.string().nullable(),
-            sort_order: z.number(),
-            step_number: z.number().nullable().describe("Recomputed sequential number; null for phase_header items"),
-            item_type: z.string(),
-            header_label: z.string().nullable(),
-          }),
-        },
       },
       async ({ id, ...updates }) => {
         const supabase = createAdminClient();
@@ -799,10 +700,6 @@ const handler = createMcpHandler(
             .array(z.string().uuid())
             .describe("Array of UAT step UUIDs to delete"),
         },
-        outputSchema: {
-          deleted: z.number().describe("Count of items deleted"),
-          ids: z.array(z.string()).describe("The UUIDs that were deleted"),
-        },
       },
       async ({ ids }) => {
         const supabase = createAdminClient();
@@ -848,10 +745,6 @@ const handler = createMcpHandler(
               "UAT step UUIDs in the desired order (first = sort_order 1). Must include ALL steps for the UAT checklist — any step omitted will be left at its current position."
             ),
         },
-        outputSchema: {
-          reordered: z.literal(true),
-          count: z.number().describe("Number of items whose sort_order was updated"),
-        },
       },
       async ({ ids }) => {
         const supabase = createAdminClient();
@@ -891,16 +784,6 @@ const handler = createMcpHandler(
           "Get testing progress for a UAT checklist — completion percentage, status breakdown, and tester count.",
         inputSchema: {
           slug: z.string().describe("The UAT checklist slug"),
-        },
-        outputSchema: {
-          project_slug: z.string(),
-          project_title: z.string().nullable(),
-          total_steps: z.number().describe("Count of testable steps (phase headers excluded)"),
-          total_testers: z.number(),
-          total_expected_responses: z.number().describe("total_steps × total_testers — maximum possible responses"),
-          total_responses: z.number().describe("Responses actually submitted so far"),
-          completion_percentage: z.number().describe("Integer 0–100: (total_responses / total_expected_responses) × 100"),
-          status_breakdown: z.record(z.string(), z.number()).describe("Count per status value (e.g. {Pass: 10, Fail: 2, 'N/A': 1, Blocked: 0})"),
         },
       },
       async ({ slug }) => {
@@ -972,20 +855,6 @@ const handler = createMcpHandler(
         inputSchema: {
           slug: z.string().describe("The UAT checklist slug"),
         },
-        outputSchema: {
-          project_slug: z.string(),
-          total_testers: z.number(),
-          testers: z.array(
-            z.object({
-              id: z.string().describe("Tester UUID"),
-              name: z.string(),
-              email: z.string(),
-              mobile: z.string(),
-              test_completed: z.string().nullable().describe("ISO 8601 timestamp when the tester submitted; null if not yet completed"),
-              created_at: z.string().nullable().describe("ISO 8601 timestamp of tester registration"),
-            })
-          ),
-        },
       },
       async ({ slug }) => {
         const supabase = createAdminClient();
@@ -1018,40 +887,6 @@ const handler = createMcpHandler(
           "Get admin review data for all non-pass UAT steps in a checklist, grouped by tester. Returns the tester's own remark, behavior type, resolution status, and admin findings/comments for each flagged step. Used for generating AI summaries of UAT testing results.",
         inputSchema: {
           slug: z.string().describe("The UAT checklist slug"),
-        },
-        outputSchema: {
-          project_slug: z.string(),
-          project_title: z.string().nullable(),
-          total_steps: z.number().describe("Total UAT steps (steps + phase headers)"),
-          total_testers: z.number(),
-          summary_stats: z.object({
-            total_responses: z.number(),
-            pass: z.number(),
-            fail: z.number(),
-            na: z.number(),
-            pass_rate: z.string().describe("Formatted percentage string e.g. '87.5%'"),
-          }),
-          admin_reviews: z.array(
-            z.object({
-              tester_name: z.string(),
-              tester_email: z.string(),
-              total_steps_assigned: z.number(),
-              total_flagged: z.number().describe("Count of non-pass responses for this tester"),
-              resolved_count: z.number().describe("Count of flagged items whose resolution_status is 'Done'"),
-              items: z.array(
-                z.object({
-                  step_number: z.number().nullable(),
-                  actor: z.string().nullable(),
-                  action: z.string().nullable(),
-                  status: z.string().nullable().describe("Response status: Fail, N/A, or Blocked"),
-                  tester_comment: z.string().nullable().describe("The tester's own remark/comment left on this step, if any"),
-                  finding_type: z.string().nullable().describe("Admin-assigned finding category"),
-                  resolution_status: z.string().nullable().describe("Admin resolution state (e.g. 'Done', 'In Progress')"),
-                  findings: z.string().nullable().describe("Admin notes/comments for this item"),
-                })
-              ).describe("Non-pass items sorted by step_number ascending"),
-            })
-          ),
         },
       },
       async ({ slug }) => {
