@@ -18,10 +18,9 @@ async function getProjectBySlug(slug: string) {
 }
 
 function getAppBaseUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com").replace(
-    /\/+$/,
-    ""
-  );
+  return (process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com")
+    .trim()
+    .replace(/\/+$/, "");
 }
 
 // Every tool below declares an `outputSchema`, which per the MCP spec means
@@ -72,8 +71,7 @@ const handler = createMcpHandler(
       },
       async ({ query }) => {
         const supabase = createAdminClient();
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com";
+        const baseUrl = getAppBaseUrl();
 
         const q = query.trim();
         const { data, error } = await supabase
@@ -129,8 +127,7 @@ const handler = createMcpHandler(
       },
       async ({ id }) => {
         const supabase = createAdminClient();
-        const baseUrl =
-          process.env.NEXT_PUBLIC_APP_URL || "https://uat.talkpush.com";
+        const baseUrl = getAppBaseUrl();
 
         const project = await getProjectBySlug(id);
 

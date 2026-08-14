@@ -34,7 +34,7 @@ export async function POST(
     const body = await request.json().catch(() => ({}))
     const origin: string | null = body.origin ?? null
     const testerIds: string[] | null = Array.isArray(body.testerIds) ? body.testerIds : null
-    const baseUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app"
+    const baseUrl = (origin || process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app").trim()
 
     const brevo = new BrevoClient({ apiKey: brevoKey })
     const supabase = createAdminClient()
