@@ -84,10 +84,14 @@ export async function GET(
       })
     }
 
+    // No .in("tester_id", ...) filter here: checklist_item_id is already scoped
+    // to this project's items, which fully determines project membership on its
+    // own — adding the tester_id list too only inflates the request URL (this is
+    // what caused a HeadersOverflowError on the admin dashboard's equivalent
+    // query, and this endpoint is polled every 5s while the page is open).
     const { data: responses, error: responsesError } = await supabase
       .from("responses")
       .select("tester_id, status")
-      .in("tester_id", testers.map((t) => t.id))
       .in("checklist_item_id", itemIds)
 
     if (responsesError) {

@@ -96,11 +96,14 @@ export async function POST(
       comment: string | null
     }[] = []
 
+    // No .in("tester_id", ...) filter here: checklist_item_id is already scoped
+    // to this project's items, which fully determines project membership on its
+    // own — adding the tester_id list too only inflates the request URL (this is
+    // what caused a HeadersOverflowError on the admin dashboard's equivalent query).
     if (testerIds.length > 0 && itemIds.length > 0) {
       const { data } = await supabase
         .from("responses")
         .select("id, tester_id, checklist_item_id, status, comment")
-        .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds)
       responses = data || []
     }
@@ -118,7 +121,6 @@ export async function POST(
       const { data } = await supabase
         .from("admin_reviews")
         .select("checklist_item_id, tester_id, finding_type, resolution_status, notes")
-        .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds)
       adminReviews = data || []
     }

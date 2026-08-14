@@ -67,8 +67,6 @@ export async function POST(
       return NextResponse.json({ sent: 0, errors: [] })
     }
 
-    const filteredTesterIds = testerList.map((t) => t.id)
-
     // 3. Fetch checklist items
     const { data: checklistItems } = await supabase
       .from("checklist_items")
@@ -81,17 +79,21 @@ export async function POST(
     }
 
     // 4. Fetch responses
+    // No .in("tester_id", ...) filter here: checklist_item_id is already scoped
+    // to this project's items, which fully determines project membership on its
+    // own — adding the tester_id list too only inflates the request URL (this is
+    // what caused a HeadersOverflowError on the admin dashboard's equivalent
+    // query). Results are narrowed to the requested testers via the in-memory
+    // tester_id comparisons in the per-tester loop below.
     const { data: responses } = await supabase
       .from("responses")
       .select("tester_id, checklist_item_id, status")
-      .in("tester_id", filteredTesterIds)
       .in("checklist_item_id", itemIds)
 
     // 5. Fetch admin reviews
     const { data: adminReviews } = await supabase
       .from("admin_reviews")
       .select("tester_id, checklist_item_id, resolution_status")
-      .in("tester_id", filteredTesterIds)
       .in("checklist_item_id", itemIds)
 
     const responseList = responses || []

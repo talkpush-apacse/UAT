@@ -101,17 +101,20 @@ export default async function PublicAnalyticsPage({
     notes: string | null
   }[] = []
 
+  // No .in("tester_id", ...) filter here: checklist_item_id is already scoped
+  // to this project's items, which fully determines project membership on its
+  // own — adding the tester_id list too only inflates the request URL (this is
+  // what caused a HeadersOverflowError on the admin dashboard's equivalent
+  // query). This page is client-facing, so an overflow here is externally visible.
   if (testerIds.length > 0 && itemIds.length > 0) {
     const [responsesResult, adminReviewsResult] = await Promise.all([
       supabase
         .from("responses")
         .select("tester_id, checklist_item_id, status, comment")
-        .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds),
       supabase
         .from("admin_reviews")
         .select("checklist_item_id, tester_id, finding_type, resolution_status, notes")
-        .in("tester_id", testerIds)
         .in("checklist_item_id", itemIds),
     ])
 
