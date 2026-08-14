@@ -498,11 +498,15 @@ export async function listProjectsForCopy(
     if (error) return { error: error.message }
     if (!projects || projects.length === 0) return { projects: [] }
 
-    // Fetch item counts for each project in one query
+    // Fetch item counts for each project in one query. No .in("project_id", ...)
+    // filter: `projects` already covers every project except the current one, so
+    // filtering by its own ID list is a no-op that only inflates the request URL
+    // (this is what caused a HeadersOverflowError elsewhere in this codebase once
+    // there were enough IDs). The current project's rows get fetched too, but are
+    // simply never looked up below since countMap is only read via `projects`.
     const { data: counts } = await supabase
       .from('checklist_items')
       .select('project_id')
-      .in('project_id', projects.map((p) => p.id))
 
     const countMap: Record<string, number> = {}
     ;(counts || []).forEach((row) => {
