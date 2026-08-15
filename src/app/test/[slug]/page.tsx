@@ -25,13 +25,13 @@ export default async function TesterRegistrationPage({
       <div className="fixed top-0 left-0 right-0 h-1.5 brand-gradient-strip z-10" />
       <div className="w-full max-w-md space-y-5">
 
-        {/* Talkpush Logo */}
+        {/* UAT Checklist Logo */}
         <div className="flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/talkpush-logo.svg"
-            alt="Talkpush"
-            className="h-9 w-auto"
+            src="/uat-isolated-monogram.svg"
+            alt="UAT Checklist"
+            className="h-14 w-auto"
           />
         </div>
 

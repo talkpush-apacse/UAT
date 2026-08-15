@@ -33,6 +33,7 @@ export const metadata: Metadata = {
     title: "UAT Checklist",
   },
   icons: {
+    icon: "/uat-checkbox-favicon.svg",
     apple: "/icons/apple-touch-icon.png",
   },
 }
