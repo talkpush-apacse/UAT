@@ -1,9 +1,10 @@
 import Link from "next/link"
 import { logoutAdmin } from "@/lib/actions/auth"
 import { Button } from "@/components/ui/button"
-import { LogOut, LayoutDashboard } from "lucide-react"
+import { LogOut } from "lucide-react"
 import { AboutDialog } from "@/components/about/AboutDialog"
 import { AdminBreadcrumbs } from "@/components/admin/admin-breadcrumbs"
+import { UatCheckboxFavicon } from "@/components/brand/UatCheckboxFavicon"
 
 export default function AdminLayout({
   children,
@@ -19,9 +20,7 @@ export default function AdminLayout({
           <div className="flex justify-between h-14 items-center gap-4">
             {/* Left: logo + dynamic breadcrumb trail */}
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-                <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <UatCheckboxFavicon className="h-8 w-8 flex-shrink-0" />
               <Link
                 href="/admin"
                 className="font-nav font-semibold text-base text-foreground hover:text-brand-sage-darker transition-colors flex-shrink-0"
