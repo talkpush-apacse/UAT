@@ -81,6 +81,39 @@ export async function registerTester(
 
   if (error) {
     if (error.code === '23505') {
+      // Concurrent submission raced this one to the insert — look up whoever
+      // won so this request still completes as a normal returning-tester
+      // flow instead of surfacing a bare error requiring a resubmit. Two
+      // separate .eq() lookups (matching the checks above) rather than a
+      // single .or() filter, since `mobile` has no format constraint and
+      // could contain characters that break PostgREST's .or() syntax.
+      const { data: winnerByEmail } = await supabase
+        .from('testers')
+        .select('id, name')
+        .eq('project_id', parsed.data.projectId)
+        .eq('email', parsed.data.email)
+        .single()
+
+      const winner =
+        winnerByEmail ??
+        (
+          await supabase
+            .from('testers')
+            .select('id, name')
+            .eq('project_id', parsed.data.projectId)
+            .eq('mobile', parsed.data.mobile)
+            .single()
+        ).data
+
+      if (winner) {
+        return {
+          success: true,
+          testerId: winner.id,
+          returning: true,
+          testerName: winner.name,
+        }
+      }
+
       return { error: 'A tester with this email or mobile already exists for this project' }
     }
     return { error: error.message }

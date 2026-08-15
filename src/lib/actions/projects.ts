@@ -199,34 +199,38 @@ export async function duplicateProject(
   // Fetch and copy all checklist items — item_type/header_label must be
   // included or phase headers silently become numbered 'step' rows in the
   // copy (item_type defaults to 'step' at the DB level).
-  const { data: items, error: itemsFetchError } = await supabase
-    .from('checklist_items')
-    .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample, item_type, header_label')
-    .eq('project_id', projectId)
-    .order('sort_order')
-
-  if (itemsFetchError) {
-    await supabase.from('projects').delete().eq('id', newProject.id)
-    return { error: itemsFetchError.message }
-  }
-
-  if (items && items.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const copies = items.map(({ id, project_id, ...rest }) => ({
-      ...rest,
-      project_id: newProject.id,
-    }))
-    const { error: itemsError } = await supabase
+  //
+  // Everything from here on is wrapped in one try/catch so that ANY failure
+  // — a returned Supabase error or a genuine thrown exception (network
+  // blip, timeout) — cleans up the half-created project rather than leaving
+  // an orphaned, empty duplicate behind.
+  try {
+    const { data: items, error: itemsFetchError } = await supabase
       .from('checklist_items')
-      .insert(copies)
-    if (itemsError) {
-      await supabase.from('projects').delete().eq('id', newProject.id)
-      return { error: itemsError.message }
-    }
+      .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample, item_type, header_label')
+      .eq('project_id', projectId)
+      .order('sort_order')
 
-    // Phase headers carry step_number = NULL; re-run the sequential
-    // renumbering RPC so copied steps get clean, gap-free numbers.
-    await supabase.rpc('renumber_steps', { p_project_id: newProject.id })
+    if (itemsFetchError) throw new Error(itemsFetchError.message)
+
+    if (items && items.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const copies = items.map(({ id, project_id, ...rest }) => ({
+        ...rest,
+        project_id: newProject.id,
+      }))
+      const { error: itemsError } = await supabase
+        .from('checklist_items')
+        .insert(copies)
+      if (itemsError) throw new Error(itemsError.message)
+
+      // Phase headers carry step_number = NULL; re-run the sequential
+      // renumbering RPC so copied steps get clean, gap-free numbers.
+      await supabase.rpc('renumber_steps', { p_project_id: newProject.id })
+    }
+  } catch (err) {
+    await supabase.from('projects').delete().eq('id', newProject.id)
+    return { error: err instanceof Error ? err.message : 'Failed to duplicate checklist items' }
   }
 
   revalidatePath('/admin')

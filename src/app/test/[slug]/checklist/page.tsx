@@ -15,20 +15,22 @@ export default async function ChecklistPage({
 
   const supabase = createAnonSupabaseClient()
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("id, slug, company_name, test_scenario, talkpush_login_link, wizard_mode")
-    .eq("slug", params.slug)
-    .single()
+  // Project lookup and tester lookup are independent — the tester is fetched
+  // by its own id, and only cross-checked against project.id afterward.
+  const [{ data: project }, { data: tester }] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("id, slug, company_name, test_scenario, talkpush_login_link, wizard_mode")
+      .eq("slug", params.slug)
+      .single(),
+    supabase
+      .from("testers")
+      .select("id, name, project_id, test_completed")
+      .eq("id", searchParams.tester)
+      .single(),
+  ])
 
   if (!project) notFound()
-
-  // Verify tester exists and belongs to this project
-  const { data: tester } = await supabase
-    .from("testers")
-    .select("id, name, project_id, test_completed")
-    .eq("id", searchParams.tester)
-    .single()
 
   if (!tester || tester.project_id !== project.id) {
     redirect(`/test/${params.slug}`)
