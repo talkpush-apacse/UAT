@@ -1,5 +1,27 @@
 [
   {
+    "version": "2.21.0",
+    "name": "Version 2.21.0 - Performance & Reliability",
+    "changes": [
+      "Improved checklist editor page load speed by ~65%",
+      "Fixed duplicated checklists breaking section headers",
+      "Fixed tester comments dropping on fast navigation",
+      "Fixed rapid status clicks showing a stale result",
+      "Fixed MCP integration failing open when misconfigured",
+      "Improved status badge consistency across admin pages",
+      "Improved MCP server and step editor code organization"
+    ],
+    "deployed_at": "2026-08-15"
+  },
+  {
+    "version": "2.20.1",
+    "name": "Version 2.20.1 - Copy Checklist Fix",
+    "changes": [
+      "Fixed a crash risk when copying steps from another UAT checklist"
+    ],
+    "deployed_at": "2026-08-14"
+  },
+  {
     "version": "2.20.0",
     "name": "Version 2.20.0 - Mobile Numbers & Reliability",
     "changes": [

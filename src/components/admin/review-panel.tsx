@@ -4,18 +4,10 @@ import { useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X, FileText, File, MessageSquare } from "lucide-react"
 import { saveAdminReview, bulkMarkResolved } from "@/lib/actions/admin-reviews"
+import { StatusBadge } from "@/components/ui/status-badge"
 import type { TesterSection, HistoryEntry, AttachmentData } from "@/app/admin/projects/[slug]/review/page"
 
 type SaveStatus = "idle" | "saving" | "saved" | "error"
-
-const STATUS_PILL: Record<string, string> = {
-  Pass: "bg-green-100 text-green-800",
-  Fail: "bg-red-100 text-red-800",
-  "N/A": "bg-gray-100 text-gray-700",
-  Blocked: "bg-orange-100 text-orange-800",
-  "Up For Review": "bg-amber-100 text-amber-800",
-  "—": "bg-gray-100 text-gray-500",
-}
 
 const PATH_STYLES: Record<string, string> = {
   Happy: "bg-green-50 text-green-700 border-green-200",
@@ -307,13 +299,10 @@ function StepRow({ step, testerId, projectSlug, selected, onToggle }: StepRowPro
           </span>
 
           {/* Tester status pill */}
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-              STATUS_PILL[step.testerStatus] ?? "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {step.testerStatus === "Blocked" ? "Up For Review" : step.testerStatus}
-          </span>
+          <StatusBadge
+            status={step.testerStatus}
+            label={step.testerStatus === "Blocked" ? "Up For Review" : step.testerStatus}
+          />
         </div>
 
         {/* Action text */}

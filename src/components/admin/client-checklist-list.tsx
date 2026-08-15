@@ -33,13 +33,8 @@ import {
 import { deleteProject } from "@/lib/actions/projects"
 import DuplicateProjectDialog from "@/components/admin/duplicate-project-dialog"
 import { toast } from "sonner"
-import type { ClientGroup, ProjectWithCounts, ProjectStatus } from "./client-grouped-dashboard"
-
-function getProjectStatus(project: ProjectWithCounts): ProjectStatus {
-  if (project.signoffCount > 0) return "Signed Off"
-  if (project.testerCount > 0) return "In Progress"
-  return "Not Started"
-}
+import type { ClientGroup, ProjectStatus } from "./client-grouped-dashboard"
+import { getProjectStatus } from "@/lib/utils/project-status"
 
 function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   const styles: Record<ProjectStatus, string> = {
@@ -258,7 +253,7 @@ export default function ClientChecklistList({ group }: Props) {
               </thead>
               <tbody>
                 {filteredProjects.map((project) => {
-                  const status = getProjectStatus(project)
+                  const status = getProjectStatus(project.testerCount, project.signoffCount)
                   return (
                     <tr
                       key={project.id}
@@ -334,7 +329,7 @@ export default function ClientChecklistList({ group }: Props) {
       {viewMode === "cards" && filteredProjects.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((project) => {
-            const status = getProjectStatus(project)
+            const status = getProjectStatus(project.testerCount, project.signoffCount)
             return (
               <Link key={project.id} href={`/admin/projects/${project.slug}`}>
                 <Card className="group bg-white rounded-xl border border-gray-100 border-l-[3px] border-l-brand-sage-darker shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 cursor-pointer h-full">

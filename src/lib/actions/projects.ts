@@ -196,10 +196,12 @@ export async function duplicateProject(
   if (projError) return { error: projError.message }
   if (!newProject) return { error: 'Failed to create duplicated project' }
 
-  // Fetch and copy all checklist items
+  // Fetch and copy all checklist items — item_type/header_label must be
+  // included or phase headers silently become numbered 'step' rows in the
+  // copy (item_type defaults to 'step' at the DB level).
   const { data: items, error: itemsFetchError } = await supabase
     .from('checklist_items')
-    .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample')
+    .select('id, project_id, step_number, path, actor, action, crm_module, tip, sort_order, view_sample, item_type, header_label')
     .eq('project_id', projectId)
     .order('sort_order')
 
@@ -221,6 +223,10 @@ export async function duplicateProject(
       await supabase.from('projects').delete().eq('id', newProject.id)
       return { error: itemsError.message }
     }
+
+    // Phase headers carry step_number = NULL; re-run the sequential
+    // renumbering RPC so copied steps get clean, gap-free numbers.
+    await supabase.rpc('renumber_steps', { p_project_id: newProject.id })
   }
 
   revalidatePath('/admin')

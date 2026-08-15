@@ -75,6 +75,9 @@ export function AdminBreadcrumbs() {
   const projectLabel = projectInfo
     ? (projectInfo.title || projectInfo.company_name)
     : slug
+  const clientHref = projectInfo
+    ? `/admin?client=${encodeURIComponent(projectInfo.company_name)}`
+    : null
 
   return (
     <div className="flex items-center gap-1 text-sm min-w-0">
@@ -85,9 +88,13 @@ export function AdminBreadcrumbs() {
         <>
           {projectInfo && (
             <>
-              <span className="hidden sm:inline text-gray-400 truncate max-w-[100px]">
+              <Link
+                href={clientHref ?? "/admin"}
+                className="hidden sm:inline text-gray-400 hover:text-brand-sage-darker transition-colors truncate max-w-[100px]"
+                title={`View ${projectInfo.company_name} UAT checklists`}
+              >
                 {projectInfo.company_name}
-              </span>
+              </Link>
               <ChevronRight className="hidden sm:inline h-3.5 w-3.5 flex-shrink-0 text-gray-300" />
             </>
           )}
@@ -108,9 +115,13 @@ export function AdminBreadcrumbs() {
         <>
           {projectInfo && (
             <>
-              <span className="hidden sm:inline text-gray-400 truncate max-w-[100px]">
+              <Link
+                href={clientHref ?? "/admin"}
+                className="hidden sm:inline text-gray-400 hover:text-brand-sage-darker transition-colors truncate max-w-[100px]"
+                title={`View ${projectInfo.company_name} UAT checklists`}
+              >
                 {projectInfo.company_name}
-              </span>
+              </Link>
               <ChevronRight className="hidden sm:inline h-3.5 w-3.5 flex-shrink-0 text-gray-300" />
             </>
           )}

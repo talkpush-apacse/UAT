@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import MDEditor from "@uiw/react-md-editor"
+import MDEditor from "./lazy-md-editor"
 
 /* ------------------------------------------------------------------ */
 /*  Color presets                                                       */

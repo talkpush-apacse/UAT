@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Button } from "@/components/ui/button"
@@ -26,8 +25,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { updateChecklistItem } from "@/lib/actions/checklist"
-import { toast } from "sonner"
 import {
   GripVertical,
   Pencil,
@@ -39,13 +36,14 @@ import {
   FileText,
   Bookmark,
 } from "lucide-react"
-import MDEditor from "@uiw/react-md-editor"
+import MDEditor from "./lazy-md-editor"
 import ReactMarkdown from "react-markdown"
 import rehypeRaw from "rehype-raw"
 import RichActionEditor from "./RichActionEditor"
-import { SampleMediaInput, validateSampleFile } from "./sample-media-input"
-import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES, isPhaseHeader } from "./types"
-import type { Actor } from "@/lib/constants"
+import { SampleMediaInput } from "./sample-media-input"
+import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES } from "./types"
+import { resolveViewSampleUrl } from "@/lib/utils/sample-url"
+import { useStepEditor } from "./use-step-editor"
 
 /* ------------------------------------------------------------------ */
 /*  SortableStepCard                                                   */
@@ -70,10 +68,18 @@ export function SortableStepCard({
   isSelected: boolean
   onSelectToggle: (id: string) => void
 }) {
-  const [editing, setEditing] = useState(false)
-  const [editData, setEditData] = useState(item)
-  const [pendingSampleFile, setPendingSampleFile] = useState<File | null>(null)
-  const [saving, setSaving] = useState(false)
+  const {
+    isHeader,
+    editing,
+    editData,
+    setEditData,
+    saving,
+    pendingSampleFile,
+    setPendingSampleFile,
+    startEditing,
+    handleSave,
+    handleCancel,
+  } = useStepEditor(item, slug, onUpdate)
 
   const {
     attributes,
@@ -87,104 +93,6 @@ export function SortableStepCard({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  }
-
-  const isHeader = isPhaseHeader(item)
-
-  const uploadSampleFile = async (file: File): Promise<string> => {
-    const validationError = validateSampleFile(file)
-    if (validationError) {
-      throw new Error(validationError)
-    }
-
-    const response = await fetch("/api/admin/sample-upload-url", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fileName: file.name,
-        fileSize: file.size,
-        mimeType: file.type,
-        projectId: item.project_id,
-        checklistItemId: item.id,
-      }),
-    })
-
-    const data = await response.json().catch(() => ({
-      error: "Unable to prepare sample upload",
-    })) as {
-      signedUrl?: string
-      publicUrl?: string
-      error?: string
-    }
-
-    if (!response.ok || !data.signedUrl || !data.publicUrl) {
-      throw new Error(data.error || "Unable to prepare sample upload")
-    }
-
-    const uploadResponse = await fetch(data.signedUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file,
-    })
-
-    if (!uploadResponse.ok) {
-      throw new Error("Unable to upload sample image")
-    }
-
-    return data.publicUrl
-  }
-
-  const handleSave = async () => {
-    if (saving) return
-
-    setSaving(true)
-
-    try {
-      let dataToSave = editData
-
-      if (!isHeader && pendingSampleFile) {
-        const publicUrl = await uploadSampleFile(pendingSampleFile)
-        dataToSave = { ...editData, view_sample: publicUrl }
-        setEditData(dataToSave)
-        setPendingSampleFile(null)
-      }
-
-      const result = isHeader
-        ? await updateChecklistItem(slug, {
-            id: item.id,
-            itemType: "phase_header",
-            action: dataToSave.action,
-            tip: dataToSave.tip || "",
-            headerLabel: dataToSave.header_label || "",
-          })
-        : await updateChecklistItem(slug, {
-            id: item.id,
-            path: dataToSave.path as "Happy" | "Non-Happy" | null,
-            actor: dataToSave.actor as Actor,
-            action: dataToSave.action,
-            viewSample: dataToSave.view_sample || "",
-            crmModule: dataToSave.crm_module || "",
-            tip: dataToSave.tip || "",
-          })
-
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        onUpdate(dataToSave)
-        setEditing(false)
-        toast.success(isHeader ? "Section header updated" : "Step updated")
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to save changes")
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleCancel = () => {
-    setEditing(false)
-    setEditData(item)
-    setPendingSampleFile(null)
   }
 
   /* ---------- EDIT MODE — phase header variant ---------- */
@@ -476,11 +384,7 @@ export function SortableStepCard({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 text-gray-400 hover:text-brand-lavender-darker hover:bg-brand-lavender-lighter/50"
-                  onClick={() => {
-                    setEditData(item)
-                    setPendingSampleFile(null)
-                    setEditing(true)
-                  }}
+                  onClick={startEditing}
                   title="Edit section header"
                 >
                   <Pencil className="h-4 w-4" />
@@ -608,7 +512,7 @@ export function SortableStepCard({
                 )}
                 {item.view_sample?.trim() && (
                   <a
-                    href={item.view_sample}
+                    href={resolveViewSampleUrl(item.view_sample)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-brand-sage-darker hover:text-primary hover:underline"
@@ -628,11 +532,7 @@ export function SortableStepCard({
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 text-gray-400 hover:text-brand-sage-darker hover:bg-brand-sage-lightest"
-                onClick={() => {
-                  setEditData(item)
-                  setPendingSampleFile(null)
-                  setEditing(true)
-                }}
+                onClick={startEditing}
                 title="Edit step"
               >
                 <Pencil className="h-4 w-4" />

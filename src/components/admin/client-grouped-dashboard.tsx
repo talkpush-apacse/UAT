@@ -4,8 +4,9 @@ import { useState } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Building2, Search, SearchX, ChevronRight, Plus } from "lucide-react"
+import type { ProjectStatus } from "@/lib/utils/project-status"
 
-export type ProjectStatus = "Signed Off" | "In Progress" | "Not Started"
+export type { ProjectStatus }
 
 export interface ProjectWithCounts {
   id: string

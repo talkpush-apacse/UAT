@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import MDEditor from "@uiw/react-md-editor"
+import MDEditor from "./lazy-md-editor"
 import RichActionEditor from "./RichActionEditor"
 import {
   Select,

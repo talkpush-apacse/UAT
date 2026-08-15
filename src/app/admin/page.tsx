@@ -8,19 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Plus, FolderOpen, Building2, ArrowLeft } from "lucide-react"
 import ClientGroupedDashboard, {
   type ClientGroup,
-  type ProjectStatus,
   type ProjectWithCounts,
 } from "@/components/admin/client-grouped-dashboard"
 import ClientChecklistList from "@/components/admin/client-checklist-list"
+import { getProjectStatus } from "@/lib/utils/project-status"
 
 function toTimestamp(value: string | null | undefined) {
   return value ? new Date(value).getTime() : 0
-}
-
-function getProjectStatus(testerCount: number, signoffCount: number): ProjectStatus {
-  if (signoffCount > 0) return "Signed Off"
-  if (testerCount > 0) return "In Progress"
-  return "Not Started"
 }
 
 function keepLatestTimestamp(

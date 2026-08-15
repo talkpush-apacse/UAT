@@ -193,10 +193,20 @@ export default function ChecklistItem({
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const supabaseRef = useRef(createAnonClient())
 
+  // Tracks the latest status/comment on every render (no effect needed) so the
+  // unmount-flush below can read fresh values without re-subscribing on every
+  // keystroke. Also guards against out-of-order concurrent saves: only the
+  // most recently issued save is allowed to update state — an earlier click's
+  // response resolving after a later one can no longer clobber it.
+  const latestArgsRef = useRef({ status, comment })
+  latestArgsRef.current = { status, comment }
+  const latestRequestIdRef = useRef(0)
+
   const save = useCallback(
     async (newStatus: string | null, newComment: string) => {
       if (previewMode) return
 
+      const requestId = ++latestRequestIdRef.current
       setSaveStatus("saving")
 
       try {
@@ -215,6 +225,10 @@ export default function ChecklistItem({
           )
           .select("id")
           .single()
+
+        // A newer save has since been issued — ignore this now-stale result
+        // so it can't overwrite state a more recent click already set.
+        if (requestId !== latestRequestIdRef.current) return
 
         if (error) {
           setSaveStatus("error")
@@ -235,7 +249,7 @@ export default function ChecklistItem({
         setSaveStatus("saved")
         setTimeout(() => setSaveStatus("idle"), 2000)
       } catch {
-        setSaveStatus("error")
+        if (requestId === latestRequestIdRef.current) setSaveStatus("error")
       }
     },
     [testerId, item.id, responseId, onResponseUpdate, previewMode]
@@ -266,11 +280,16 @@ export default function ChecklistItem({
     }, 500)
   }
 
+  // Flush (not cancel) a pending debounced comment save on unmount — otherwise
+  // a comment typed just before navigation is silently dropped.
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+        save(latestArgsRef.current.status, latestArgsRef.current.comment)
+      }
     }
-  }, [])
+  }, [save])
 
   // Validate the guide URL before deciding which embed variant to show — #1
   const rawSample = item.view_sample?.trim() || null
