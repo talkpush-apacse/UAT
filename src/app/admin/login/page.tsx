@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import { LayoutDashboard } from "lucide-react"
+import { UatCheckboxFavicon } from "@/components/brand/UatCheckboxFavicon"
 
 const initialState: AuthState = {}
 
@@ -46,9 +46,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50/50 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
-            <LayoutDashboard className="h-6 w-6 text-white" />
-          </div>
+          <UatCheckboxFavicon className="h-12 w-12 mx-auto mb-4" />
           <h1 className="text-2xl font-semibold text-gray-900">UAT Admin</h1>
           <p className="text-sm text-gray-500 mt-1">Sign in to manage your UAT checklists</p>
         </div>
