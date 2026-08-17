@@ -426,6 +426,27 @@ function getEffectiveResolutionStatus(step: TesterSection["steps"][0]): string {
   return step.adminReview?.resolutionStatus ?? "Not Yet Started"
 }
 
+// Feedback type filter — based on the tester's reported status (the colored pill
+// on each step), not the admin's resolution progress. "Blocked" and "Up For Review"
+// are merged into one option since the badge displays them identically (see
+// StatusBadge's label override for "Blocked").
+const FEEDBACK_TYPE_OPTIONS: { value: string; activeStyle: string }[] = [
+  { value: "Fail", activeStyle: "bg-red-600 text-white border-red-600" },
+  { value: "Up For Review", activeStyle: "bg-amber-500 text-white border-amber-500" },
+  { value: "N/A", activeStyle: "bg-gray-500 text-white border-gray-500" },
+  { value: "Pass", activeStyle: "bg-green-600 text-white border-green-600" },
+]
+const ALL_FEEDBACK_TYPES = FEEDBACK_TYPE_OPTIONS.map((o) => o.value)
+
+/** Maps a raw tester status to a feedback-type filter key, or null if it has no
+ *  known status (e.g. flagged For Retesting with no tester response yet) —
+ *  such steps are never hidden by this filter. */
+function getFeedbackTypeKey(testerStatus: string): string | null {
+  if (testerStatus === "Blocked" || testerStatus === "Up For Review") return "Up For Review"
+  if (testerStatus === "Pass" || testerStatus === "Fail" || testerStatus === "N/A") return testerStatus
+  return null
+}
+
 interface Props {
   testerSections: TesterSection[]
   projectSlug: string
@@ -437,6 +458,9 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkResult, setBulkResult] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [resolutionFilter, setResolutionFilter] = useState<string>("All")
+  const [feedbackTypeFilter, setFeedbackTypeFilter] = useState<Set<string>>(
+    new Set(ALL_FEEDBACK_TYPES)
+  )
 
   const toggleItem = (key: string) => {
     setSelectedItems((prev) => {
@@ -472,6 +496,21 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
 
   const clearSelection = () => setSelectedItems(new Set())
 
+  const toggleFeedbackType = (value: string) => {
+    setFeedbackTypeFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(value)) {
+        next.delete(value)
+      } else {
+        next.add(value)
+      }
+      return next
+    })
+  }
+
+  const selectAllFeedbackTypes = () => setFeedbackTypeFilter(new Set(ALL_FEEDBACK_TYPES))
+  const isAllFeedbackSelected = feedbackTypeFilter.size === ALL_FEEDBACK_TYPES.length
+
   const handleBulkResolve = async () => {
     setBulkLoading(true)
     setBulkResult(null)
@@ -501,17 +540,20 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
     }
   }
 
-  const filteredSections =
-    resolutionFilter === "All"
-      ? testerSections
-      : testerSections
-          .map((section) => ({
-            ...section,
-            steps: section.steps.filter(
-              (step) => getEffectiveResolutionStatus(step) === resolutionFilter
-            ),
-          }))
-          .filter((section) => section.steps.length > 0)
+  const isFiltering = resolutionFilter !== "All" || !isAllFeedbackSelected
+
+  const filteredSections = testerSections
+    .map((section) => ({
+      ...section,
+      steps: section.steps.filter((step) => {
+        const matchesResolution =
+          resolutionFilter === "All" || getEffectiveResolutionStatus(step) === resolutionFilter
+        const feedbackKey = getFeedbackTypeKey(step.testerStatus)
+        const matchesFeedbackType = feedbackKey === null || feedbackTypeFilter.has(feedbackKey)
+        return matchesResolution && matchesFeedbackType
+      }),
+    }))
+    .filter((section) => section.steps.length > 0)
 
   return (
     <div className="relative pb-20">
@@ -531,7 +573,7 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
             {label}
           </button>
         ))}
-        {resolutionFilter !== "All" && (
+        {isFiltering && (
           <span className="text-xs text-gray-400 ml-1">
             {filteredSections.reduce((acc, s) => acc + s.steps.length, 0)} item
             {filteredSections.reduce((acc, s) => acc + s.steps.length, 0) !== 1 ? "s" : ""}
@@ -539,15 +581,50 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
         )}
       </div>
 
-      {filteredSections.length === 0 && resolutionFilter !== "All" ? (
+      {/* Feedback Type Filter — tester-reported status, multi-select */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="text-xs font-medium text-gray-500 mr-1">Feedback Type:</span>
+        <button
+          type="button"
+          onClick={selectAllFeedbackTypes}
+          aria-pressed={isAllFeedbackSelected}
+          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
+            isAllFeedbackSelected
+              ? "bg-gray-800 text-white border-gray-800"
+              : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+          }`}
+        >
+          All
+        </button>
+        {FEEDBACK_TYPE_OPTIONS.map(({ value, activeStyle }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => toggleFeedbackType(value)}
+            aria-pressed={feedbackTypeFilter.has(value)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
+              feedbackTypeFilter.has(value)
+                ? activeStyle
+                : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+            }`}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
+
+      {filteredSections.length === 0 && isFiltering ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-sm font-medium text-gray-500">No items with status &ldquo;{resolutionFilter}&rdquo;</p>
+          <p className="text-sm font-medium text-gray-500">No items match the selected filters</p>
           <button
             type="button"
-            onClick={() => setResolutionFilter("All")}
+            onClick={() => {
+              setResolutionFilter("All")
+              selectAllFeedbackTypes()
+            }}
             className="mt-2 text-xs text-brand-sage-darker hover:underline"
           >
-            Clear filter
+            Clear filters
           </button>
         </div>
       ) : (
