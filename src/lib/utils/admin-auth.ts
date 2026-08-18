@@ -50,6 +50,12 @@ export async function createAdminSession(): Promise<void> {
 }
 
 export async function verifyAdminSession(): Promise<boolean> {
+  // Local dev-only automated-testing bypass — see the matching check and
+  // comment in src/middleware.ts. Never set E2E_ADMIN_BYPASS in Vercel.
+  if (process.env.NODE_ENV !== 'production' && process.env.E2E_ADMIN_BYPASS === 'true') {
+    return true
+  }
+
   const cookie = cookies().get(COOKIE_NAME)
   if (!cookie?.value) return verifySupabaseAdminSession()
 

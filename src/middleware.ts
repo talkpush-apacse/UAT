@@ -23,6 +23,15 @@ export async function middleware(request: NextRequest) {
 
   // Protect all /admin/* routes
   if (pathname.startsWith('/admin')) {
+    // Local dev-only automated-testing bypass. Double-gated: NODE_ENV is always
+    // 'production' for any built/deployed app (including Vercel previews), so
+    // this branch is structurally inert everywhere except `next dev` on a
+    // machine that has explicitly opted in via .env.local. Never set this in
+    // Vercel. See E2E_ADMIN_BYPASS in .env.local.example.
+    if (process.env.NODE_ENV !== 'production' && process.env.E2E_ADMIN_BYPASS === 'true') {
+      return NextResponse.next()
+    }
+
     if (hasValidAdminSessionCookie(request)) {
       return NextResponse.next()
     }
