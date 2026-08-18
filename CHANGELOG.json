@@ -1,5 +1,14 @@
 [
   {
+    "version": "2.23.0",
+    "name": "Version 2.23.0 - Client Report Layout",
+    "changes": [
+      "Moved Tester Participation Summary above the failure details on the client report",
+      "Made the divider between steps in Steps Requiring Attention easier to see"
+    ],
+    "deployed_at": "2026-08-18"
+  },
+  {
     "version": "2.22.0",
     "name": "Version 2.22.0 - New Logo",
     "changes": [

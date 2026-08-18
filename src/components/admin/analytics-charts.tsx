@@ -468,11 +468,11 @@ export default function AnalyticsCharts({
       <nav className="sticky top-0 z-10 -mx-6 px-6 py-2 bg-white/90 backdrop-blur border-b border-gray-100 flex items-center gap-1 text-xs font-medium overflow-x-auto" style={{ scrollbarWidth: "none" }}>
         <a href="#summary" className="px-3 py-1.5 rounded-md text-gray-500 hover:text-brand-sage-darker hover:bg-brand-sage-lightest transition-colors whitespace-nowrap">Summary</a>
         <span className="text-gray-200">|</span>
+        <a href="#participation" className="px-3 py-1.5 rounded-md text-gray-500 hover:text-brand-sage-darker hover:bg-brand-sage-lightest transition-colors whitespace-nowrap">Participation</a>
+        <span className="text-gray-200">|</span>
         <a href="#attention" className="px-3 py-1.5 rounded-md text-gray-500 hover:text-brand-sage-darker hover:bg-brand-sage-lightest transition-colors whitespace-nowrap">Failures</a>
         <span className="text-gray-200">|</span>
         <a href="#charts" className="px-3 py-1.5 rounded-md text-gray-500 hover:text-brand-sage-darker hover:bg-brand-sage-lightest transition-colors whitespace-nowrap">Charts</a>
-        <span className="text-gray-200">|</span>
-        <a href="#participation" className="px-3 py-1.5 rounded-md text-gray-500 hover:text-brand-sage-darker hover:bg-brand-sage-lightest transition-colors whitespace-nowrap">Participation</a>
       </nav>
 
       {/* Completion Overview */}
@@ -530,6 +530,103 @@ export default function AnalyticsCharts({
       </div>
 
       {/* ══════════════════════════════════════════════════════════════ */}
+      {/*  CLIENT REPORT: Tester Participation Summary                  */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      <div id="participation" className="scroll-mt-16" />
+      <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-brand-sage-darker" />
+              <CardTitle className="text-base font-semibold text-gray-800">Tester Participation Summary</CardTitle>
+            </div>
+            <span className="text-xs text-gray-500">
+              {testerParticipation.filter((t) => t.testCompleted).length} of {testerParticipation.length} marked complete
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="px-0 pb-0">
+          {testerParticipation.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">No testers registered yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50">
+                    <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Tester</th>
+                    <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-36">Steps Done</th>
+                    <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">Pass</th>
+                    <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">Fail</th>
+                    <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">N/A</th>
+                    <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-24">Review</th>
+                    <th className="text-center text-xs font-semibold text-gray-500 px-4 py-2.5 w-32">Completed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {testerParticipation.map((t, idx) => (
+                    <tr
+                      key={idx}
+                      className={`border-b border-gray-50 transition-colors ${
+                        t.hasIssues ? "bg-red-50/20 hover:bg-red-50/40" : "hover:bg-gray-50/50"
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-800">{t.name}</p>
+                        <p className="text-xs text-gray-400">{t.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden w-20"
+                            role="progressbar"
+                            aria-valuenow={t.answered}
+                            aria-valuemin={0}
+                            aria-valuemax={t.total}
+                            aria-label={`${t.name}: ${t.answered} of ${t.total} steps completed`}
+                          >
+                            <div
+                              className="h-full bg-brand-sage rounded-full"
+                              style={{ width: t.total === 0 ? "0%" : `${Math.round((t.answered / t.total) * 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-600 tabular-nums whitespace-nowrap">
+                            {t.answered}/{t.total}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="text-sm font-semibold text-green-600">{t.pass}</span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className={`text-sm font-semibold ${t.fail > 0 ? "text-red-600" : "text-gray-400"}`}>{t.fail}</span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="text-sm font-semibold text-gray-500">{t.na}</span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className={`text-sm font-semibold ${t.blocked > 0 ? "text-amber-600" : "text-gray-400"}`}>{t.blocked}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {t.testCompleted ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                            <CheckCircle2 className="h-3 w-3" /> Done
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ══════════════════════════════════════════════════════════════ */}
       {/*  Steps Requiring Attention — surfaced before charts            */}
       {/* ══════════════════════════════════════════════════════════════ */}
       <div id="attention" className="scroll-mt-16" />
@@ -569,12 +666,12 @@ export default function AnalyticsCharts({
               const pageRows = failedStepsRows.slice(pageStart, pageStart + ATTENTION_PAGE_SIZE)
               return (
                 <div>
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y-2 divide-gray-200">
                     {pageRows.map((row, idx) => (
-                      <div key={pageStart + idx} className="border-b border-gray-50 last:border-0">
+                      <div key={pageStart + idx}>
 
                         {/* ── Step header ── */}
-                        <div className="flex items-start gap-3 px-4 py-3 bg-gray-50/50 border-l-4 border-l-brand-sage-lighter">
+                        <div className="flex items-start gap-3 px-4 py-3 bg-gray-50/50 border-l-4 border-l-brand-sage-darker">
                           <span className="inline-flex items-center justify-center h-6 rounded-md bg-white border border-gray-200 px-2 text-xs font-bold text-gray-600 flex-shrink-0 mt-0.5 whitespace-nowrap">
                             Step {row.stepNumber}
                           </span>
@@ -881,103 +978,6 @@ export default function AnalyticsCharts({
           </Card>
         )
       )}
-
-        {/* ══════════════════════════════════════════════════════════════ */}
-        {/*  CLIENT REPORT: Tester Participation Summary                  */}
-        {/* ══════════════════════════════════════════════════════════════ */}
-        <div id="participation" className="scroll-mt-16" />
-        <Card className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-brand-sage-darker" />
-                <CardTitle className="text-base font-semibold text-gray-800">Tester Participation Summary</CardTitle>
-              </div>
-              <span className="text-xs text-gray-500">
-                {testerParticipation.filter((t) => t.testCompleted).length} of {testerParticipation.length} marked complete
-              </span>
-            </div>
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
-            {testerParticipation.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">No testers registered yet</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5">Tester</th>
-                      <th className="text-left text-xs font-semibold text-gray-500 px-4 py-2.5 w-36">Steps Done</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">Pass</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">Fail</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-16">N/A</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-3 py-2.5 w-24">Review</th>
-                      <th className="text-center text-xs font-semibold text-gray-500 px-4 py-2.5 w-32">Completed</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {testerParticipation.map((t, idx) => (
-                      <tr
-                        key={idx}
-                        className={`border-b border-gray-50 transition-colors ${
-                          t.hasIssues ? "bg-red-50/20 hover:bg-red-50/40" : "hover:bg-gray-50/50"
-                        }`}
-                      >
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-gray-800">{t.name}</p>
-                          <p className="text-xs text-gray-400">{t.email}</p>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden w-20"
-                              role="progressbar"
-                              aria-valuenow={t.answered}
-                              aria-valuemin={0}
-                              aria-valuemax={t.total}
-                              aria-label={`${t.name}: ${t.answered} of ${t.total} steps completed`}
-                            >
-                              <div
-                                className="h-full bg-brand-sage rounded-full"
-                                style={{ width: t.total === 0 ? "0%" : `${Math.round((t.answered / t.total) * 100)}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-gray-600 tabular-nums whitespace-nowrap">
-                              {t.answered}/{t.total}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="text-sm font-semibold text-green-600">{t.pass}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className={`text-sm font-semibold ${t.fail > 0 ? "text-red-600" : "text-gray-400"}`}>{t.fail}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="text-sm font-semibold text-gray-500">{t.na}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className={`text-sm font-semibold ${t.blocked > 0 ? "text-amber-600" : "text-gray-400"}`}>{t.blocked}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {t.testCompleted ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
-                              <CheckCircle2 className="h-3 w-3" /> Done
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                              Pending
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
     </div>
   )
