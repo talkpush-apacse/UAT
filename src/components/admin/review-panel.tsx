@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X, FileText, File, MessageSquare } from "lucide-react"
 import { saveAdminReview, bulkMarkResolved } from "@/lib/actions/admin-reviews"
 import { StatusBadge } from "@/components/ui/status-badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { TesterSection, HistoryEntry, AttachmentData } from "@/app/admin/projects/[slug]/review/page"
 
 type SaveStatus = "idle" | "saving" | "saved" | "error"
@@ -430,11 +431,41 @@ function getEffectiveResolutionStatus(step: TesterSection["steps"][0]): string {
 // on each step), not the admin's resolution progress. "Blocked" and "Up For Review"
 // are merged into one option since the badge displays them identically (see
 // StatusBadge's label override for "Blocked").
-const FEEDBACK_TYPE_OPTIONS: { value: string; activeStyle: string }[] = [
-  { value: "Fail", activeStyle: "bg-red-600 text-white border-red-600" },
-  { value: "Up For Review", activeStyle: "bg-amber-500 text-white border-amber-500" },
-  { value: "N/A", activeStyle: "bg-gray-500 text-white border-gray-500" },
-  { value: "Pass", activeStyle: "bg-green-600 text-white border-green-600" },
+const FEEDBACK_TYPE_OPTIONS: {
+  value: string
+  checkedBg: string
+  checkedBorder: string
+  checkedText: string
+  checkboxChecked: string
+}[] = [
+  {
+    value: "Fail",
+    checkedBg: "bg-red-50",
+    checkedBorder: "border-red-200",
+    checkedText: "text-red-700",
+    checkboxChecked: "data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600",
+  },
+  {
+    value: "Up For Review",
+    checkedBg: "bg-amber-50",
+    checkedBorder: "border-amber-200",
+    checkedText: "text-amber-700",
+    checkboxChecked: "data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500",
+  },
+  {
+    value: "N/A",
+    checkedBg: "bg-gray-50",
+    checkedBorder: "border-gray-300",
+    checkedText: "text-gray-700",
+    checkboxChecked: "data-[state=checked]:bg-gray-500 data-[state=checked]:border-gray-500",
+  },
+  {
+    value: "Pass",
+    checkedBg: "bg-green-50",
+    checkedBorder: "border-green-200",
+    checkedText: "text-green-700",
+    checkboxChecked: "data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600",
+  },
 ]
 const ALL_FEEDBACK_TYPES = FEEDBACK_TYPE_OPTIONS.map((o) => o.value)
 
@@ -581,36 +612,34 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
         )}
       </div>
 
-      {/* Feedback Type Filter — tester-reported status, multi-select */}
+      {/* Feedback Type Filter — tester-reported status, multi-select via checkboxes */}
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <span className="text-xs font-medium text-gray-500 mr-1">Feedback Type:</span>
+        {FEEDBACK_TYPE_OPTIONS.map(({ value, checkedBg, checkedBorder, checkedText, checkboxChecked }) => {
+          const checked = feedbackTypeFilter.has(value)
+          return (
+            <label
+              key={value}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer transition-all duration-150 ${
+                checked ? `${checkedBg} ${checkedBorder}` : "border-gray-200 bg-white hover:bg-gray-50"
+              }`}
+            >
+              <Checkbox
+                checked={checked}
+                onCheckedChange={() => toggleFeedbackType(value)}
+                className={`h-3.5 w-3.5 ${checkboxChecked}`}
+              />
+              <span className={`text-xs font-medium ${checked ? checkedText : "text-gray-600"}`}>{value}</span>
+            </label>
+          )
+        })}
         <button
           type="button"
-          onClick={selectAllFeedbackTypes}
-          aria-pressed={isAllFeedbackSelected}
-          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
-            isAllFeedbackSelected
-              ? "bg-gray-800 text-white border-gray-800"
-              : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
-          }`}
+          onClick={() => (isAllFeedbackSelected ? setFeedbackTypeFilter(new Set()) : selectAllFeedbackTypes())}
+          className="text-xs text-brand-sage-darker hover:underline ml-1"
         >
-          All
+          {isAllFeedbackSelected ? "Clear" : "Select all"}
         </button>
-        {FEEDBACK_TYPE_OPTIONS.map(({ value, activeStyle }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => toggleFeedbackType(value)}
-            aria-pressed={feedbackTypeFilter.has(value)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
-              feedbackTypeFilter.has(value)
-                ? activeStyle
-                : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
-            }`}
-          >
-            {value}
-          </button>
-        ))}
       </div>
 
       {filteredSections.length === 0 && isFiltering ? (
