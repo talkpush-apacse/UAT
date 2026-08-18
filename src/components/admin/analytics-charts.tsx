@@ -653,7 +653,7 @@ export default function AnalyticsCharts({
               )}
             </div>
           </CardHeader>
-          <CardContent className="px-0 pb-0">
+          <CardContent className="px-4 pb-4 pt-1">
             {failedStepsRows.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                 <CheckCircle2 className="h-8 w-8 mb-2 text-green-400" />
@@ -666,12 +666,15 @@ export default function AnalyticsCharts({
               const pageRows = failedStepsRows.slice(pageStart, pageStart + ATTENTION_PAGE_SIZE)
               return (
                 <div>
-                  <div className="divide-y-2 divide-gray-200">
+                  <div className="space-y-3">
                     {pageRows.map((row, idx) => (
-                      <div key={pageStart + idx}>
+                      <div
+                        key={pageStart + idx}
+                        className="rounded-lg border border-gray-200 border-l-4 border-l-brand-sage-darker shadow-sm overflow-hidden bg-white"
+                      >
 
                         {/* ── Step header ── */}
-                        <div className="flex items-start gap-3 px-4 py-3 bg-gray-50/50 border-l-4 border-l-brand-sage-darker">
+                        <div className="flex items-start gap-3 px-4 py-3 bg-gray-50 border-b border-gray-100">
                           <span className="inline-flex items-center justify-center h-6 rounded-md bg-white border border-gray-200 px-2 text-xs font-bold text-gray-600 flex-shrink-0 mt-0.5 whitespace-nowrap">
                             Step {row.stepNumber}
                           </span>
@@ -753,7 +756,7 @@ export default function AnalyticsCharts({
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
                       <span className="text-xs text-gray-400">
                         Showing {pageStart + 1}–{Math.min(pageStart + ATTENTION_PAGE_SIZE, failedStepsRows.length)} of {failedStepsRows.length} issues
                       </span>

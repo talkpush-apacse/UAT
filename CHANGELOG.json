@@ -1,5 +1,14 @@
 [
   {
+    "version": "2.23.2",
+    "name": "Version 2.23.2 - Steps as Cards",
+    "changes": [
+      "Redesigned Steps Requiring Attention on the client report as separated cards",
+      "Added an optional local-only dev setting for automated admin page testing"
+    ],
+    "deployed_at": "2026-08-18"
+  },
+  {
     "version": "2.23.1",
     "name": "Version 2.23.1 - Filter Clarity",
     "changes": [
