@@ -18,7 +18,7 @@ export default async function ManageChecklistPage({
   const supabase = createAdminClient()
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug")
+    .select("id, slug, company_name")
     .eq("slug", params.slug)
     .single()
 
@@ -51,6 +51,7 @@ export default async function ManageChecklistPage({
         items={items || []}
         projectId={project.id}
         slug={project.slug}
+        companyName={project.company_name}
         snapshots={snapshots || []}
       />
     </div>

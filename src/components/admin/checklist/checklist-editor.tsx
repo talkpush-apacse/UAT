@@ -52,11 +52,13 @@ export default function ChecklistEditor({
   items: initialItems,
   projectId,
   slug,
+  companyName,
   snapshots: initialSnapshots = [],
 }: {
   items: ChecklistItem[]
   projectId: string
   slug: string
+  companyName: string
   snapshots?: ChecklistSnapshot[]
 }) {
   const router = useRouter()
@@ -251,6 +253,7 @@ export default function ChecklistEditor({
               <CopyStepsDialog
                 projectId={projectId}
                 slug={slug}
+                companyName={companyName}
                 disabled={!!adding}
                 onCopied={handleCopied}
               />
@@ -290,6 +293,7 @@ export default function ChecklistEditor({
             <CopyStepsDialog
               projectId={projectId}
               slug={slug}
+              companyName={companyName}
               onCopied={handleCopied}
             />
             <Button

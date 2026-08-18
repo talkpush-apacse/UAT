@@ -482,7 +482,7 @@ export async function duplicateChecklistItem(
 
 export async function listProjectsForCopy(
   currentProjectId: string
-): Promise<{ error?: string; projects?: { id: string; slug: string; company_name: string; title: string | null; itemCount: number }[] }> {
+): Promise<{ error?: string; projects?: { id: string; slug: string; company_name: string; title: string | null; itemCount: number; created_at: string | null }[] }> {
   try {
     const isAdmin = await verifyAdminSession()
     if (!isAdmin) return { error: 'Unauthorized' }
@@ -491,7 +491,7 @@ export async function listProjectsForCopy(
 
     const { data: projects, error } = await supabase
       .from('projects')
-      .select('id, slug, company_name, title')
+      .select('id, slug, company_name, title, created_at')
       .neq('id', currentProjectId)
       .order('company_name')
 
@@ -520,6 +520,7 @@ export async function listProjectsForCopy(
         company_name: p.company_name,
         title: p.title,
         itemCount: countMap[p.id] || 0,
+        created_at: p.created_at,
       })),
     }
   } catch (err) {
