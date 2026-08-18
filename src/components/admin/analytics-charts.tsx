@@ -670,7 +670,9 @@ export default function AnalyticsCharts({
                     {pageRows.map((row, idx) => (
                       <div
                         key={pageStart + idx}
-                        className="rounded-lg border border-gray-200 border-l-4 border-l-brand-sage-darker shadow-sm overflow-hidden bg-white"
+                        className={`rounded-lg border border-gray-200 border-l-4 shadow-sm overflow-hidden bg-white ${
+                          row.status === "Fail" ? "border-l-red-500" : "border-l-amber-500"
+                        }`}
                       >
 
                         {/* ── Step header ── */}

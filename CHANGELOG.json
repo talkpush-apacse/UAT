@@ -1,5 +1,13 @@
 [
   {
+    "version": "2.23.3",
+    "name": "Version 2.23.3 - Status Accent Colors",
+    "changes": [
+      "Steps Requiring Attention cards now color-code their left accent by status (red for Fail, amber for Up For Review)"
+    ],
+    "deployed_at": "2026-08-18"
+  },
+  {
     "version": "2.23.2",
     "name": "Version 2.23.2 - Steps as Cards",
     "changes": [
