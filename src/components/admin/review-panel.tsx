@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ShieldCheck, Clock, ChevronDown, ChevronUp, CheckCircle2, X, FileText, File, MessageSquare } from "lucide-react"
 import { saveAdminReview, bulkMarkResolved } from "@/lib/actions/admin-reviews"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import type { TesterSection, HistoryEntry, AttachmentData } from "@/app/admin/projects/[slug]/review/page"
 
 type SaveStatus = "idle" | "saving" | "saved" | "error"
@@ -492,6 +494,25 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
   const [feedbackTypeFilter, setFeedbackTypeFilter] = useState<Set<string>>(
     new Set(ALL_FEEDBACK_TYPES)
   )
+  const allTesterIds = testerSections.map((s) => s.tester.id)
+  const [testerFilter, setTesterFilter] = useState<Set<string>>(new Set(allTesterIds))
+  const [testerPopoverOpen, setTesterPopoverOpen] = useState(false)
+  const prevTesterIdsRef = useRef<Set<string>>(new Set(allTesterIds))
+
+  // Newly-appearing testers (e.g. after a bulk-resolve refresh) default to visible,
+  // matching the "select all" default rather than being silently hidden.
+  useEffect(() => {
+    const newIds = allTesterIds.filter((id) => !prevTesterIdsRef.current.has(id))
+    if (newIds.length > 0) {
+      setTesterFilter((prev) => {
+        const next = new Set(prev)
+        newIds.forEach((id) => next.add(id))
+        return next
+      })
+    }
+    prevTesterIdsRef.current = new Set(allTesterIds)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testerSections])
 
   const toggleItem = (key: string) => {
     setSelectedItems((prev) => {
@@ -542,6 +563,21 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
   const selectAllFeedbackTypes = () => setFeedbackTypeFilter(new Set(ALL_FEEDBACK_TYPES))
   const isAllFeedbackSelected = feedbackTypeFilter.size === ALL_FEEDBACK_TYPES.length
 
+  const toggleTester = (testerId: string) => {
+    setTesterFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(testerId)) {
+        next.delete(testerId)
+      } else {
+        next.add(testerId)
+      }
+      return next
+    })
+  }
+
+  const selectAllTesters = () => setTesterFilter(new Set(allTesterIds))
+  const isAllTestersSelected = testerFilter.size === allTesterIds.length
+
   const handleBulkResolve = async () => {
     setBulkLoading(true)
     setBulkResult(null)
@@ -571,9 +607,10 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
     }
   }
 
-  const isFiltering = resolutionFilter !== "All" || !isAllFeedbackSelected
+  const isFiltering = resolutionFilter !== "All" || !isAllFeedbackSelected || !isAllTestersSelected
 
   const filteredSections = testerSections
+    .filter((section) => testerFilter.has(section.tester.id))
     .map((section) => ({
       ...section,
       steps: section.steps.filter((step) => {
@@ -642,6 +679,71 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
         </button>
       </div>
 
+      {/* Tester Filter — searchable multi-select popover, scales to large tester lists */}
+      {testerSections.length > 0 && (
+        <div className="flex items-center gap-2 mb-6">
+          <Popover open={testerPopoverOpen} onOpenChange={setTesterPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
+                  isAllTestersSelected
+                    ? "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+                    : "bg-brand-sage-darker/10 border-brand-sage-darker/30 text-gray-800"
+                }`}
+              >
+                Tester
+                {!isAllTestersSelected && (
+                  <span className="text-brand-sage-darker">
+                    {testerFilter.size}/{allTesterIds.length}
+                  </span>
+                )}
+                <ChevronDown className="h-3 w-3" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+                <span className="text-xs font-medium text-gray-500">
+                  {testerFilter.size}/{allTesterIds.length} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={() => (isAllTestersSelected ? setTesterFilter(new Set()) : selectAllTesters())}
+                  className="text-xs text-brand-sage-darker hover:underline"
+                >
+                  {isAllTestersSelected ? "Clear" : "Select all"}
+                </button>
+              </div>
+              <Command>
+                <CommandInput placeholder="Search testers..." className="text-sm" />
+                <CommandList>
+                  <CommandEmpty>No testers found.</CommandEmpty>
+                  <CommandGroup>
+                    {testerSections.map(({ tester }) => {
+                      const checked = testerFilter.has(tester.id)
+                      return (
+                        <CommandItem
+                          key={tester.id}
+                          value={tester.name}
+                          onSelect={() => toggleTester(tester.id)}
+                          className="gap-2"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            className="h-3.5 w-3.5 pointer-events-none data-[state=checked]:bg-brand-sage-darker data-[state=checked]:border-brand-sage-darker"
+                          />
+                          <span className={checked ? "text-gray-800" : "text-gray-600"}>{tester.name}</span>
+                        </CommandItem>
+                      )
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+
       {filteredSections.length === 0 && isFiltering ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-sm font-medium text-gray-500">No items match the selected filters</p>
@@ -650,6 +752,7 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
             onClick={() => {
               setResolutionFilter("All")
               selectAllFeedbackTypes()
+              selectAllTesters()
             }}
             className="mt-2 text-xs text-brand-sage-darker hover:underline"
           >

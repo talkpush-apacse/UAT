@@ -1,5 +1,14 @@
 [
   {
+    "version": "2.23.4",
+    "name": "Version 2.23.4 - Tester Filter",
+    "changes": [
+      "Added a searchable Tester filter to the admin review page, scoped to combine with the Feedback Type and Status filters",
+      "Replaced the tester chip row with a compact popover so the filter bar stays a fixed size on projects with many testers"
+    ],
+    "deployed_at": "2026-08-20"
+  },
+  {
     "version": "2.23.3",
     "name": "Version 2.23.3 - Status Accent Colors",
     "changes": [
