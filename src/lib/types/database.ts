@@ -39,6 +39,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_login_events: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          ip_address: string | null
+          method: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          method: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          method?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_review_history: {
         Row: {
           changed_at: string

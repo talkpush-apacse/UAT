@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { isAllowedAdminEmail } from '@/lib/utils/admin-access'
+import { logAdminLoginEvent } from '@/lib/utils/admin-login-log'
 
 // Only ever redirect back into the OAuth connector consent screen — never an
 // arbitrary caller-supplied path, since that would make this unauthenticated
@@ -35,6 +36,8 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(new URL('/admin/login?error=unauthorized', request.url))
   }
+
+  await logAdminLoginEvent('google', data.user?.email ?? null, request.headers)
 
   return NextResponse.redirect(new URL(resolvePostLoginPath(request, requestUrl), request.url))
 }

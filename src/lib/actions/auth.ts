@@ -1,12 +1,14 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import {
   verifyAdminPassword,
   createAdminSession,
   destroyAdminSession,
 } from '@/lib/utils/admin-auth'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { logAdminLoginEvent } from '@/lib/utils/admin-login-log'
 
 export interface AuthState {
   error?: string
@@ -27,6 +29,7 @@ export async function loginAdmin(
   }
 
   await createAdminSession()
+  await logAdminLoginEvent('password', null, headers())
   redirect('/admin')
 }
 
