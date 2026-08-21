@@ -1,5 +1,20 @@
 [
   {
+    "version": "2.24.0",
+    "name": "Version 2.24.0 - What's New Page",
+    "changes": [
+      {
+        "headline": "Replaced the Help dropdown with a full What's New page",
+        "context": "Admins now see a scrollable timeline of every shipped update grouped by date, with the newest release expanded by default and older ones collapsing into an accordion"
+      },
+      {
+        "headline": "Added a notification dot on the Help nav item for unseen updates",
+        "context": "The dot appears the first time an admin's browser hasn't seen the latest release yet, and clears as soon as they open the What's New page"
+      }
+    ],
+    "deployed_at": "2026-08-22"
+  },
+  {
     "version": "2.23.4",
     "name": "Version 2.23.4 - Tester Filter",
     "changes": [

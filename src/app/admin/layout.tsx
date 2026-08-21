@@ -2,15 +2,18 @@ import Link from "next/link"
 import { logoutAdmin } from "@/lib/actions/auth"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
-import { AboutDialog } from "@/components/about/AboutDialog"
+import { WhatsNewNavLink } from "@/components/about/WhatsNewNavLink"
 import { AdminBreadcrumbs } from "@/components/admin/admin-breadcrumbs"
 import { UatCheckboxFavicon } from "@/components/brand/UatCheckboxFavicon"
+import changelog from "../../../CHANGELOG.json"
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const latestVersion = changelog[0]?.version ?? "0.0.0"
+
   return (
     <div className="min-h-screen bg-background">
       {/* Talkpush Sign brand gradient strip */}
@@ -33,7 +36,7 @@ export default function AdminLayout({
 
             {/* Right: Help + Logout */}
             <div className="flex items-center gap-1 flex-shrink-0">
-              <AboutDialog />
+              <WhatsNewNavLink latestVersion={latestVersion} />
               <form action={logoutAdmin}>
                 <Button variant="ghost" size="sm" type="submit" className="text-gray-500 hover:text-gray-700">
                   <LogOut className="h-4 w-4 mr-1.5" />
