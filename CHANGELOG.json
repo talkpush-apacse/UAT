@@ -1,5 +1,16 @@
 [
   {
+    "version": "2.26.0",
+    "name": "Version 2.26.0 - Mixpanel Analytics",
+    "changes": [
+      {
+        "headline": "Added Mixpanel tracking for page views and button clicks",
+        "context": "Covers both the admin tool and tester-facing pages, so we can see which pages get used most and what people try to do on them; tracking is off until a Mixpanel project token is configured, and testers are always tracked anonymously"
+      }
+    ],
+    "deployed_at": "2026-08-22"
+  },
+  {
     "version": "2.25.0",
     "name": "Version 2.25.0 - MCP Usage Page",
     "changes": [

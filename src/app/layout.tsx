@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next"
+import { Suspense } from "react"
 import { DM_Sans, Space_Grotesk } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
+import { MixpanelTracker } from "@/components/analytics/mixpanel-tracker"
 import "./globals.css"
 
 const dmSans = DM_Sans({
@@ -50,6 +52,9 @@ export default function RootLayout({
       >
         {children}
         <Toaster />
+        <Suspense fallback={null}>
+          <MixpanelTracker />
+        </Suspense>
       </body>
     </html>
   )

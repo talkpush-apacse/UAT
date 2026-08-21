@@ -5,6 +5,7 @@ import { LogOut } from "lucide-react"
 import { WhatsNewNavLink } from "@/components/about/WhatsNewNavLink"
 import { AdminBreadcrumbs } from "@/components/admin/admin-breadcrumbs"
 import { UatCheckboxFavicon } from "@/components/brand/UatCheckboxFavicon"
+import { MixpanelIdentifyAdmin } from "@/components/analytics/mixpanel-identify-admin"
 import changelog from "../../../CHANGELOG.json"
 
 export default function AdminLayout({
@@ -16,6 +17,7 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      <MixpanelIdentifyAdmin />
       {/* Talkpush Sign brand gradient strip */}
       <div className="h-1.5 brand-gradient-strip" />
       <nav className="bg-card border-b border-border shadow-sm">
