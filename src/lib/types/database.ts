@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       admin_review_history: {
@@ -251,6 +276,30 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      mcp_tool_calls: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          id: string
+          success: boolean
+          tool_name: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms: number
+          id?: string
+          success: boolean
+          tool_name: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          success?: boolean
+          tool_name?: string
         }
         Relationships: []
       }
@@ -658,6 +707,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

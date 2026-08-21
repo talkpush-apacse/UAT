@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Plus, FolderOpen, Building2, ArrowLeft } from "lucide-react"
+import { Plus, FolderOpen, Building2, ArrowLeft, Activity } from "lucide-react"
 import ClientGroupedDashboard, {
   type ClientGroup,
   type ProjectWithCounts,
@@ -319,6 +319,12 @@ export default async function AdminDashboard({
               <Button variant="outline">
                 <Building2 className="h-4 w-4 mr-1.5" />
                 Manage Clients
+              </Button>
+            </Link>
+            <Link href="/admin/mcp-usage">
+              <Button variant="outline">
+                <Activity className="h-4 w-4 mr-1.5" />
+                MCP Usage
               </Button>
             </Link>
             <Link href="/admin/projects/new">

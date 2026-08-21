@@ -4,6 +4,7 @@ import { registerDiscoveryTools } from "@/lib/mcp/tools/discovery";
 import { registerProjectTools } from "@/lib/mcp/tools/projects";
 import { registerChecklistStepTools } from "@/lib/mcp/tools/checklist-steps";
 import { registerProgressTools } from "@/lib/mcp/tools/progress-and-reviews";
+import { withToolCallLogging } from "@/lib/mcp/usage-logger";
 
 // Constant-time comparison — mirrors the pattern in lib/utils/admin-auth.ts.
 function isValidApiKey(provided: string | null, expected: string): boolean {
@@ -17,10 +18,11 @@ function isValidApiKey(provided: string | null, expected: string): boolean {
 // --- MCP Handler ---
 const handler = createMcpHandler(
   (server) => {
-    registerDiscoveryTools(server);
-    registerProjectTools(server);
-    registerChecklistStepTools(server);
-    registerProgressTools(server);
+    const loggedServer = withToolCallLogging(server);
+    registerDiscoveryTools(loggedServer);
+    registerProjectTools(loggedServer);
+    registerChecklistStepTools(loggedServer);
+    registerProgressTools(loggedServer);
   },
   {
     capabilities: {},

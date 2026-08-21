@@ -1,5 +1,20 @@
 [
   {
+    "version": "2.25.0",
+    "name": "Version 2.25.0 - MCP Usage Page",
+    "changes": [
+      {
+        "headline": "Added an MCP Usage page showing tool-call volume for the /api/mcp server",
+        "context": "A line chart breaks down calls by tool name, with 24h/7d/14d/30d presets and a custom date-range calendar picker; access it via the new MCP Usage button on the admin dashboard"
+      },
+      {
+        "headline": "Every MCP tool call is now logged (tool name, success, duration)",
+        "context": "Logging happens transparently for all 14 registered tools without changing how any of them behave, and never blocks or breaks a tool call if logging itself fails"
+      }
+    ],
+    "deployed_at": "2026-08-22"
+  },
+  {
     "version": "2.24.0",
     "name": "Version 2.24.0 - What's New Page",
     "changes": [
