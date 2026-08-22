@@ -13,7 +13,9 @@ export function MixpanelIdentifyAdmin() {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user?.email) identifyAdmin(data.user.email)
+      if (data.user?.id && data.user?.email) {
+        identifyAdmin(data.user.id, data.user.email)
+      }
     })
   }, [])
 

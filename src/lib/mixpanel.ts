@@ -39,10 +39,22 @@ export function trackButtonClick(label: string, pathname: string, area: Mixpanel
   mixpanel.track("Button Clicked", { label, path: pathname, area })
 }
 
-// Admin pages only — testers are deliberately never identified by email,
-// to avoid creating a new place where candidate PII is linked to behavior data.
-export function identifyAdmin(email: string): void {
+// Admin pages only — testers are deliberately never identified, to avoid
+// creating a new place where candidate PII is linked to behavior data.
+// Identifies by the stable Supabase auth user id, not email — Mixpanel's
+// own guidance is to never use email as the distinct_id (it can change;
+// it's not a stable primary key). Email is still attached as a profile
+// property so it's visible in Mixpanel's UI.
+export function identifyAdmin(userId: string, email: string): void {
   if (!ensureInitialized()) return
-  mixpanel.identify(email)
+  mixpanel.identify(userId)
   mixpanel.people.set({ $email: email })
+}
+
+// Call on logout. Without this, the next person to log in on the same
+// browser (e.g. a shared office machine, or this app's shared password
+// login) would get merged into the previous admin's identified session.
+export function resetMixpanel(): void {
+  if (!ensureInitialized()) return
+  mixpanel.reset()
 }

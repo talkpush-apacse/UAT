@@ -1,11 +1,9 @@
 import Link from "next/link"
-import { logoutAdmin } from "@/lib/actions/auth"
-import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
 import { WhatsNewNavLink } from "@/components/about/WhatsNewNavLink"
 import { AdminBreadcrumbs } from "@/components/admin/admin-breadcrumbs"
 import { UatCheckboxFavicon } from "@/components/brand/UatCheckboxFavicon"
 import { MixpanelIdentifyAdmin } from "@/components/analytics/mixpanel-identify-admin"
+import { LogoutButton } from "@/components/analytics/logout-button"
 import changelog from "../../../CHANGELOG.json"
 
 export default function AdminLayout({
@@ -39,12 +37,7 @@ export default function AdminLayout({
             {/* Right: Help + Logout */}
             <div className="flex items-center gap-1 flex-shrink-0">
               <WhatsNewNavLink latestVersion={latestVersion} />
-              <form action={logoutAdmin}>
-                <Button variant="ghost" size="sm" type="submit" className="text-gray-500 hover:text-gray-700">
-                  <LogOut className="h-4 w-4 mr-1.5" />
-                  Logout
-                </Button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
         </div>
