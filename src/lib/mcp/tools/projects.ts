@@ -78,10 +78,19 @@ export function registerProjectTools(server: McpServer) {
       const supabase = createAdminClient();
       const slug = await generateUniqueProjectSlug(supabase, title);
 
+      // Link to a real client row when the name matches one, so this
+      // checklist picks up the client's logo like ones made via the web UI.
+      const { data: client } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("name", company_name)
+        .maybeSingle();
+
       const { data, error } = await supabase
         .from("projects")
         .insert({
           company_name,
+          client_id: client?.id ?? null,
           title,
           test_scenario: test_scenario ?? null,
           talkpush_login_link: talkpush_login_link ?? null,
@@ -156,7 +165,16 @@ export function registerProjectTools(server: McpServer) {
       const cleanUpdates: Record<string, string | null> = {};
 
       if (title !== undefined) cleanUpdates.title = title;
-      if (company_name !== undefined) cleanUpdates.company_name = company_name;
+      if (company_name !== undefined) {
+        cleanUpdates.company_name = company_name;
+        // Keep client_id in sync whenever the client name changes.
+        const { data: client } = await supabase
+          .from("clients")
+          .select("id")
+          .eq("name", company_name)
+          .maybeSingle();
+        cleanUpdates.client_id = client?.id ?? null;
+      }
       if (test_scenario !== undefined) {
         cleanUpdates.test_scenario = test_scenario || null;
       }

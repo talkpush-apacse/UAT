@@ -36,7 +36,6 @@ export async function deleteClient(
 
   const supabase = createAdminClient()
 
-  // Check if any projects reference this client name
   const { data: client } = await supabase
     .from('clients')
     .select('name')
@@ -45,14 +44,15 @@ export async function deleteClient(
 
   if (!client) return { error: 'Client not found' }
 
+  // Check if any projects are linked to this client
   const { count } = await supabase
     .from('projects')
     .select('id', { count: 'exact', head: true })
-    .eq('company_name', client.name)
+    .eq('client_id', id)
 
   if (count && count > 0) {
     return {
-      error: `Cannot delete "${client.name}" — ${count} project${count > 1 ? 's' : ''} still use this client name`,
+      error: `Cannot delete "${client.name}" — ${count} UAT checklist${count > 1 ? 's' : ''} still use this client`,
     }
   }
 

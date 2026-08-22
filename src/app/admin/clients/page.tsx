@@ -19,22 +19,23 @@ export default async function ClientsPage() {
     throw new Error("Failed to load clients")
   }
 
-  // Get project counts per client name
+  // Get project counts per client
   const { data: projects } = await supabase
     .from("projects")
-    .select("company_name")
+    .select("client_id")
 
   const projectCountByClient = new Map<string, number>()
   for (const p of projects ?? []) {
+    if (!p.client_id) continue
     projectCountByClient.set(
-      p.company_name,
-      (projectCountByClient.get(p.company_name) ?? 0) + 1
+      p.client_id,
+      (projectCountByClient.get(p.client_id) ?? 0) + 1
     )
   }
 
   const clientsWithCounts = (clients ?? []).map((c) => ({
     ...c,
-    projectCount: projectCountByClient.get(c.name) ?? 0,
+    projectCount: projectCountByClient.get(c.id) ?? 0,
   }))
 
   return <ClientsManager clients={clientsWithCounts} />
