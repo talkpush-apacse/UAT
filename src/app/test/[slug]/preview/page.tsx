@@ -13,7 +13,7 @@ export default async function ChecklistPreviewPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug, company_name, test_scenario, talkpush_login_link, wizard_mode")
+    .select("id, slug, company_name, test_scenario, talkpush_login_link, wizard_mode, client:clients(logo_url)")
     .eq("slug", params.slug)
     .single()
 

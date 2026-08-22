@@ -7,6 +7,7 @@ import {
   Svg,
   Path,
   Circle,
+  Image,
   StyleSheet,
 } from "@react-pdf/renderer"
 
@@ -42,6 +43,7 @@ interface TesterParticipation {
 export interface AnalyticsPDFDocumentProps {
   companyName?: string
   generatedAt?: string
+  clientLogoUrl?: string
   completionStats: { registered: number; started: number; completed: number }
   overallBreakdown: { name: string; value: number }[]
   findingsBreakdown: { entries: { name: string; value: number }[]; total: number }
@@ -142,6 +144,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
     borderBottomStyle: "solid",
+  },
+  headerLogoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  headerLogo: {
+    height: 16,
+    objectFit: "contain",
+  },
+  headerClientLogo: {
+    height: 16,
+    maxWidth: 70,
+    marginLeft: 8,
+    objectFit: "contain",
   },
   headerLabel: {
     fontSize: 7,
@@ -504,12 +521,22 @@ function computeDonutSegments(
 function PDFHeader({
   companyName,
   generatedAt,
+  clientLogoUrl,
 }: {
   companyName?: string
   generatedAt?: string
+  clientLogoUrl?: string
 }) {
   return (
     <View style={styles.header}>
+      <View style={styles.headerLogoRow}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf's Image, not an HTML img */}
+        <Image src="/talkpush-logo.jpg" style={styles.headerLogo} />
+        {clientLogoUrl ? (
+          // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf's Image, not an HTML img
+          <Image src={clientLogoUrl} style={styles.headerClientLogo} />
+        ) : null}
+      </View>
       <Text style={styles.headerLabel}>UAT Analytics Report</Text>
       {companyName ? (
         <Text style={styles.headerTitle}>{companyName}</Text>
@@ -1072,6 +1099,7 @@ function PDFSection5TesterTable({
 export default function AnalyticsPDFDocument({
   companyName,
   generatedAt,
+  clientLogoUrl,
   completionStats,
   overallBreakdown,
   findingsBreakdown,
@@ -1096,7 +1124,7 @@ export default function AnalyticsPDFDocument({
           />
         </View>
 
-        <PDFHeader companyName={companyName} generatedAt={generatedAt} />
+        <PDFHeader companyName={companyName} generatedAt={generatedAt} clientLogoUrl={clientLogoUrl} />
 
         <PDFSection1KPICards stats={completionStats} />
 

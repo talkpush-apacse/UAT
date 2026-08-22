@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { addClient, deleteClient } from "@/lib/actions/clients"
+import { addClient, deleteClient, uploadClientLogo, removeClientLogo } from "@/lib/actions/clients"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -23,13 +23,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Plus, Building2, Trash2, ArrowLeft } from "lucide-react"
+import { Plus, Building2, Trash2, ArrowLeft, ImagePlus, X } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 
 interface ClientWithCount {
   id: string
   name: string
+  logo_url: string | null
   created_at: string | null
   projectCount: number
 }
@@ -45,6 +46,8 @@ export default function ClientsManager({
   const [deleteTarget, setDeleteTarget] = useState<ClientWithCount | null>(null)
   const [deleting, setDeleting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [uploadingId, setUploadingId] = useState<string | null>(null)
+  const logoInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -80,6 +83,47 @@ export default function ClientsManager({
 
     toast.success(`"${deleteTarget.name}" deleted`)
     setDeleteTarget(null)
+    router.refresh()
+  }
+
+  async function handleLogoSelected(clientId: string, file: File | undefined) {
+    if (!file) return
+
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      toast.error("Logo must be a PNG, JPEG, or WEBP image")
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Logo must be smaller than 2MB")
+      return
+    }
+
+    setUploadingId(clientId)
+    const formData = new FormData()
+    formData.set("file", file)
+    const result = await uploadClientLogo(clientId, formData)
+    setUploadingId(null)
+
+    if (result.error) {
+      toast.error(result.error)
+      return
+    }
+
+    toast.success("Logo updated")
+    router.refresh()
+  }
+
+  async function handleRemoveLogo(clientId: string) {
+    setUploadingId(clientId)
+    const result = await removeClientLogo(clientId)
+    setUploadingId(null)
+
+    if (result.error) {
+      toast.error(result.error)
+      return
+    }
+
+    toast.success("Logo removed")
     router.refresh()
   }
 
@@ -137,6 +181,7 @@ export default function ClientsManager({
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50/80">
+                <TableHead className="w-[64px]" />
                 <TableHead className="text-xs font-medium text-gray-500">
                   Client Name
                 </TableHead>
@@ -149,6 +194,51 @@ export default function ClientsManager({
             <TableBody>
               {clients.map((client) => (
                 <TableRow key={client.id} className="group even:bg-gray-50">
+                  <TableCell>
+                    <input
+                      ref={(el) => {
+                        logoInputRefs.current[client.id] = el
+                      }}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        handleLogoSelected(client.id, e.target.files?.[0])
+                        e.target.value = ""
+                      }}
+                    />
+                    <div className="relative h-10 w-10 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => logoInputRefs.current[client.id]?.click()}
+                        disabled={uploadingId === client.id}
+                        className="h-10 w-10 rounded-md border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center hover:border-brand-sage-darker transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker focus-visible:ring-inset"
+                        title={client.logo_url ? "Replace logo" : "Upload logo"}
+                      >
+                        {client.logo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={client.logo_url}
+                            alt={`${client.name} logo`}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <ImagePlus className="h-4 w-4 text-gray-300" />
+                        )}
+                      </button>
+                      {client.logo_url && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLogo(client.id)}
+                          disabled={uploadingId === client.id}
+                          className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-white border border-gray-200 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-50 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                          title="Remove logo"
+                        >
+                          <X className="h-2.5 w-2.5 text-gray-500 hover:text-red-500" />
+                        </button>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-medium text-sm text-gray-800">
                     {client.name}
                   </TableCell>

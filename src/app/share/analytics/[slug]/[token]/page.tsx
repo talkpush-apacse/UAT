@@ -50,7 +50,7 @@ export default async function PublicAnalyticsPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug, company_name, title, test_scenario, created_at")
+    .select("id, slug, company_name, title, test_scenario, created_at, client:clients(logo_url)")
     .eq("slug", params.slug)
     .single()
 
@@ -143,6 +143,7 @@ export default async function PublicAnalyticsPage({
           projectTitle={project.title ?? undefined}
           testScenario={project.test_scenario ?? undefined}
           projectCreatedAt={project.created_at ?? undefined}
+          clientLogoUrl={project.client?.logo_url ?? undefined}
         />
 
       </div>

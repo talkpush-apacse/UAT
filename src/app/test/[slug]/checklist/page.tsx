@@ -20,7 +20,7 @@ export default async function ChecklistPage({
   const [{ data: project }, { data: tester }] = await Promise.all([
     supabase
       .from("projects")
-      .select("id, slug, company_name, test_scenario, talkpush_login_link, wizard_mode")
+      .select("id, slug, company_name, test_scenario, talkpush_login_link, wizard_mode, client:clients(logo_url)")
       .eq("slug", params.slug)
       .single(),
     supabase

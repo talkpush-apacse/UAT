@@ -48,8 +48,17 @@ export async function createProject(
     return { error: err instanceof Error ? err.message : 'Failed to generate project slug' }
   }
 
+  // The company name is chosen from the clients list, so it always resolves
+  // to a real client row — this keeps client_id in sync without changing the form.
+  const { data: client } = await supabase
+    .from('clients')
+    .select('id')
+    .eq('name', parsed.data.companyName)
+    .maybeSingle()
+
   const { error } = await supabase.from('projects').insert({
     company_name: parsed.data.companyName,
+    client_id: client?.id ?? null,
     title: parsed.data.title,
     slug,
     test_scenario: parsed.data.testScenario || null,
@@ -92,7 +101,16 @@ export async function updateProject(
 
   const supabase = createAdminClient()
   const updates: ProjectUpdate = {}
-  if (parsed.data.companyName) updates.company_name = parsed.data.companyName
+  if (parsed.data.companyName) {
+    updates.company_name = parsed.data.companyName
+    // Keep client_id in sync whenever the client selection changes.
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('name', parsed.data.companyName)
+      .maybeSingle()
+    updates.client_id = client?.id ?? null
+  }
   if (parsed.data.title) updates.title = parsed.data.title
   if (parsed.data.slug) updates.slug = parsed.data.slug
   if (parsed.data.testScenario !== undefined)
@@ -160,7 +178,7 @@ export async function duplicateProject(
   // Fetch original project
   const { data: original, error: originalError } = await supabase
     .from('projects')
-    .select('id, company_name, title, test_scenario, talkpush_login_link, country')
+    .select('id, company_name, client_id, title, test_scenario, talkpush_login_link, country')
     .eq('id', projectId)
     .single()
 
@@ -184,6 +202,7 @@ export async function duplicateProject(
     .from('projects')
     .insert({
       company_name: original.company_name,
+      client_id: original.client_id,
       title: duplicateTitle,
       slug: newSlug,
       test_scenario: original.test_scenario,

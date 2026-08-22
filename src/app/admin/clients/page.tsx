@@ -12,7 +12,7 @@ export default async function ClientsPage() {
   const supabase = createAdminClient()
   const { data: clients, error } = await supabase
     .from("clients")
-    .select("id, name, created_at")
+    .select("id, name, logo_url, created_at")
     .order("name")
 
   if (error) {

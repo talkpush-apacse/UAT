@@ -9,6 +9,7 @@ import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
 import { getStepsMissingEvidence, EVIDENCE_REQUIRED_STATUSES } from "@/lib/utils/response-validation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { ClientLogosHeader } from "./client-logos-header"
 
 interface ChecklistItemData {
   id: string
@@ -48,6 +49,7 @@ interface Project {
   test_scenario: string | null
   talkpush_login_link: string | null
   wizard_mode?: boolean | null
+  client?: { logo_url: string | null } | null
 }
 
 interface Tester {
@@ -241,6 +243,7 @@ export default function ChecklistWizardView({
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pt-5 pb-4 px-4 sm:px-6 -mx-4 border-b border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="min-w-0">
+              <ClientLogosHeader clientLogoUrl={project.client?.logo_url} />
               <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
               <p className="text-sm text-gray-500">Hi {tester.name}</p>
             </div>
@@ -284,6 +287,7 @@ export default function ChecklistWizardView({
           className="flex items-center justify-between mb-3"
         >
           <div className="min-w-0">
+            <ClientLogosHeader clientLogoUrl={project.client?.logo_url} />
             <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
             <p className="text-sm text-gray-500">
               {previewMode ? "UAT Steps Preview" : `Hi ${tester.name}`}

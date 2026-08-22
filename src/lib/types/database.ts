@@ -292,16 +292,19 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          logo_url: string | null
           name: string
         }
         Insert: {
           created_at?: string
           id?: string
+          logo_url?: string | null
           name: string
         }
         Update: {
           created_at?: string
           id?: string
+          logo_url?: string | null
           name?: string
         }
         Relationships: []
@@ -450,6 +453,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          client_id: string | null
           company_name: string
           country: string
           created_at: string | null
@@ -461,6 +465,7 @@ export type Database = {
           wizard_mode: boolean
         }
         Insert: {
+          client_id?: string | null
           company_name: string
           country?: string
           created_at?: string | null
@@ -472,6 +477,7 @@ export type Database = {
           wizard_mode?: boolean
         }
         Update: {
+          client_id?: string | null
           company_name?: string
           country?: string
           created_at?: string | null
@@ -482,7 +488,15 @@ export type Database = {
           title?: string | null
           wizard_mode?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       responses: {
         Row: {

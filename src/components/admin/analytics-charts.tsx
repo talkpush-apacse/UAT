@@ -119,6 +119,7 @@ export default function AnalyticsCharts({
   projectTitle,
   testScenario,
   projectCreatedAt,
+  clientLogoUrl,
 }: {
   checklistItems: ChecklistItem[]
   testers: Tester[]
@@ -128,6 +129,7 @@ export default function AnalyticsCharts({
   projectTitle?: string
   testScenario?: string
   projectCreatedAt?: string
+  clientLogoUrl?: string
 }) {
   const [filterScope, setFilterScope] = useState<"all" | "completed">("all")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -329,7 +331,7 @@ export default function AnalyticsCharts({
         month: "long",
         day: "numeric",
       })
-      const blob = await pdf(
+      const buildDoc = (includeClientLogo: boolean) => (
         <AnalyticsPDFDocument
           companyName={companyName}
           generatedAt={generatedAt}
@@ -338,8 +340,19 @@ export default function AnalyticsCharts({
           findingsBreakdown={findingsBreakdown}
           failedStepsRows={failedStepsRows}
           testerParticipation={testerParticipation}
+          clientLogoUrl={includeClientLogo ? clientLogoUrl : undefined}
         />
-      ).toBlob()
+      )
+
+      let blob: Blob
+      try {
+        blob = await pdf(buildDoc(true)).toBlob()
+      } catch (err) {
+        // A broken/unreachable client logo image shouldn't block the whole
+        // report — retry once without it rather than failing the download.
+        console.error("PDF generation with client logo failed, retrying without it:", err)
+        blob = await pdf(buildDoc(false)).toBlob()
+      }
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
@@ -438,6 +451,21 @@ export default function AnalyticsCharts({
       {/* ════════════════════════════════════════════════════ */}
       <div className="flex items-start justify-between gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/talkpush-logo.jpg" alt="Talkpush" className="h-6 w-auto" />
+            {clientLogoUrl && (
+              <>
+                <span className="text-gray-300" aria-hidden="true">×</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={clientLogoUrl}
+                  alt=""
+                  className="h-6 w-auto max-w-[100px] object-contain"
+                />
+              </>
+            )}
+          </div>
           <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">UAT Analytics Report</p>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">{companyName ?? "Report"}</h1>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
