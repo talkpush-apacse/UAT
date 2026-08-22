@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.28.0",
+    "name": "Version 2.28.0 - Client Grouping",
+    "changes": [
+      "UAT Checklists dashboard now groups by the linked client instead of typed-in company name, so geo variants like Alorica PH and Alorica Egypt show as one client",
+      "Client logos now show on the dashboard's client cards and client detail header",
+      "MCP checklist creation now reuses an existing client (case-insensitive) or creates one automatically, instead of relying on exact-text matches"
+    ],
+    "deployed_at": "2026-08-22"
+  },
+  {
     "version": "2.27.0",
     "name": "Version 2.27.0 - Client Branding",
     "changes": [

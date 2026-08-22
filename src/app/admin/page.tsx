@@ -53,10 +53,18 @@ export default async function AdminDashboard({
 
   const { data: projects, error: projectsError } = await supabase
     .from("projects")
-    .select("id, slug, company_name, title, test_scenario, created_at")
+    .select("id, slug, company_name, title, test_scenario, created_at, client_id")
     .order("created_at", { ascending: false })
 
   assertNoQueryError(projectsError, "projects")
+
+  const { data: clientRows, error: clientsError } = await supabase
+    .from("clients")
+    .select("id, name, logo_url")
+
+  assertNoQueryError(clientsError, "clients")
+
+  const clientById = new Map((clientRows ?? []).map((client) => [client.id, client]))
 
   const baseProjects = projects ?? []
   const projectIds = baseProjects.map((project) => project.id)
@@ -203,23 +211,38 @@ export default async function AdminDashboard({
 
   const recentlyAccessed = projectsWithCounts.slice(0, 5)
 
-  const groupedByClient: ClientGroup[] = Object.entries(
-    projectsWithCounts.reduce<Record<string, ProjectWithCounts[]>>((acc, project) => {
-      const key = project.company_name || "Unknown Client"
-      if (!acc[key]) acc[key] = []
-      acc[key].push(project)
-      return acc
-    }, {})
-  )
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([clientName, clientProjects]) => {
+  // Group by the real client link (client_id) rather than the free-text
+  // company_name a checklist was created with, so geo/typo variants of the
+  // same client (e.g. "Alorica PH" / "Alorica Egypt", both linked to the
+  // same "Alorica" client row) show as one card instead of several.
+  const groupedByClientMap = projectsWithCounts.reduce<
+    Record<string, { displayName: string; logoUrl: string | null; projects: ProjectWithCounts[] }>
+  >((acc, project) => {
+    const linkedClient = project.client_id ? clientById.get(project.client_id) : undefined
+    const key = linkedClient ? linkedClient.id : `unlinked:${project.company_name || "Unknown Client"}`
+
+    if (!acc[key]) {
+      acc[key] = {
+        displayName: linkedClient?.name ?? project.company_name ?? "Unknown Client",
+        logoUrl: linkedClient?.logo_url ?? null,
+        projects: [],
+      }
+    }
+    acc[key].projects.push(project)
+    return acc
+  }, {})
+
+  const groupedByClient: ClientGroup[] = Object.values(groupedByClientMap)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName))
+    .map(({ displayName, logoUrl, projects: clientProjects }) => {
       const sortedProjects = [...clientProjects].sort(
         (a, b) =>
           toTimestamp(b.lastActivityAt ?? b.created_at) - toTimestamp(a.lastActivityAt ?? a.created_at)
       )
 
       return {
-        clientName,
+        clientName: displayName,
+        logoUrl,
         activeCount: sortedProjects.filter((project) => project.status === "In Progress").length,
         completedCount: sortedProjects.filter((project) => project.status === "Signed Off").length,
         projects: sortedProjects,
@@ -247,6 +270,14 @@ export default async function AdminDashboard({
                 Client
               </p>
               <h1 className="text-[28px] font-bold text-gray-900 leading-tight flex items-center gap-3 flex-wrap">
+                {matchingGroup?.logoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={matchingGroup.logoUrl}
+                    alt=""
+                    className="h-8 w-8 rounded-md object-contain bg-brand-sage-lightest p-1 flex-shrink-0"
+                  />
+                )}
                 <span className="truncate">{decodedClient}</span>
                 {matchingGroup && (
                   <span className="text-sm font-normal text-gray-500 bg-gray-100 rounded-full px-2.5 py-0.5 flex-shrink-0">

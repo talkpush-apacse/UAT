@@ -5,7 +5,61 @@ import { generateUniqueProjectSlug } from "@/lib/utils/project-slug";
 import { generateShareToken } from "@/lib/utils/share-token";
 import { getProjectBySlug, getAppBaseUrl, toolResult } from "@/lib/mcp/helpers";
 
+// Resolves company_name to a real client row, reusing an existing client
+// (case-insensitive exact match) so geo/typo variants of the same company
+// (e.g. "taskus" vs "TaskUs") don't spawn duplicate client records. Creates
+// a new client automatically when the company genuinely isn't tracked yet,
+// so a checklist is never left unlinked.
+async function resolveOrCreateClient(
+  supabase: ReturnType<typeof createAdminClient>,
+  companyName: string
+): Promise<string> {
+  const trimmedName = companyName.trim();
+
+  const { data: existingClient, error: lookupError } = await supabase
+    .from("clients")
+    .select("id")
+    .ilike("name", trimmedName)
+    .maybeSingle();
+
+  if (lookupError) throw new Error(lookupError.message);
+  if (existingClient) return existingClient.id;
+
+  const { data: newClient, error: insertError } = await supabase
+    .from("clients")
+    .insert({ name: trimmedName })
+    .select("id")
+    .single();
+
+  if (insertError) throw new Error(insertError.message);
+  return newClient.id;
+}
+
 export function registerProjectTools(server: McpServer) {
+  // ===========================
+  // TOOL 0: list_clients
+  // ===========================
+  server.registerTool(
+    "list_clients",
+    {
+      title: "List Clients",
+      description:
+        "List all existing client/company records. Call this BEFORE create_uat_checklist or update_uat_checklist to check whether the company already exists — reuse its exact name instead of typing a new variant (e.g. 'TaskUs Philippines' when 'TaskUs PH' is already tracked), which would otherwise create a disconnected duplicate client.",
+      inputSchema: {},
+    },
+    async () => {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, name, logo_url")
+        .order("name");
+
+      if (error) throw new Error(error.message);
+
+      return toolResult({ count: data.length, clients: data });
+    }
+  );
+
   // ===========================
   // TOOL 1: list_uat_checklists
   // ===========================
@@ -51,11 +105,13 @@ export function registerProjectTools(server: McpServer) {
     {
       title: "Create UAT Checklist",
       description:
-        "Create a new UAT checklist. Generates a URL-friendly slug from the title automatically.",
+        "Create a new UAT checklist. Generates a URL-friendly slug from the title automatically. Call list_clients first and reuse an existing client's exact name whenever the company is already tracked — even if the request describes a specific office or geo (e.g. use 'TaskUs' rather than inventing 'TaskUs Philippines' if 'TaskUs' is already the tracked client for that org). A name that doesn't match any existing client is automatically created as a new client record and linked to this checklist.",
       inputSchema: {
         company_name: z
           .string()
-          .describe("The client/company name (e.g., 'Accenture')"),
+          .describe(
+            "The client/company name (e.g., 'Accenture'). Check list_clients first and reuse the exact existing name whenever this company is already tracked — a new name automatically creates a new client record."
+          ),
         title: z
           .string()
           .describe("The UAT checklist title (e.g., 'ERP Link Generator UAT')"),
@@ -78,19 +134,13 @@ export function registerProjectTools(server: McpServer) {
       const supabase = createAdminClient();
       const slug = await generateUniqueProjectSlug(supabase, title);
 
-      // Link to a real client row when the name matches one, so this
-      // checklist picks up the client's logo like ones made via the web UI.
-      const { data: client } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("name", company_name)
-        .maybeSingle();
+      const clientId = await resolveOrCreateClient(supabase, company_name);
 
       const { data, error } = await supabase
         .from("projects")
         .insert({
           company_name,
-          client_id: client?.id ?? null,
+          client_id: clientId,
           title,
           test_scenario: test_scenario ?? null,
           talkpush_login_link: talkpush_login_link ?? null,
@@ -135,7 +185,9 @@ export function registerProjectTools(server: McpServer) {
           .min(1)
           .max(200)
           .optional()
-          .describe("Replacement client/company name (1–200 chars). Only pass if changing."),
+          .describe(
+            "Replacement client/company name (1–200 chars). Only pass if changing. Call list_clients first and reuse the exact existing name whenever this company is already tracked — a new name automatically creates a new client record."
+          ),
         test_scenario: z
           .string()
           .max(2000)
@@ -168,12 +220,7 @@ export function registerProjectTools(server: McpServer) {
       if (company_name !== undefined) {
         cleanUpdates.company_name = company_name;
         // Keep client_id in sync whenever the client name changes.
-        const { data: client } = await supabase
-          .from("clients")
-          .select("id")
-          .eq("name", company_name)
-          .maybeSingle();
-        cleanUpdates.client_id = client?.id ?? null;
+        cleanUpdates.client_id = await resolveOrCreateClient(supabase, company_name);
       }
       if (test_scenario !== undefined) {
         cleanUpdates.test_scenario = test_scenario || null;

@@ -15,6 +15,7 @@ export interface ProjectWithCounts {
   title: string | null
   test_scenario: string | null
   created_at: string | null
+  client_id?: string | null
   testerCount: number
   signoffCount: number
   stepCount?: number
@@ -24,6 +25,7 @@ export interface ProjectWithCounts {
 
 export interface ClientGroup {
   clientName: string
+  logoUrl?: string | null
   activeCount?: number
   completedCount?: number
   projects: ProjectWithCounts[]
@@ -105,8 +107,17 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                     {/* Icon + Name + Arrow */}
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex-shrink-0 w-10 h-10 bg-brand-sage-lightest rounded-lg flex items-center justify-center">
-                          <Building2 className="h-5 w-5 text-brand-sage-darker" />
+                        <div className="flex-shrink-0 w-10 h-10 bg-brand-sage-lightest rounded-lg flex items-center justify-center overflow-hidden">
+                          {group.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={group.logoUrl}
+                              alt=""
+                              className="w-full h-full object-contain p-1"
+                            />
+                          ) : (
+                            <Building2 className="h-5 w-5 text-brand-sage-darker" />
+                          )}
                         </div>
                         <h3 className="text-[15px] font-semibold text-gray-800 leading-snug group-hover:text-brand-sage-darker transition-colors line-clamp-2">
                           {group.clientName}
