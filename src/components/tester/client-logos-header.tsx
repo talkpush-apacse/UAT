@@ -1,8 +1,16 @@
-export function ClientLogosHeader({ clientLogoUrl }: { clientLogoUrl?: string | null }) {
+export function ClientLogosHeader({
+  clientLogoUrl,
+  className = "mb-1.5",
+  logoClassName = "h-5",
+}: {
+  clientLogoUrl?: string | null
+  className?: string
+  logoClassName?: string
+}) {
   return (
-    <div className="flex items-center gap-2 mb-1.5">
+    <div className={`flex items-center gap-2 ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/talkpush-logo.jpg" alt="Talkpush" className="h-5 w-auto" />
+      <img src="/talkpush-logo.jpg" alt="Talkpush" className={`${logoClassName} w-auto`} />
       {clientLogoUrl && (
         <>
           <span className="text-gray-300" aria-hidden="true">×</span>
@@ -10,7 +18,7 @@ export function ClientLogosHeader({ clientLogoUrl }: { clientLogoUrl?: string | 
           <img
             src={clientLogoUrl}
             alt=""
-            className="h-5 w-auto max-w-[90px] object-contain"
+            className={`${logoClassName} w-auto max-w-[110px] object-contain`}
           />
         </>
       )}

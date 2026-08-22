@@ -13,7 +13,7 @@ export default async function TesterRegistrationPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id, slug, company_name, title, test_scenario, country")
+    .select("id, slug, company_name, title, test_scenario, country, client:clients(logo_url)")
     .eq("slug", params.slug)
     .single()
 
@@ -66,6 +66,7 @@ export default async function TesterRegistrationPage({
             slug={project.slug}
             companyName={project.company_name}
             country={project.country}
+            clientLogoUrl={project.client?.logo_url}
           />
         </div>
 

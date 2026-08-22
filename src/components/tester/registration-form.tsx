@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import PhoneInput from "react-phone-input-2"
 import "react-phone-input-2/lib/style.css"
-import { ClipboardCheck, Eye } from "lucide-react"
+import { Eye } from "lucide-react"
 import { getCountryByCode, DEFAULT_COUNTRY_CODE } from "@/lib/countries"
+import { ClientLogosHeader } from "./client-logos-header"
 
 const initialState: RegisterTesterState = {}
 
@@ -20,11 +21,13 @@ export default function RegistrationForm({
   slug,
   companyName,
   country,
+  clientLogoUrl,
 }: {
   projectId: string
   slug: string
   companyName?: string
   country?: string | null
+  clientLogoUrl?: string | null
 }) {
   const [state, formAction] = useFormState(registerTester, initialState)
   const router = useRouter()
@@ -44,9 +47,11 @@ export default function RegistrationForm({
     <div className="space-y-6">
       {/* Branding header */}
       <div className="text-center">
-        <div className="w-12 h-12 rounded-xl bg-brand-sage-lightest flex items-center justify-center mx-auto mb-3">
-          <ClipboardCheck className="h-6 w-6 text-brand-sage-darker" />
-        </div>
+        <ClientLogosHeader
+          clientLogoUrl={clientLogoUrl}
+          className="justify-center mb-3"
+          logoClassName="h-7"
+        />
         {companyName && (
           <h2 className="text-lg font-semibold text-gray-900">{companyName}</h2>
         )}
