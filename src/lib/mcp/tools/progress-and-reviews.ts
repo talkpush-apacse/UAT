@@ -2,6 +2,10 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProjectBySlug, toolResult } from "@/lib/mcp/helpers";
+import {
+  getAttachmentById,
+  buildAttachmentContent,
+} from "@/lib/mcp/attachment-content";
 
 export function registerProgressTools(server: McpServer) {
   // =====================================
@@ -115,7 +119,7 @@ export function registerProgressTools(server: McpServer) {
     {
       title: "Get Admin Reviews",
       description:
-        "Get admin review data for all non-pass UAT steps in a checklist, grouped by tester. Returns the tester's own remark, behavior type, resolution status, and admin findings/comments for each flagged step. Used for generating AI summaries of UAT testing results.",
+        "Get admin review data for all non-pass UAT steps in a checklist, grouped by tester. Returns the tester's own remark, behavior type, resolution status, and admin findings/comments for each flagged step, plus an `attachments` array (id, file_name, mime_type, file_size) for any files the tester uploaded on that step. Pass an attachment's `id` to get_step_attachment to fetch its actual content (image or extracted text). Used for generating AI summaries of UAT testing results.",
       inputSchema: {
         slug: z.string().describe("The UAT checklist slug"),
       },
@@ -146,6 +150,7 @@ export function registerProgressTools(server: McpServer) {
 
       // Fetch ALL responses (needed for summary stats)
       let allResponses: {
+        id: string;
         tester_id: string;
         checklist_item_id: string;
         status: string | null;
@@ -154,10 +159,29 @@ export function registerProgressTools(server: McpServer) {
       if (itemIds.length > 0) {
         const { data: resp, error: respError } = await supabase
           .from("responses")
-          .select("tester_id, checklist_item_id, status, comment")
+          .select("id, tester_id, checklist_item_id, status, comment")
           .in("checklist_item_id", itemIds);
         if (respError) throw new Error(respError.message);
         allResponses = resp ?? [];
+      }
+
+      // Fetch attachment metadata for all responses so flagged steps expose
+      // a fetchable reference — get_step_attachment resolves it to content.
+      let allAttachments: {
+        id: string;
+        response_id: string;
+        file_name: string;
+        mime_type: string;
+        file_size: number;
+      }[] = [];
+      const responseIds = allResponses.map((r) => r.id);
+      if (responseIds.length > 0) {
+        const { data: att, error: attError } = await supabase
+          .from("attachments")
+          .select("id, response_id, file_name, mime_type, file_size")
+          .in("response_id", responseIds);
+        if (attError) throw new Error(attError.message);
+        allAttachments = att ?? [];
       }
 
       // Fetch all admin reviews for this project's items
@@ -184,6 +208,12 @@ export function registerProgressTools(server: McpServer) {
       const reviewMap = new Map(
         allReviews.map((r) => [`${r.checklist_item_id}:${r.tester_id}`, r])
       );
+      const attachmentsByResponse = new Map<string, typeof allAttachments>();
+      for (const att of allAttachments) {
+        const existing = attachmentsByResponse.get(att.response_id);
+        if (existing) existing.push(att);
+        else attachmentsByResponse.set(att.response_id, [att]);
+      }
 
       // Compute summary stats across all responses
       const totalResponses = allResponses.length;
@@ -211,6 +241,14 @@ export function registerProgressTools(server: McpServer) {
             const review = reviewMap.get(
               `${resp.checklist_item_id}:${tester.id}`
             );
+            const attachments = (attachmentsByResponse.get(resp.id) ?? []).map(
+              (a) => ({
+                id: a.id,
+                file_name: a.file_name,
+                mime_type: a.mime_type,
+                file_size: a.file_size,
+              })
+            );
             return {
               step_number: item?.step_number ?? null,
               actor: item?.actor ?? null,
@@ -220,6 +258,7 @@ export function registerProgressTools(server: McpServer) {
               finding_type: review?.finding_type ?? null,
               resolution_status: review?.resolution_status ?? null,
               findings: review?.notes ?? null,
+              attachments,
             };
           })
           .sort((a, b) => (a.step_number ?? 0) - (b.step_number ?? 0));
@@ -252,6 +291,42 @@ export function registerProgressTools(server: McpServer) {
         },
         admin_reviews: adminReviews,
       });
+    }
+  );
+
+  // =============================
+  // TOOL 12: get_step_attachment
+  // =============================
+  server.registerTool(
+    "get_step_attachment",
+    {
+      title: "Get Step Attachment",
+      description:
+        "Fetch the actual content of a tester-uploaded attachment by its `id` (from get_admin_reviews' `attachments` array). Images are returned as viewable image content. PDFs and .docx files are returned as extracted text. Other file types (legacy .doc, video) return metadata and a file URL instead, since their content can't be inlined.",
+      inputSchema: {
+        attachment_id: z.string().uuid().describe("The attachment UUID from get_admin_reviews"),
+      },
+    },
+    async ({ attachment_id }) => {
+      const attachment = await getAttachmentById(attachment_id);
+      const result = await buildAttachmentContent(attachment);
+
+      const content: Array<{ type: "text"; text: string } | { type: "image"; data: string; mimeType: string }> = [
+        {
+          type: "text",
+          text: JSON.stringify(
+            { attachment: result.attachment, note: result.note ?? null },
+            null,
+            2
+          ),
+        },
+      ];
+
+      for (const block of result.content) {
+        content.push(block);
+      }
+
+      return { content };
     }
   );
 }

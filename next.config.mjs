@@ -4,6 +4,9 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "2mb",
     },
+    // pdfjs-dist (a pdf-parse dependency) breaks when webpack bundles it for
+    // the server — keep it as a real Node require instead.
+    serverComponentsExternalPackages: ["pdf-parse", "pdfjs-dist"],
   },
   images: {
     remotePatterns: [
