@@ -8,12 +8,15 @@ const nextConfig = {
     // the server — keep it as a real Node require instead.
     serverComponentsExternalPackages: ["pdf-parse", "pdfjs-dist", "@napi-rs/canvas"],
     // @napi-rs/canvas (pdfjs-dist's DOMMatrix polyfill) ships a platform-
-    // specific native .node binary, picked via a dynamic require that
-    // Vercel's output tracing can't follow — the deployed function silently
-    // ships without it, and pdf-parse fails at runtime with "DOMMatrix is
-    // not defined". Force the whole package family into the trace.
+    // specific native .node binary, and pdfjs-dist itself loads its worker
+    // (pdf.worker.mjs) via a dynamic path at runtime — Vercel's output
+    // tracing can't follow either, so the deployed function silently ships
+    // without them. Force both package trees into the trace.
     outputFileTracingIncludes: {
-      "/api/mcp/**": ["./node_modules/@napi-rs/canvas*/**/*"],
+      "/api/mcp/**": [
+        "./node_modules/@napi-rs/canvas*/**/*",
+        "./node_modules/pdfjs-dist/**/*",
+      ],
     },
   },
   images: {
