@@ -1,7 +1,28 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getProjectBySlug, toolResult } from "@/lib/mcp/helpers";
+import { getAppBaseUrl, getProjectBySlug, toolResult } from "@/lib/mcp/helpers";
+import { buildAbsoluteSampleProxyUrl } from "@/lib/utils/sample-url";
+
+// Mirrors the admin sample-upload route's allow-list (src/app/api/admin/sample-upload-url/route.ts)
+// so MCP-attached samples land in the same bucket/path shape and render the same way.
+const SAMPLE_MIME_EXTENSIONS: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
+
+const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
+
+function getSafeFileName(fileName: string): string {
+  return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+function decodeBase64Image(imageBase64: string): Buffer {
+  const stripped = imageBase64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, "");
+  return Buffer.from(stripped, "base64");
+}
 
 export function registerChecklistStepTools(server: McpServer) {
   // =====================
@@ -233,6 +254,85 @@ export function registerChecklistStepTools(server: McpServer) {
       }
 
       return toolResult({ updated: true, item: data });
+    }
+  );
+
+  // ==============================
+  // TOOL 6b: attach_step_sample
+  // ==============================
+  server.registerTool(
+    "attach_step_sample",
+    {
+      title: "Attach Step Sample Image",
+      description:
+        "Upload a screenshot/sample image (base64-encoded, e.g. one pasted into the chat) and attach it to a UAT step's view_sample field, so testers see it as the expected result. Only testable steps can have a sample — not section headers.",
+      inputSchema: {
+        id: z.string().uuid().describe("The UAT step UUID to attach the sample image to"),
+        image_base64: z
+          .string()
+          .describe(
+            "Base64-encoded image data. A 'data:image/...;base64,' prefix is accepted and stripped automatically."
+          ),
+        mime_type: z
+          .enum(["image/png", "image/jpeg", "image/gif", "image/webp"])
+          .describe("Image MIME type"),
+        file_name: z
+          .string()
+          .optional()
+          .describe("Original file name, used to name the stored object. Defaults to 'sample.<ext>'."),
+      },
+    },
+    async ({ id, image_base64, mime_type, file_name }) => {
+      const supabase = createAdminClient();
+
+      const { data: item, error: itemError } = await supabase
+        .from("checklist_items")
+        .select("id, project_id, item_type, step_number")
+        .eq("id", id)
+        .single();
+
+      if (itemError || !item) throw new Error(`UAT step not found: ${id}`);
+      if (item.item_type === "phase_header") {
+        throw new Error("Samples can only be attached to testable steps, not section headers");
+      }
+
+      const buffer = decodeBase64Image(image_base64);
+      if (buffer.length === 0) {
+        throw new Error("Decoded image is empty — check image_base64");
+      }
+      if (buffer.length > MAX_SAMPLE_BYTES) {
+        throw new Error(`Image is ${buffer.length} bytes, over the ${MAX_SAMPLE_BYTES}-byte limit`);
+      }
+
+      const extension = SAMPLE_MIME_EXTENSIONS[mime_type];
+      const safeFileName = getSafeFileName(file_name ?? `sample.${extension}`);
+      const uniqueId = crypto.randomUUID();
+      const path = `samples/${item.project_id}/${id}/${uniqueId}-${safeFileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("attachments")
+        .upload(path, buffer, { contentType: mime_type, upsert: false });
+
+      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+
+      const viewSampleUrl = buildAbsoluteSampleProxyUrl(getAppBaseUrl(), path);
+
+      const { data: updated, error: updateError } = await supabase
+        .from("checklist_items")
+        .update({ view_sample: viewSampleUrl })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (updateError) throw new Error(updateError.message);
+
+      return toolResult({
+        attached: true,
+        step_id: id,
+        step_number: item.step_number,
+        view_sample: viewSampleUrl,
+        item: updated,
+      });
     }
   );
 
