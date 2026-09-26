@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { Building2, Search, SearchX, ChevronRight, Plus } from "lucide-react"
+import { AlertTriangle, Building2, Search, SearchX, ChevronRight, Clock3, Plus } from "lucide-react"
 import type { ProjectStatus } from "@/lib/utils/project-status"
 
 export type { ProjectStatus }
@@ -19,6 +19,7 @@ export interface ProjectWithCounts {
   testerCount: number
   signoffCount: number
   stepCount?: number
+  openFindingCount?: number
   status?: ProjectStatus
   lastActivityAt?: string | null
 }
@@ -34,10 +35,51 @@ export interface ClientGroup {
 interface Props {
   groups: ClientGroup[]
   recentlyAccessed?: ProjectWithCounts[]
+  attentionProjects?: ProjectWithCounts[]
 }
 
-export default function ClientGroupedDashboard({ groups }: Props) {
+function formatRelativeDate(value: string | null | undefined) {
+  if (!value) return "No activity yet"
+  const timestamp = new Date(value).getTime()
+  if (Number.isNaN(timestamp)) return "No activity yet"
+
+  const diffMs = Date.now() - timestamp
+  const minutes = Math.floor(diffMs / 60000)
+  if (minutes < 1) return "Just now"
+  if (minutes < 60) return `${minutes}m ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+
+  return new Date(value).toLocaleDateString()
+}
+
+function getNextAction(project: ProjectWithCounts) {
+  if ((project.stepCount ?? 0) === 0) return "Add steps"
+  if (project.testerCount === 0) return "Share tester link"
+  if ((project.openFindingCount ?? 0) > 0) return "Review findings"
+  if (project.signoffCount === 0) return "Record sign-off"
+  return "View report"
+}
+
+export default function ClientGroupedDashboard({
+  groups,
+  recentlyAccessed = [],
+  attentionProjects = [],
+}: Props) {
   const [searchQuery, setSearchQuery] = useState("")
+
+  useEffect(() => {
+    const savedQuery = window.localStorage.getItem("uat-admin-client-search")
+    if (savedQuery) setSearchQuery(savedQuery)
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem("uat-admin-client-search", searchQuery)
+  }, [searchQuery])
 
   const filteredGroups = groups.filter((group) =>
     group.clientName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -45,6 +87,73 @@ export default function ClientGroupedDashboard({ groups }: Props) {
 
   return (
     <div className="space-y-6">
+      {(attentionProjects.length > 0 || recentlyAccessed.length > 0) && (
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+          {attentionProjects.length > 0 && (
+            <section className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                Needs Attention
+              </h2>
+              <div className="mt-3 space-y-2">
+                {attentionProjects.map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/admin/projects/${project.slug}`}
+                    className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 shadow-sm transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-gray-900">
+                        {project.title || project.company_name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        {project.company_name} · {formatRelativeDate(project.lastActivityAt)} · {getNextAction(project)}
+                      </p>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      {(project.openFindingCount ?? 0) > 0 && (
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-red-200">
+                          {project.openFindingCount} open
+                        </span>
+                      )}
+                      <ChevronRight className="h-4 w-4 text-amber-700" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {recentlyAccessed.length > 0 && (
+            <section className="rounded-xl border border-gray-200 bg-white p-4">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                <Clock3 className="h-4 w-4 text-gray-400" />
+                Recent Activity
+              </h2>
+              <div className="mt-3 space-y-2">
+                {recentlyAccessed.map((project) => (
+                  <Link
+                    key={project.id}
+                    href={`/admin/projects/${project.slug}`}
+                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-gray-800">
+                        {project.title || project.company_name}
+                      </span>
+                      <span className="block text-xs text-gray-400">
+                        {formatRelativeDate(project.lastActivityAt)}
+                      </span>
+                    </span>
+                    <span className="text-xs font-medium text-gray-500">{getNextAction(project)}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+
       {/* Search bar */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -89,6 +198,10 @@ export default function ClientGroupedDashboard({ groups }: Props) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredGroups.map((group) => {
             const signedOffCount = group.projects.filter((p) => p.signoffCount > 0).length
+            const openFindingCount = group.projects.reduce(
+              (sum, project) => sum + (project.openFindingCount ?? 0),
+              0
+            )
             const inProgressCount = group.projects.filter(
               (p) => p.signoffCount === 0 && p.testerCount > 0
             ).length
@@ -140,6 +253,12 @@ export default function ClientGroupedDashboard({ groups }: Props) {
                         <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-0.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                           {signedOffCount} Signed Off
+                        </span>
+                      )}
+                      {openFindingCount > 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs bg-red-50 text-red-700 border border-red-200 rounded-full px-2.5 py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                          {openFindingCount} Open
                         </span>
                       )}
                       {inProgressCount > 0 && (

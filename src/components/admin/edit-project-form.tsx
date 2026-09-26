@@ -104,6 +104,9 @@ export default function EditProjectForm({ project }: { project: Project }) {
               defaultValue={project.slug}
               required
             />
+            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Changing this updates the tester URL. Share the new link with testers if this UAT is already in progress.
+            </p>
             {state.fieldErrors?.slug && (
               <p className="text-sm text-red-600">{state.fieldErrors.slug[0]}</p>
             )}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,6 +35,33 @@ import DuplicateProjectDialog from "@/components/admin/duplicate-project-dialog"
 import { toast } from "sonner"
 import type { ClientGroup, ProjectStatus } from "./client-grouped-dashboard"
 import { getProjectStatus } from "@/lib/utils/project-status"
+
+function formatRelativeDate(value: string | null | undefined) {
+  if (!value) return "No activity"
+  const timestamp = new Date(value).getTime()
+  if (Number.isNaN(timestamp)) return "No activity"
+
+  const diffMs = Date.now() - timestamp
+  const minutes = Math.floor(diffMs / 60000)
+  if (minutes < 1) return "Just now"
+  if (minutes < 60) return `${minutes}m ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+
+  return new Date(value).toLocaleDateString()
+}
+
+function getNextAction(project: Props["group"]["projects"][number]) {
+  if ((project.stepCount ?? 0) === 0) return "Add steps"
+  if (project.testerCount === 0) return "Share tester link"
+  if ((project.openFindingCount ?? 0) > 0) return "Review findings"
+  if (project.signoffCount === 0) return "Record sign-off"
+  return "View report"
+}
 
 function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   const styles: Record<ProjectStatus, string> = {
@@ -119,6 +146,7 @@ function TableDeleteButton({
           size="sm"
           disabled={loading}
           className="h-7 w-7 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+          aria-label="Delete UAT checklist"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -150,6 +178,23 @@ export default function ClientChecklistList({ group }: Props) {
   const router = useRouter()
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [searchQuery, setSearchQuery] = useState("")
+
+  useEffect(() => {
+    const savedViewMode = window.localStorage.getItem("uat-admin-project-view")
+    const savedSearch = window.localStorage.getItem(`uat-admin-project-search:${group.clientName}`)
+    if (savedViewMode === "table" || savedViewMode === "cards") {
+      setViewMode(savedViewMode)
+    }
+    if (savedSearch) setSearchQuery(savedSearch)
+  }, [group.clientName])
+
+  useEffect(() => {
+    window.localStorage.setItem("uat-admin-project-view", viewMode)
+  }, [viewMode])
+
+  useEffect(() => {
+    window.localStorage.setItem(`uat-admin-project-search:${group.clientName}`, searchQuery)
+  }, [group.clientName, searchQuery])
 
   const filteredProjects = group.projects.filter(
     (p) =>
@@ -243,8 +288,14 @@ export default function ClientChecklistList({ group }: Props) {
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Testers
                   </th>
-                  <th className="hidden sm:table-cell text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Created
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Open
+                  </th>
+                  <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Next
+                  </th>
+                  <th className="hidden lg:table-cell text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Activity
                   </th>
                   <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Actions
@@ -279,10 +330,20 @@ export default function ClientChecklistList({ group }: Props) {
                           {project.testerCount}
                         </span>
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-gray-400">
-                        {project.created_at
-                          ? new Date(project.created_at).toLocaleDateString()
-                          : "—"}
+                      <td className="px-4 py-3">
+                        {(project.openFindingCount ?? 0) > 0 ? (
+                          <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-red-200">
+                            {project.openFindingCount}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3 text-sm text-gray-600">
+                        {getNextAction(project)}
+                      </td>
+                      <td className="hidden lg:table-cell px-4 py-3 text-sm text-gray-400">
+                        {formatRelativeDate(project.lastActivityAt)}
                       </td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
@@ -301,6 +362,7 @@ export default function ClientChecklistList({ group }: Props) {
                               variant="ghost"
                               size="sm"
                               className="h-7 w-7 p-0 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                              aria-label="Edit UAT checklist"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
@@ -357,10 +419,16 @@ export default function ClientChecklistList({ group }: Props) {
                         {project.testerCount !== 1 ? "s" : ""}
                       </span>
                       <span>
-                        {project.created_at
-                          ? new Date(project.created_at).toLocaleDateString()
-                          : "—"}
+                        {formatRelativeDate(project.lastActivityAt)}
                       </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                      {(project.openFindingCount ?? 0) > 0 && (
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 font-semibold text-red-700 ring-1 ring-red-200">
+                          {project.openFindingCount} open
+                        </span>
+                      )}
+                      <span className="font-medium text-gray-600">{getNextAction(project)}</span>
                     </div>
                   </CardContent>
                 </Card>
