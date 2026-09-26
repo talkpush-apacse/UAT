@@ -10,6 +10,7 @@ import { markTestComplete } from "@/lib/actions/testers"
 import { getStepsMissingEvidence } from "@/lib/utils/response-validation"
 import ChecklistWizardView from "./checklist-wizard-view"
 import { ClientLogosHeader } from "./client-logos-header"
+import { trackMarkCompleteFailed, trackTestCompleted } from "./completion-tracking"
 
 interface ChecklistItemData {
   id: string
@@ -101,11 +102,20 @@ function ClassicChecklistView({
   const handleMarkComplete = async () => {
     setIsMarkingComplete(true)
     setCompleteError(null)
-    const result = await markTestComplete(tester.id)
-    if (!result.error) {
-      setIsTestComplete(true)
-    } else {
-      setCompleteError(result.error)
+    try {
+      const result = await markTestComplete(tester.id)
+      if (!result.error) {
+        setIsTestComplete(true)
+        trackTestCompleted(project.slug, "classic", stepItems, responses)
+      } else {
+        setCompleteError(result.error)
+        trackMarkCompleteFailed(project.slug, "classic", result.error)
+      }
+    } catch (err) {
+      // Server action unreachable (e.g. offline) — previously the button
+      // stayed stuck on "Saving…" with no message.
+      setCompleteError("Couldn't reach the server. Check your connection and try again.")
+      trackMarkCompleteFailed(project.slug, "classic", err)
     }
     setIsMarkingComplete(false)
   }
@@ -131,6 +141,12 @@ function ClassicChecklistView({
   }, [responses, stepItems])
 
   const totalCount = stepItems.length
+
+  // 1-based position among answerable steps (phase headers excluded), for analytics
+  const stepPositions = useMemo(
+    () => new Map(stepItems.map((item, i) => [item.id, i + 1])),
+    [stepItems]
+  )
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
   // Fail/Blocked/Up For Review steps must have a comment or an attachment before completion.
@@ -370,6 +386,12 @@ function ClassicChecklistView({
                   : null
               }
               previewMode={previewMode}
+              trackingContext={{
+                project_slug: project.slug,
+                step_position: stepPositions.get(item.id) ?? 0,
+                total_steps: totalCount,
+                view_mode: "classic",
+              }}
             />
           )
         })}

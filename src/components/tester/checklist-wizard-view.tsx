@@ -10,6 +10,7 @@ import { markTestComplete } from "@/lib/actions/testers"
 import { getStepsMissingEvidence, EVIDENCE_REQUIRED_STATUSES } from "@/lib/utils/response-validation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { ClientLogosHeader } from "./client-logos-header"
+import { trackMarkCompleteFailed, trackTestCompleted } from "./completion-tracking"
 
 interface ChecklistItemData {
   id: string
@@ -128,6 +129,12 @@ export default function ChecklistWizardView({
   )
   const totalAnswerable = answerableItems.length
 
+  // 1-based position among answerable steps (phase headers excluded), for analytics
+  const stepPositions = useMemo(
+    () => new Map(answerableItems.map((item, i) => [item.id, i + 1])),
+    [answerableItems]
+  )
+
   // Start at the first un-answered *answerable* step (skip phase headers)
   const initialIndex = useMemo(() => {
     if (totalCount === 0) return 0
@@ -218,11 +225,20 @@ export default function ChecklistWizardView({
     setIsMarkingComplete(true)
     setCompleteError(null)
     await doSaveCurrentStep()
-    const result = await markTestComplete(tester.id)
-    if (!result.error) {
-      setIsTestComplete(true)
-    } else {
-      setCompleteError(result.error)
+    try {
+      const result = await markTestComplete(tester.id)
+      if (!result.error) {
+        setIsTestComplete(true)
+        trackTestCompleted(project.slug, "wizard", answerableItems, responses)
+      } else {
+        setCompleteError(result.error)
+        trackMarkCompleteFailed(project.slug, "wizard", result.error)
+      }
+    } catch (err) {
+      // Server action unreachable (e.g. offline) — previously the button
+      // stayed stuck on "Saving…" with no message.
+      setCompleteError("Couldn't reach the server. Check your connection and try again.")
+      trackMarkCompleteFailed(project.slug, "wizard", err)
     }
     setIsMarkingComplete(false)
   }
@@ -351,6 +367,12 @@ export default function ChecklistWizardView({
                   : null
               }
               previewMode={previewMode}
+              trackingContext={{
+                project_slug: project.slug,
+                step_position: stepPositions.get(currentItem.id) ?? 0,
+                total_steps: totalAnswerable,
+                view_mode: "wizard",
+              }}
             />
           </>
         )}
@@ -380,6 +402,7 @@ export default function ChecklistWizardView({
                   key={item.id}
                   type="button"
                   onClick={() => handleJumpToStep(idx)}
+                  data-track="Jump to step"
                   className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
                     isCurrent
                       ? isHeader

@@ -10,6 +10,7 @@ import FileUpload from "./file-upload"
 import ReactMarkdown from "react-markdown"
 import rehypeSanitize from "rehype-sanitize"
 import { resolveViewSampleUrl } from "@/lib/utils/sample-url"
+import { errorCategoryFor, trackEvent, type StepContext } from "@/lib/mixpanel"
 
 interface ChecklistItemData {
   id: string
@@ -172,6 +173,7 @@ export default function ChecklistItem({
   onAttachmentsChange,
   talkpushLoginLink,
   previewMode = false,
+  trackingContext,
 }: {
   item: ChecklistItemData
   testerId: string
@@ -181,6 +183,8 @@ export default function ChecklistItem({
   onAttachmentsChange?: (responseId: string, attachments: AttachmentData[]) => void
   talkpushLoginLink?: string | null
   previewMode?: boolean
+  /** Analytics-only: where this step sits in the checklist (see docs/analytics-events.md) */
+  trackingContext: Omit<StepContext, "step_id" | "step_number">
 }) {
   const [status, setStatus] = useState<string | null>(response?.status || null)
   const [comment, setComment] = useState(response?.comment || "")
@@ -202,9 +206,23 @@ export default function ChecklistItem({
   latestArgsRef.current = { status, comment }
   const latestRequestIdRef = useRef(0)
 
+  // Kept in a ref so `save` (and the unmount flush that depends on it) doesn't
+  // get a new identity whenever the parent re-renders with a fresh object.
+  const trackingRef = useRef(trackingContext)
+  trackingRef.current = trackingContext
+
   const save = useCallback(
-    async (newStatus: string | null, newComment: string) => {
+    async (newStatus: string | null, newComment: string, saveKind: "status" | "comment") => {
       if (previewMode) return
+
+      const reportFailure = (err: unknown) =>
+        trackEvent("Response Save Failed", {
+          project_slug: trackingRef.current.project_slug,
+          step_number: item.step_number,
+          view_mode: trackingRef.current.view_mode,
+          save_kind: saveKind,
+          error_category: errorCategoryFor(err),
+        })
 
       const requestId = ++latestRequestIdRef.current
       setSaveStatus("saving")
@@ -232,6 +250,7 @@ export default function ChecklistItem({
 
         if (error) {
           setSaveStatus("error")
+          reportFailure(error)
           return
         }
 
@@ -248,11 +267,14 @@ export default function ChecklistItem({
 
         setSaveStatus("saved")
         setTimeout(() => setSaveStatus("idle"), 2000)
-      } catch {
-        if (requestId === latestRequestIdRef.current) setSaveStatus("error")
+      } catch (err) {
+        if (requestId === latestRequestIdRef.current) {
+          setSaveStatus("error")
+          reportFailure(err)
+        }
       }
     },
-    [testerId, item.id, responseId, onResponseUpdate, previewMode]
+    [testerId, item.id, item.step_number, responseId, onResponseUpdate, previewMode]
   )
 
   const handleStatusChange = (newStatus: string) => {
@@ -261,12 +283,20 @@ export default function ChecklistItem({
     const finalStatus = newStatus === status ? null : newStatus
     setStatus(finalStatus)
 
+    trackEvent("Step Status Set", {
+      ...trackingContext,
+      step_id: item.id,
+      step_number: item.step_number,
+      status: finalStatus,
+      previous_status: status,
+    })
+
     if (finalStatus === "Fail" || finalStatus === "Blocked" || finalStatus === "Up For Review") {
       setShowComment(true)
     }
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    save(finalStatus, comment)
+    save(finalStatus, comment, "status")
   }
 
   const handleCommentChange = (value: string) => {
@@ -276,7 +306,7 @@ export default function ChecklistItem({
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      save(status, value)
+      save(status, value, "comment")
     }, 500)
   }
 
@@ -286,7 +316,7 @@ export default function ChecklistItem({
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current)
-        save(latestArgsRef.current.status, latestArgsRef.current.comment)
+        save(latestArgsRef.current.status, latestArgsRef.current.comment, "comment")
       }
     }
   }, [save])
@@ -592,6 +622,11 @@ export default function ChecklistItem({
               projectId={item.id}
               existingAttachments={attachments}
               onAttachmentsChange={(next) => onAttachmentsChange?.(responseId, next)}
+              trackingContext={{
+                project_slug: trackingContext.project_slug,
+                step_number: item.step_number,
+                view_mode: trackingContext.view_mode,
+              }}
             />
           </div>
         )}

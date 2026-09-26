@@ -13,6 +13,7 @@ import "react-phone-input-2/lib/style.css"
 import { Eye } from "lucide-react"
 import { getCountryByCode, DEFAULT_COUNTRY_CODE } from "@/lib/countries"
 import { ClientLogosHeader } from "./client-logos-header"
+import { trackEvent } from "@/lib/mixpanel"
 
 const initialState: RegisterTesterState = {}
 
@@ -43,6 +44,24 @@ export default function RegistrationForm({
     }
   }, [state, router, slug])
 
+  // Server-side rejections. Field *names* and a reason only — never the
+  // values typed or the server's message text.
+  useEffect(() => {
+    if (state.fieldErrors && Object.keys(state.fieldErrors).length > 0) {
+      trackEvent("Registration Failed", {
+        project_slug: slug,
+        reason: "server_check",
+        fields: Object.keys(state.fieldErrors),
+      })
+    } else if (state.error) {
+      trackEvent("Registration Failed", {
+        project_slug: slug,
+        reason: /already exists/i.test(state.error) ? "already_registered" : "server_error",
+        fields: [],
+      })
+    }
+  }, [state, slug])
+
   return (
     <div className="space-y-6">
       {/* Branding header */}
@@ -69,6 +88,11 @@ export default function RegistrationForm({
           if (Object.keys(errors).length > 0) {
             e.preventDefault()
             setClientErrors(errors)
+            trackEvent("Registration Failed", {
+              project_slug: slug,
+              reason: "form_check",
+              fields: Object.keys(errors),
+            })
             if (errors.name) nameRef.current?.focus()
             else if (errors.email) emailRef.current?.focus()
           } else {

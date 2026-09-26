@@ -111,6 +111,7 @@ export function SortableStepCard({
               className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
               onClick={handleCancel}
               disabled={saving}
+              aria-label="Close editor"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -194,6 +195,7 @@ export function SortableStepCard({
               className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600"
               onClick={handleCancel}
               disabled={saving}
+              aria-label="Close editor"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -338,6 +340,7 @@ export function SortableStepCard({
                 className="flex items-center pt-0.5"
                 {...attributes}
                 {...listeners}
+                aria-label="Drag to reorder section header"
               >
                 <GripVertical className="h-5 w-5 text-brand-lavender-lighter cursor-grab active:cursor-grabbing hover:text-brand-lavender transition-colors" />
               </div>
@@ -462,6 +465,7 @@ export function SortableStepCard({
               className="flex items-center pt-0.5"
               {...attributes}
               {...listeners}
+              aria-label="Drag to reorder step"
             >
               <GripVertical className="h-5 w-5 text-gray-300 cursor-grab active:cursor-grabbing hover:text-gray-400 transition-colors" />
             </div>
@@ -533,6 +537,7 @@ export function SortableStepCard({
                 size="sm"
                 className="h-8 w-8 p-0 text-gray-400 hover:text-brand-sage-darker hover:bg-brand-sage-lightest"
                 onClick={startEditing}
+                data-track="Edit step"
                 title="Edit step"
               >
                 <Pencil className="h-4 w-4" />
@@ -543,6 +548,7 @@ export function SortableStepCard({
                 size="sm"
                 className="h-8 w-8 p-0 text-gray-400 hover:text-brand-sage-darker hover:bg-brand-sage-lightest"
                 onClick={() => onDuplicate(item.id)}
+                data-track="Duplicate step"
                 title="Duplicate step"
               >
                 <Copy className="h-4 w-4" />
@@ -554,6 +560,7 @@ export function SortableStepCard({
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                    data-track="Delete step"
                     title="Delete step"
                   >
                     <Trash2 className="h-4 w-4" />

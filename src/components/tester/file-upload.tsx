@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react"
 import { createAnonClient } from "@/lib/supabase/client"
 import { Paperclip, FileText, File as FileIcon, X } from "lucide-react"
 import { toast } from "sonner"
+import { fileKindFor, trackEvent, type ViewMode } from "@/lib/mixpanel"
 
 interface AttachmentData {
   id: string
@@ -27,6 +28,9 @@ const ALLOWED_MIME_TYPES = new Set([
 ])
 
 const ACCEPT_STRING = ".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx"
+
+type UploadStage = "file_type" | "file_size" | "upload_url" | "storage" | "save_record" | "network"
+type UploadFailure = { error: string; stage: UploadStage; mimeType: string }
 
 /** Only http/https URLs are safe to render as a clickable link */
 function isSafeAttachmentUrl(url: string): boolean {
@@ -54,80 +58,93 @@ export default function FileUpload({
   projectId,
   existingAttachments,
   onAttachmentsChange,
+  trackingContext,
 }: {
   responseId: string
   testerId: string
   projectId: string
   existingAttachments: AttachmentData[]
   onAttachmentsChange?: (attachments: AttachmentData[]) => void
+  trackingContext: { project_slug: string; step_number: number; view_mode: ViewMode }
 }) {
   const [attachments, setAttachments] = useState<AttachmentData[]>(existingAttachments)
   const [uploading, setUploading] = useState(false)
   const [uploadErrors, setUploadErrors] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const trackingRef = useRef(trackingContext)
+  trackingRef.current = trackingContext
 
-  // Upload a single file — returns the saved AttachmentData or an error string
+  // Upload a single file — returns the saved AttachmentData, or the error to
+  // show plus which stage failed (the stage, not the message, goes to analytics)
   const uploadSingleFile = useCallback(
-    async (file: File): Promise<AttachmentData | string> => {
+    async (file: File): Promise<AttachmentData | UploadFailure> => {
+      const fail = (error: string, stage: UploadStage): UploadFailure => ({ error, stage, mimeType: file.type })
+
       if (!ALLOWED_MIME_TYPES.has(file.type)) {
-        return `${file.name}: unsupported file type`
+        return fail(`${file.name}: unsupported file type`, "file_type")
       }
       if (file.size > MAX_FILE_SIZE) {
-        return `${file.name}: exceeds 10MB limit`
+        return fail(`${file.name}: exceeds 10MB limit`, "file_size")
       }
 
-      const res = await fetch("/api/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-          responseId,
-          testerId,
-          projectId,
-        }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "Upload failed" }))
-        return `${file.name}: ${data.error || "upload failed"}`
-      }
-
-      const { signedUrl, path } = await res.json()
-
-      const uploadRes = await fetch(signedUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      })
-
-      if (!uploadRes.ok) {
-        return `${file.name}: upload failed`
-      }
-
-      const supabase = createAnonClient()
-      const { data: urlData } = supabase.storage
-        .from("attachments")
-        .getPublicUrl(path)
-
-      const { data: attachment, error: dbError } = await supabase
-        .from("attachments")
-        .insert({
-          response_id: responseId,
-          file_name: file.name,
-          file_url: urlData.publicUrl || signedUrl,
-          file_size: file.size,
-          mime_type: file.type,
+      try {
+        const res = await fetch("/api/upload-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+            responseId,
+            testerId,
+            projectId,
+          }),
         })
-        .select()
-        .single()
 
-      if (dbError) {
-        return `${file.name}: failed to save record`
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({ error: "Upload failed" }))
+          return fail(`${file.name}: ${data.error || "upload failed"}`, "upload_url")
+        }
+
+        const { signedUrl, path } = await res.json()
+
+        const uploadRes = await fetch(signedUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        })
+
+        if (!uploadRes.ok) {
+          return fail(`${file.name}: upload failed`, "storage")
+        }
+
+        const supabase = createAnonClient()
+        const { data: urlData } = supabase.storage
+          .from("attachments")
+          .getPublicUrl(path)
+
+        const { data: attachment, error: dbError } = await supabase
+          .from("attachments")
+          .insert({
+            response_id: responseId,
+            file_name: file.name,
+            file_url: urlData.publicUrl || signedUrl,
+            file_size: file.size,
+            mime_type: file.type,
+          })
+          .select()
+          .single()
+
+        if (dbError) {
+          return fail(`${file.name}: failed to save record`, "save_record")
+        }
+
+        return attachment
+      } catch {
+        // fetch() rejects on connection loss — previously this left the
+        // whole batch stuck on "Uploading…"
+        return fail(`${file.name}: upload failed — check your connection`, "network")
       }
-
-      return attachment
     },
     [responseId, testerId, projectId]
   )
@@ -144,8 +161,14 @@ export default function FileUpload({
       const newAttachments: AttachmentData[] = []
       const errors: string[] = []
       results.forEach((result) => {
-        if (typeof result === "string") {
-          errors.push(result)
+        if ("stage" in result) {
+          errors.push(result.error)
+          trackEvent("Attachment Upload Failed", {
+            ...trackingRef.current,
+            stage: result.stage,
+            file_kind: fileKindFor(result.mimeType),
+            file_count: files.length,
+          })
         } else {
           newAttachments.push(result)
         }
@@ -245,6 +268,7 @@ export default function FileUpload({
                 onClick={() => handleDelete(att)}
                 className="ml-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-500 focus-visible:opacity-100 focus-visible:outline-none"
                 aria-label={`Remove ${att.file_name}`}
+                data-track="Remove attachment"
               >
                 <X className="h-3 w-3" />
               </button>

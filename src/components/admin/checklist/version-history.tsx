@@ -142,6 +142,7 @@ export function VersionHistory({ slug, initialSnapshots }: VersionHistoryProps) 
         <div
           role="button"
           tabIndex={0}
+          data-track="Version history"
           className="flex items-center justify-between px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-sage-darker"
           onClick={() => setExpanded((v) => !v)}
           onKeyDown={(e) => {
