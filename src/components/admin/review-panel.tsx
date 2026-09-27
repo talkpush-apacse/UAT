@@ -625,124 +625,132 @@ export default function ReviewPanel({ testerSections, projectSlug }: Props) {
 
   return (
     <div className="relative pb-20">
-      {/* Resolution Status Filter */}
-      <div className="flex flex-wrap items-center gap-2 mb-6">
-        {FILTER_OPTIONS.map(({ label, value, activeStyle }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setResolutionFilter(value)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
-              resolutionFilter === value
-                ? activeStyle
-                : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-        {isFiltering && (
-          <span className="text-xs text-gray-400 ml-1">
+      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800">Review Queue</h2>
+            <p className="text-xs text-gray-400">Filter only when the queue gets noisy.</p>
+          </div>
+          {isFiltering && (
+            <button
+              type="button"
+              onClick={() => {
+                setResolutionFilter("All")
+                selectAllFeedbackTypes()
+                selectAllTesters()
+              }}
+              className="text-xs font-medium text-brand-sage-darker hover:underline"
+            >
+              Clear all filters
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {FILTER_OPTIONS.map(({ label, value, activeStyle }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setResolutionFilter(value)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
+                resolutionFilter === value
+                  ? activeStyle
+                  : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+
+          <span className="mx-1 hidden h-5 w-px bg-gray-200 sm:inline-block" />
+
+          {FEEDBACK_TYPE_OPTIONS.map(({ value, checkedBg, checkedBorder, checkedText, checkboxChecked }) => {
+            const checked = feedbackTypeFilter.has(value)
+            return (
+              <label
+                key={value}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer transition-all duration-150 ${
+                  checked ? `${checkedBg} ${checkedBorder}` : "border-gray-200 bg-white hover:bg-gray-50"
+                }`}
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={() => toggleFeedbackType(value)}
+                  className={`h-3.5 w-3.5 ${checkboxChecked}`}
+                />
+                <span className={`text-xs font-medium ${checked ? checkedText : "text-gray-600"}`}>{value}</span>
+              </label>
+            )
+          })}
+
+          {testerSections.length > 0 && (
+            <Popover open={testerPopoverOpen} onOpenChange={setTesterPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
+                    isAllTestersSelected
+                      ? "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+                      : "bg-brand-sage-darker/10 border-brand-sage-darker/30 text-gray-800"
+                  }`}
+                >
+                  Tester
+                  {!isAllTestersSelected && (
+                    <span className="text-brand-sage-darker">
+                      {testerFilter.size}/{allTesterIds.length}
+                    </span>
+                  )}
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-0">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+                  <span className="text-xs font-medium text-gray-500">
+                    {testerFilter.size}/{allTesterIds.length} selected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => (isAllTestersSelected ? setTesterFilter(new Set()) : selectAllTesters())}
+                    className="text-xs text-brand-sage-darker hover:underline"
+                  >
+                    {isAllTestersSelected ? "Clear" : "Select all"}
+                  </button>
+                </div>
+                <Command>
+                  <CommandInput placeholder="Search testers..." className="text-sm" />
+                  <CommandList>
+                    <CommandEmpty>No testers found.</CommandEmpty>
+                    <CommandGroup>
+                      {testerSections.map(({ tester }) => {
+                        const checked = testerFilter.has(tester.id)
+                        return (
+                          <CommandItem
+                            key={tester.id}
+                            value={tester.name}
+                            onSelect={() => toggleTester(tester.id)}
+                            className="gap-2"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              className="h-3.5 w-3.5 pointer-events-none data-[state=checked]:bg-brand-sage-darker data-[state=checked]:border-brand-sage-darker"
+                            />
+                            <span className={checked ? "text-gray-800" : "text-gray-600"}>{tester.name}</span>
+                          </CommandItem>
+                        )
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          <span className="ml-auto text-xs text-gray-400">
             {filteredSections.reduce((acc, s) => acc + s.steps.length, 0)} item
             {filteredSections.reduce((acc, s) => acc + s.steps.length, 0) !== 1 ? "s" : ""}
           </span>
-        )}
-      </div>
-
-      {/* Feedback Type Filter — tester-reported status, multi-select via checkboxes */}
-      <div className="flex flex-wrap items-center gap-2 mb-6">
-        <span className="text-xs font-medium text-gray-500 mr-1">Feedback Type:</span>
-        {FEEDBACK_TYPE_OPTIONS.map(({ value, checkedBg, checkedBorder, checkedText, checkboxChecked }) => {
-          const checked = feedbackTypeFilter.has(value)
-          return (
-            <label
-              key={value}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer transition-all duration-150 ${
-                checked ? `${checkedBg} ${checkedBorder}` : "border-gray-200 bg-white hover:bg-gray-50"
-              }`}
-            >
-              <Checkbox
-                checked={checked}
-                onCheckedChange={() => toggleFeedbackType(value)}
-                className={`h-3.5 w-3.5 ${checkboxChecked}`}
-              />
-              <span className={`text-xs font-medium ${checked ? checkedText : "text-gray-600"}`}>{value}</span>
-            </label>
-          )
-        })}
-        <button
-          type="button"
-          onClick={() => (isAllFeedbackSelected ? setFeedbackTypeFilter(new Set()) : selectAllFeedbackTypes())}
-          className="text-xs text-brand-sage-darker hover:underline ml-1"
-        >
-          {isAllFeedbackSelected ? "Clear" : "Select all"}
-        </button>
-      </div>
-
-      {/* Tester Filter — searchable multi-select popover, scales to large tester lists */}
-      {testerSections.length > 0 && (
-        <div className="flex items-center gap-2 mb-6">
-          <Popover open={testerPopoverOpen} onOpenChange={setTesterPopoverOpen}>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
-                  isAllTestersSelected
-                    ? "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
-                    : "bg-brand-sage-darker/10 border-brand-sage-darker/30 text-gray-800"
-                }`}
-              >
-                Tester
-                {!isAllTestersSelected && (
-                  <span className="text-brand-sage-darker">
-                    {testerFilter.size}/{allTesterIds.length}
-                  </span>
-                )}
-                <ChevronDown className="h-3 w-3" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-0">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-                <span className="text-xs font-medium text-gray-500">
-                  {testerFilter.size}/{allTesterIds.length} selected
-                </span>
-                <button
-                  type="button"
-                  onClick={() => (isAllTestersSelected ? setTesterFilter(new Set()) : selectAllTesters())}
-                  className="text-xs text-brand-sage-darker hover:underline"
-                >
-                  {isAllTestersSelected ? "Clear" : "Select all"}
-                </button>
-              </div>
-              <Command>
-                <CommandInput placeholder="Search testers..." className="text-sm" />
-                <CommandList>
-                  <CommandEmpty>No testers found.</CommandEmpty>
-                  <CommandGroup>
-                    {testerSections.map(({ tester }) => {
-                      const checked = testerFilter.has(tester.id)
-                      return (
-                        <CommandItem
-                          key={tester.id}
-                          value={tester.name}
-                          onSelect={() => toggleTester(tester.id)}
-                          className="gap-2"
-                        >
-                          <Checkbox
-                            checked={checked}
-                            className="h-3.5 w-3.5 pointer-events-none data-[state=checked]:bg-brand-sage-darker data-[state=checked]:border-brand-sage-darker"
-                          />
-                          <span className={checked ? "text-gray-800" : "text-gray-600"}>{tester.name}</span>
-                        </CommandItem>
-                      )
-                    })}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
         </div>
-      )}
+      </div>
 
       {filteredSections.length === 0 && isFiltering ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">

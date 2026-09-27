@@ -383,13 +383,14 @@ export function SortableStepCard({
             </div>
 
             {!bulkMode && (
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 text-gray-400 hover:text-brand-lavender-darker hover:bg-brand-lavender-lighter/50"
                   onClick={startEditing}
                   title="Edit section header"
+                  aria-label="Edit section header"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -400,6 +401,7 @@ export function SortableStepCard({
                   className="h-8 w-8 p-0 text-gray-400 hover:text-brand-lavender-darker hover:bg-brand-lavender-lighter/50"
                   onClick={() => onDuplicate(item.id)}
                   title="Duplicate section header"
+                  aria-label="Duplicate section header"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -411,6 +413,7 @@ export function SortableStepCard({
                       size="sm"
                       className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
                       title="Delete section header"
+                      aria-label="Delete section header"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -533,7 +536,7 @@ export function SortableStepCard({
 
           {/* Action buttons — hidden in bulk mode */}
           {!bulkMode && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
@@ -541,6 +544,7 @@ export function SortableStepCard({
                 onClick={startEditing}
                 data-track="Edit step"
                 title="Edit step"
+                aria-label="Edit step"
               >
                 <Pencil className="h-4 w-4" />
               </Button>
@@ -552,6 +556,7 @@ export function SortableStepCard({
                 onClick={() => onDuplicate(item.id)}
                 data-track="Duplicate step"
                 title="Duplicate step"
+                aria-label="Duplicate step"
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -564,6 +569,7 @@ export function SortableStepCard({
                     className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
                     data-track="Delete step"
                     title="Delete step"
+                    aria-label="Delete step"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

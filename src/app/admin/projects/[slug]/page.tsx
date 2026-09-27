@@ -22,7 +22,8 @@ import {
   Download,
   CheckCircle2,
   ClipboardCheck,
-  ChevronRight,
+  AlertTriangle,
+  Share2,
 } from "lucide-react"
 import MarkdownRenderer from "@/components/ui/markdown-renderer"
 
@@ -146,7 +147,7 @@ export default async function ProjectDetailPage({
       )
       needsTriageCount = (responses || []).filter(
         (r) =>
-          (r.status === "Fail" || r.status === "Blocked") &&
+          (r.status === "Fail" || r.status === "Blocked" || r.status === "Up For Review") &&
           !doneKeys.has(`${r.tester_id}:${r.checklist_item_id}`)
       ).length
 
@@ -182,46 +183,74 @@ export default async function ProjectDetailPage({
   const totalPass = initialTesters.reduce((sum, t) => sum + t.pass, 0)
   const totalFail = initialTesters.reduce((sum, t) => sum + t.fail, 0)
   const totalBlocked = initialTesters.reduce((sum, t) => sum + t.blocked, 0)
+  const totalForReview = initialTesters.reduce((sum, t) => sum + t.upForReview, 0)
+  const totalCompletedResponses = initialTesters.reduce((sum, t) => sum + t.completed, 0)
+  const expectedResponses = itemCount * initialTesters.length
+  const completionPercent = expectedResponses > 0
+    ? Math.round((totalCompletedResponses / expectedResponses) * 100)
+    : 0
   const totalDecided = totalPass + totalFail + totalBlocked
   // "Healthy" = passing steps as a share of steps with a definitive Pass/Fail/Blocked
   // outcome — N/A and Up For Review are excluded since they aren't a health signal.
   const healthyPercent = totalDecided > 0 ? Math.round((totalPass / totalDecided) * 100) : 0
-  const RING_RADIUS = 36
-  const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 
-  const actionCards = [
+  const readinessChecks = [
+    { label: "UAT steps exist", complete: itemCount > 0, fixHref: `/admin/projects/${project.slug}/checklist` },
+    { label: "At least one tester registered", complete: initialTesters.length > 0, fixHref: `/test/${project.slug}` },
+    { label: "No open review items", complete: needsTriageCount === 0, fixHref: `/admin/projects/${project.slug}/review` },
+    { label: "Client sign-off recorded", complete: (signoffs?.length ?? 0) > 0, fixHref: `/admin/projects/${project.slug}/signoff` },
+  ]
+
+  const primaryAction =
+    itemCount === 0
+      ? { href: `/admin/projects/${project.slug}/checklist`, label: "Add UAT Steps", icon: ListChecks }
+      : initialTesters.length === 0
+        ? { href: `/test/${project.slug}`, label: "Open Tester Link", icon: Share2 }
+        : needsTriageCount > 0
+          ? { href: `/admin/projects/${project.slug}/review`, label: "Review Findings", icon: ClipboardCheck }
+          : (signoffs?.length ?? 0) === 0
+            ? { href: `/admin/projects/${project.slug}/signoff`, label: "Record Sign-Off", icon: FileCheck }
+            : { href: `/share/analytics/${project.slug}/${shareToken}`, label: "Open Client Report", icon: BarChart3 }
+
+  const lifecycleSteps = [
     {
       href: `/admin/projects/${project.slug}/checklist`,
       icon: ListChecks,
-      label: "Manage UAT Steps",
-      sub: "Add/Edit/Reorder Steps",
+      label: "Setup",
+      sub: itemCount > 0 ? `${itemCount} steps ready` : "Add UAT steps",
+      complete: itemCount > 0,
     },
     {
-      href: `/admin/projects/${project.slug}/upload`,
-      icon: Upload,
-      label: "Upload UAT Sheet",
-      sub: `${itemCount} steps`,
+      href: `/test/${project.slug}`,
+      icon: Share2,
+      label: "Test",
+      sub: initialTesters.length > 0 ? `${initialTesters.length} testers` : "Share tester link",
+      complete: initialTesters.length > 0,
     },
     {
       href: `/admin/projects/${project.slug}/review`,
       icon: ClipboardCheck,
       label: "Review",
-      sub: "Triage findings",
-      badge: needsTriageCount > 0 ? needsTriageCount : null,
+      sub: needsTriageCount > 0 ? `${needsTriageCount} open items` : "No open items",
+      complete: needsTriageCount === 0 && initialTesters.length > 0,
+      attention: needsTriageCount > 0,
     },
     {
       href: `/share/analytics/${project.slug}/${shareToken}`,
       icon: BarChart3,
-      label: "Analytics",
-      sub: "Charts & Filters",
+      label: "Report",
+      sub: completionPercent > 0 ? `${completionPercent}% complete` : "No tester data",
+      complete: completionPercent > 0,
     },
     {
       href: `/admin/projects/${project.slug}/signoff`,
       icon: FileCheck,
       label: "Sign Off",
       sub: `${signoffs?.length || 0} sign-offs`,
+      complete: (signoffs?.length ?? 0) > 0,
     },
   ]
+  const PrimaryActionIcon = primaryAction.icon
 
   return (
     <div>
@@ -273,42 +302,28 @@ export default async function ProjectDetailPage({
             )}
           </div>
 
-          {totalDecided > 0 && (
-            <div className="flex items-center gap-5 flex-shrink-0">
-              <div className="relative w-[84px] h-[84px] flex-shrink-0">
-                <svg viewBox="0 0 84 84" width={84} height={84}>
-                  <circle cx={42} cy={42} r={RING_RADIUS} fill="none" stroke="hsl(139 25% 91%)" strokeWidth={8} />
-                  <circle
-                    cx={42}
-                    cy={42}
-                    r={RING_RADIUS}
-                    fill="none"
-                    stroke="hsl(139 30% 40%)"
-                    strokeWidth={8}
-                    strokeLinecap="round"
-                    strokeDasharray={RING_CIRCUMFERENCE}
-                    strokeDashoffset={RING_CIRCUMFERENCE * (1 - healthyPercent / 100)}
-                    transform="rotate(-90 42 42)"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[19px] font-bold font-nav">{healthyPercent}%</span>
-                  <span className="text-[9px] text-gray-500">healthy</span>
+          {(expectedResponses > 0 || totalDecided > 0) && (
+            <div className="grid min-w-[260px] gap-2 rounded-xl border border-gray-100 bg-gray-50/60 p-3 sm:w-[340px]">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-lg font-bold text-gray-900">{completionPercent}%</p>
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Complete</p>
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-gray-900">{healthyPercent}%</p>
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Pass Rate</p>
+                </div>
+                <div>
+                  <p className={`text-lg font-bold ${needsTriageCount > 0 ? "text-red-700" : "text-gray-900"}`}>
+                    {needsTriageCount}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Open</p>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <span className="flex items-center gap-1.5 text-[13px] font-semibold text-green-800">
-                  <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-                  {totalPass} Pass
-                </span>
-                <span className="flex items-center gap-1.5 text-[13px] font-semibold text-red-700">
-                  <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                  {totalFail} Fail
-                </span>
-                <span className="flex items-center gap-1.5 text-[13px] font-semibold text-amber-800">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
-                  {totalBlocked} Blocked
-                </span>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="font-medium text-green-800">{totalPass} pass</span>
+                <span className="font-medium text-red-700">{totalFail} fail</span>
+                <span className="font-medium text-amber-800">{totalBlocked + totalForReview} review</span>
               </div>
             </div>
           )}
@@ -321,8 +336,14 @@ export default async function ProjectDetailPage({
           <CopyLinkButton slug={project.slug} />
           <PreviewChecklistButton slug={project.slug} />
           <div className="mx-1 h-5 w-px bg-gray-200" />
+          <Link href={primaryAction.href}>
+            <Button size="sm" variant={needsTriageCount > 0 ? "cta" : "default"}>
+              <PrimaryActionIcon className="h-3.5 w-3.5 mr-1.5" />
+              {primaryAction.label}
+            </Button>
+          </Link>
           <Link href={`/admin/projects/${project.slug}/edit`}>
-            <Button size="sm">
+            <Button size="sm" variant="outline">
               <Pencil className="h-3.5 w-3.5 mr-1.5" />
               Edit UAT Checklist
             </Button>
@@ -342,10 +363,16 @@ export default async function ProjectDetailPage({
             <PreviewChecklistButton slug={project.slug} className="flex-1 justify-center" />
           </div>
           <div className="flex gap-2">
+            <Link href={primaryAction.href} className="flex-1">
+              <Button size="sm" className="w-full" variant={needsTriageCount > 0 ? "cta" : "default"}>
+                <PrimaryActionIcon className="h-3.5 w-3.5 mr-1.5" />
+                {primaryAction.label}
+              </Button>
+            </Link>
             <Link href={`/admin/projects/${project.slug}/edit`} className="flex-1">
-              <Button size="sm" className="w-full">
+              <Button size="sm" variant="outline" className="w-full">
                 <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Edit UAT Checklist
+                Edit
               </Button>
             </Link>
             <MoreActionsDropdown
@@ -372,27 +399,72 @@ export default async function ProjectDetailPage({
         </div>
       )}
 
-      {/* Action nav cards — clearly clickable tiles */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-8">
-        {actionCards.map((card) => (
-          <Link key={card.href} href={card.href} className="block">
-            <div className="group relative flex flex-col items-center justify-center bg-white rounded-xl border-t-4 border-t-brand-sage-darker border border-gray-200 shadow hover:shadow-lg hover:border-brand-sage hover:bg-brand-sage-lightest transition-all duration-200 cursor-pointer px-4 py-5 text-center">
-              {card.badge != null && (
-                <span className="absolute top-2.5 left-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">
-                  {card.badge}
-                </span>
-              )}
-              {/* Arrow affordance — always faintly visible, brightens on hover */}
-              <ChevronRight className="absolute top-3 right-3 h-4 w-4 text-gray-300 group-hover:text-brand-sage-darker transition-colors" />
-              {/* Icon with colored bg bubble */}
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 group-hover:bg-brand-sage-lighter transition-colors">
-                <card.icon className="h-5 w-5 text-gray-500 group-hover:text-brand-sage-darker transition-colors" />
-              </div>
-              <p className="text-sm font-semibold text-gray-800 group-hover:text-brand-sage-darker leading-tight transition-colors">{card.label}</p>
-              <p className="text-xs text-gray-500 mt-1">{card.sub}</p>
+      <div className="mb-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">UAT Lifecycle</h2>
+              <p className="text-sm text-gray-500">Follow the work from setup through client sign-off.</p>
             </div>
-          </Link>
-        ))}
+            <Link href={`/admin/projects/${project.slug}/upload`}>
+              <Button variant="outline" size="sm">
+                <Upload className="h-3.5 w-3.5 mr-1.5" />
+                Import Sheet
+              </Button>
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-5">
+            {lifecycleSteps.map((step) => (
+              <Link
+                key={step.href}
+                href={step.href}
+                className={`group rounded-lg border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-darker ${
+                  step.attention
+                    ? "border-red-200 bg-red-50 hover:bg-red-100"
+                    : step.complete
+                      ? "border-green-200 bg-green-50/60 hover:bg-green-50"
+                      : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                }`}
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <step.icon className={`h-4 w-4 ${step.attention ? "text-red-600" : step.complete ? "text-green-700" : "text-gray-500"}`} />
+                  {step.complete ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  ) : step.attention ? (
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                  ) : null}
+                </div>
+                <p className="text-sm font-semibold text-gray-900">{step.label}</p>
+                <p className="mt-1 text-xs text-gray-500">{step.sub}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <aside className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <h2 className="text-base font-semibold text-gray-900">Readiness</h2>
+          <div className="mt-4 space-y-3">
+            {readinessChecks.map((check) => (
+              <div key={check.label} className="flex items-start gap-2">
+                {check.complete ? (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
+                ) : (
+                  <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-medium ${check.complete ? "text-gray-800" : "text-amber-900"}`}>
+                    {check.label}
+                  </p>
+                  {!check.complete && (
+                    <Link href={check.fixHref} className="text-xs font-medium text-brand-sage-darker hover:underline">
+                      Fix now
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </aside>
       </div>
 
       <Separator className="mb-8" />

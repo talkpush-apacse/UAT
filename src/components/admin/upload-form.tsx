@@ -105,10 +105,10 @@ export default function UploadForm({
           )}
           <Alert variant="warning">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Heads up</AlertTitle>
+            <AlertTitle>Current steps will be saved first</AlertTitle>
             <AlertDescription>
-              Existing steps will be replaced. If steps exist, they will be automatically
-              saved as a version snapshot before import so you can restore them later.
+              Importing replaces the current UAT steps. If steps already exist, this tool
+              saves them to Version History before import so you can restore them later.
             </AlertDescription>
           </Alert>
           <Separator />
@@ -118,15 +118,16 @@ export default function UploadForm({
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Replace UAT Steps?</AlertDialogTitle>
+                <AlertDialogTitle>Replace current UAT steps?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently replace all existing UAT steps. This action cannot be undone.
+                  We will save the current steps to Version History, then import the file as
+                  the new working checklist.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={() => formRef.current?.requestSubmit()}>
-                  Yes, Replace
+                  Save Current Version and Import
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

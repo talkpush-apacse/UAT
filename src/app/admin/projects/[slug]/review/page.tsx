@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Clock3, Send } from "lucide-react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import ReviewPanel from "@/components/admin/review-panel"
@@ -253,6 +253,28 @@ export default async function ReviewPage({
     }
   }
 
+  const reviewStats = testerSections.reduce(
+    (stats, section) => {
+      for (const step of section.steps) {
+        stats.total += 1
+        const resolutionStatus = step.adminReview?.resolutionStatus ?? "Not Yet Started"
+        stats[resolutionStatus] = (stats[resolutionStatus] ?? 0) + 1
+        if (step.testerStatus === "Fail") stats.fail += 1
+        if (step.testerStatus === "Blocked" || step.testerStatus === "Up For Review") stats.review += 1
+      }
+      return stats
+    },
+    {
+      total: 0,
+      fail: 0,
+      review: 0,
+      "Not Yet Started": 0,
+      "In Progress": 0,
+      "For Retesting": 0,
+      Done: 0,
+    } as Record<string, number>
+  )
+
   return (
     <div>
       {/* Breadcrumb */}
@@ -281,7 +303,7 @@ export default async function ReviewPage({
         </Link>
       </div>
 
-      <div className="flex items-start justify-between gap-4 mb-8">
+      <div className="flex flex-col gap-5 mb-8">
         <div>
           <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">Admin Review</p>
           <h1 className="text-2xl font-semibold text-gray-900 mt-1">{project.company_name}</h1>
@@ -289,10 +311,50 @@ export default async function ReviewPage({
             Non-pass steps and items flagged for retesting, grouped by tester.
           </p>
         </div>
-        <div className="flex-shrink-0 pt-1 flex items-center gap-2">
-          <NotifyTestersButton slug={project.slug} testers={testerSections.map((s) => s.tester)} />
-          <CompleteReviewButton slug={project.slug} testerSections={testerSections} />
-          <PublishReviewButton slug={project.slug} />
+
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Queue</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{reviewStats.total}</p>
+              <p className="text-xs text-gray-500">{testerSections.length} tester groups</p>
+            </div>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-red-500">Failures</p>
+              <p className="mt-1 text-2xl font-bold text-red-700">{reviewStats.fail}</p>
+              <p className="text-xs text-red-600">Reported as fail</p>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-amber-600">Review</p>
+              <p className="mt-1 text-2xl font-bold text-amber-800">{reviewStats.review}</p>
+              <p className="text-xs text-amber-700">Blocked or up for review</p>
+            </div>
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-green-600">Resolved</p>
+              <p className="mt-1 text-2xl font-bold text-green-700">{reviewStats.Done ?? 0}</p>
+              <p className="text-xs text-green-700">Marked done</p>
+            </div>
+          </div>
+
+          <div className="grid gap-2 rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:grid-cols-3 lg:w-[360px] lg:grid-cols-1">
+            <NotifyTestersButton slug={project.slug} testers={testerSections.map((s) => s.tester)} />
+            <CompleteReviewButton slug={project.slug} testerSections={testerSections} />
+            <PublishReviewButton slug={project.slug} />
+            <div className="grid grid-cols-3 gap-2 border-t border-gray-100 pt-3 text-center text-xs text-gray-500 sm:hidden lg:grid">
+              <span className="flex items-center justify-center gap-1">
+                <Clock3 className="h-3 w-3" />
+                {reviewStats["Not Yet Started"] ?? 0} new
+              </span>
+              <span className="flex items-center justify-center gap-1">
+                <Send className="h-3 w-3" />
+                {reviewStats["For Retesting"] ?? 0} retest
+              </span>
+              <span className="flex items-center justify-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                {reviewStats.Done ?? 0} done
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 

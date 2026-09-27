@@ -79,7 +79,9 @@ export default async function AdminDashboard({
     created_at: string | null
   }[] = []
   let checklistItems: {
+    id: string
     project_id: string
+    item_type: string | null
   }[] = []
 
   if (projectIds.length > 0) {
@@ -98,7 +100,7 @@ export default async function AdminDashboard({
         .range(0, 9999),
       supabase
         .from("checklist_items")
-        .select("project_id")
+        .select("id, project_id, item_type")
         .range(0, 9999),
     ])
 
@@ -116,10 +118,14 @@ export default async function AdminDashboard({
 
   let responses: {
     tester_id: string
+    checklist_item_id: string
+    status: string | null
     updated_at: string | null
   }[] = []
   let adminReviews: {
     tester_id: string
+    checklist_item_id: string
+    resolution_status: string | null
     updated_at: string | null
   }[] = []
 
@@ -129,11 +135,11 @@ export default async function AdminDashboard({
     const [responsesResult, adminReviewsResult] = await Promise.all([
       supabase
         .from("responses")
-        .select("tester_id, updated_at")
+        .select("tester_id, checklist_item_id, status, updated_at")
         .range(0, 9999),
       supabase
         .from("admin_reviews")
-        .select("tester_id, updated_at")
+        .select("tester_id, checklist_item_id, resolution_status, updated_at")
         .range(0, 9999),
     ])
 
@@ -147,6 +153,7 @@ export default async function AdminDashboard({
   const testerCountByProject = new Map<string, number>()
   const signoffCountByProject = new Map<string, number>()
   const stepCountByProject = new Map<string, number>()
+  const openFindingCountByProject = new Map<string, number>()
   const activityByProject = new Map<string, string>()
 
   for (const project of baseProjects) {
@@ -154,6 +161,7 @@ export default async function AdminDashboard({
   }
 
   for (const checklistItem of checklistItems) {
+    if (checklistItem.item_type === "phase_header") continue
     stepCountByProject.set(
       checklistItem.project_id,
       (stepCountByProject.get(checklistItem.project_id) ?? 0) + 1
@@ -178,16 +186,49 @@ export default async function AdminDashboard({
 
   // Project recency is derived from downstream checklist activity because projects
   // do not have their own updated_at column in the current schema.
+  const doneReviewKeys = new Set(
+    adminReviews
+      .filter((review) => review.resolution_status === "Done")
+      .map((review) => `${review.tester_id}:${review.checklist_item_id}`)
+  )
+  const openReviewKeys = new Set<string>()
+
   for (const response of responses) {
     const projectId = testerProjectById.get(response.tester_id)
     if (!projectId) continue
     keepLatestTimestamp(activityByProject, projectId, response.updated_at)
+
+    const needsReview =
+      response.status === "Fail" ||
+      response.status === "Blocked" ||
+      response.status === "Up For Review"
+    const isDone = doneReviewKeys.has(`${response.tester_id}:${response.checklist_item_id}`)
+    if (needsReview && !isDone) {
+      openReviewKeys.add(`${response.tester_id}:${response.checklist_item_id}`)
+      openFindingCountByProject.set(
+        projectId,
+        (openFindingCountByProject.get(projectId) ?? 0) + 1
+      )
+    }
   }
 
   for (const adminReview of adminReviews) {
     const projectId = testerProjectById.get(adminReview.tester_id)
     if (!projectId) continue
     keepLatestTimestamp(activityByProject, projectId, adminReview.updated_at)
+
+    const reviewKey = `${adminReview.tester_id}:${adminReview.checklist_item_id}`
+    if (
+      adminReview.resolution_status &&
+      adminReview.resolution_status !== "Done" &&
+      !openReviewKeys.has(reviewKey)
+    ) {
+      openReviewKeys.add(reviewKey)
+      openFindingCountByProject.set(
+        projectId,
+        (openFindingCountByProject.get(projectId) ?? 0) + 1
+      )
+    }
   }
 
   const projectsWithCounts: ProjectWithCounts[] = baseProjects
@@ -200,6 +241,7 @@ export default async function AdminDashboard({
         testerCount,
         signoffCount,
         stepCount: stepCountByProject.get(project.id) ?? 0,
+        openFindingCount: openFindingCountByProject.get(project.id) ?? 0,
         status: getProjectStatus(testerCount, signoffCount),
         lastActivityAt: activityByProject.get(project.id) ?? project.created_at,
       }
@@ -210,6 +252,14 @@ export default async function AdminDashboard({
     )
 
   const recentlyAccessed = projectsWithCounts.slice(0, 5)
+  const attentionProjects = projectsWithCounts
+    .filter((project) => (project.openFindingCount ?? 0) > 0 || project.status === "In Progress")
+    .sort((a, b) => {
+      const openDiff = (b.openFindingCount ?? 0) - (a.openFindingCount ?? 0)
+      if (openDiff !== 0) return openDiff
+      return toTimestamp(b.lastActivityAt ?? b.created_at) - toTimestamp(a.lastActivityAt ?? a.created_at)
+    })
+    .slice(0, 5)
 
   // Group by the real client link (client_id) rather than the free-text
   // company_name a checklist was created with, so geo/typo variants of the
@@ -384,6 +434,7 @@ export default async function AdminDashboard({
         <ClientGroupedDashboard
           groups={groupedByClient}
           recentlyAccessed={recentlyAccessed}
+          attentionProjects={attentionProjects}
         />
       )}
     </div>
