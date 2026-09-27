@@ -493,6 +493,7 @@ export async function listProjectsForCopy(
       .from('projects')
       .select('id, slug, company_name, title, created_at')
       .neq('id', currentProjectId)
+      .is('archived_at', null)
       .order('company_name')
 
     if (error) return { error: error.message }

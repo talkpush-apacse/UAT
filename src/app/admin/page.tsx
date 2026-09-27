@@ -54,6 +54,7 @@ export default async function AdminDashboard({
   const { data: projects, error: projectsError } = await supabase
     .from("projects")
     .select("id, slug, company_name, title, test_scenario, created_at, client_id")
+    .is("archived_at", null)
     .order("created_at", { ascending: false })
 
   assertNoQueryError(projectsError, "projects")

@@ -453,6 +453,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          archived_at: string | null
           client_id: string | null
           company_name: string
           country: string
@@ -465,6 +466,7 @@ export type Database = {
           wizard_mode: boolean
         }
         Insert: {
+          archived_at?: string | null
           client_id?: string | null
           company_name: string
           country?: string
@@ -477,6 +479,7 @@ export type Database = {
           wizard_mode?: boolean
         }
         Update: {
+          archived_at?: string | null
           client_id?: string | null
           company_name?: string
           country?: string

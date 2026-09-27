@@ -23,6 +23,7 @@ export default async function ClientsPage() {
   const { data: projects } = await supabase
     .from("projects")
     .select("client_id")
+    .is("archived_at", null)
 
   const projectCountByClient = new Map<string, number>()
   for (const p of projects ?? []) {

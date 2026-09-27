@@ -163,6 +163,33 @@ export async function deleteProject(
 }
 
 /* ------------------------------------------------------------------ */
+/*  archiveProject                                                     */
+/* ------------------------------------------------------------------ */
+
+export async function archiveProject(
+  projectId: string,
+): Promise<{ error?: string }> {
+  const isAdmin = await verifyAdminSession()
+  if (!isAdmin) return { error: 'Unauthorized' }
+
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('projects')
+    .update({ archived_at: new Date().toISOString() })
+    .eq('id', projectId)
+    .is('archived_at', null)
+    .select('slug')
+    .maybeSingle()
+
+  if (error) return { error: error.message }
+  if (!data) return { error: 'UAT checklist not found or already archived' }
+
+  revalidatePath('/admin')
+  revalidatePath(`/admin/projects/${data.slug}`)
+  return {}
+}
+
+/* ------------------------------------------------------------------ */
 /*  duplicateProject                                                   */
 /* ------------------------------------------------------------------ */
 
@@ -180,6 +207,7 @@ export async function duplicateProject(
     .from('projects')
     .select('id, company_name, client_id, title, test_scenario, talkpush_login_link, country')
     .eq('id', projectId)
+    .is('archived_at', null)
     .single()
 
   if (originalError) return { error: originalError.message }

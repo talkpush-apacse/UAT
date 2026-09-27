@@ -81,6 +81,7 @@ export function registerProjectTools(server: McpServer) {
       let query = supabase
         .from("projects")
         .select("id, slug, company_name, title, test_scenario, created_at")
+        .is("archived_at", null)
         .order("created_at", { ascending: false });
 
       if (company) query = query.ilike("company_name", `%${company}%`);
@@ -253,6 +254,7 @@ export function registerProjectTools(server: McpServer) {
         .from("projects")
         .select("id")
         .eq("slug", slug)
+        .is("archived_at", null)
         .maybeSingle();
 
       if (lookupError) throw new Error(lookupError.message);

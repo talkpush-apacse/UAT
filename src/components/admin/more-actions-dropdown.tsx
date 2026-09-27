@@ -20,10 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { deleteProject } from "@/lib/actions/projects"
+import { archiveProject, deleteProject } from "@/lib/actions/projects"
 import DuplicateProjectDialog from "@/components/admin/duplicate-project-dialog"
 import { toast } from "sonner"
-import { MoreHorizontal, Copy, Trash2, Loader2, Share2 } from "lucide-react"
+import { MoreHorizontal, Copy, Trash2, Loader2, Share2, Archive } from "lucide-react"
 
 /**
  * P4 — ⋯ More actions dropdown.
@@ -44,10 +44,24 @@ export default function MoreActionsDropdown({
 }) {
   const router = useRouter()
   const [duplicating, setDuplicating] = useState(false)
+  const [archiving, setArchiving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [sharingAnalytics, setSharingAnalytics] = useState(false)
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
+
+  const handleArchive = async () => {
+    setArchiving(true)
+    const result = await archiveProject(projectId)
+    setArchiving(false)
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("UAT checklist archived")
+      router.push("/admin")
+    }
+  }
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -80,7 +94,7 @@ export default function MoreActionsDropdown({
     }
   }
 
-  const busy = duplicating || deleting || sharingAnalytics
+  const busy = duplicating || archiving || deleting || sharingAnalytics
 
   return (
     <>
@@ -123,6 +137,14 @@ export default function MoreActionsDropdown({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
+            onClick={() => setShowArchiveDialog(true)}
+            className="gap-2 cursor-pointer"
+          >
+            <Archive className="h-3.5 w-3.5" />
+            Close and Archive
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
             onClick={() => setShowDeleteDialog(true)}
             className="gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
           >
@@ -140,6 +162,26 @@ export default function MoreActionsDropdown({
         onOpenChange={setShowRenameDialog}
         onBusyChange={setDuplicating}
       />
+
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Close and archive &ldquo;{title || companyName}&rdquo;?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the UAT checklist from the admin dashboard and checklist
+              lists. Its steps, tester results, reports, and links stay saved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchive}>
+              Archive UAT Checklist
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete confirmation dialog — triggered from dropdown, not inline */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

@@ -26,11 +26,12 @@ import {
   ExternalLink,
   Copy,
   Loader2,
+  Archive,
   Trash2,
   SearchX,
   Plus,
 } from "lucide-react"
-import { deleteProject } from "@/lib/actions/projects"
+import { archiveProject, deleteProject } from "@/lib/actions/projects"
 import DuplicateProjectDialog from "@/components/admin/duplicate-project-dialog"
 import { toast } from "sonner"
 import type { ClientGroup, ProjectStatus } from "./client-grouped-dashboard"
@@ -163,6 +164,64 @@ function TableDeleteButton({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
             Delete UAT Checklist
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+function TableArchiveButton({
+  projectId,
+  projectName,
+}: {
+  projectId: string
+  projectName: string
+}) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+
+  const handleArchive = async () => {
+    setLoading(true)
+    const result = await archiveProject(projectId)
+    setLoading(false)
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("UAT checklist archived")
+      router.refresh()
+    }
+  }
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={loading}
+          className="h-7 w-7 p-0 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+          aria-label="Close and archive UAT checklist"
+        >
+          {loading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Archive className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Close and archive &ldquo;{projectName}&rdquo;?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This removes the UAT checklist from the admin dashboard and checklist
+            lists. Its steps, tester results, reports, and links stay saved.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleArchive}>
+            Archive UAT Checklist
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -371,6 +430,10 @@ export default function ClientChecklistList({ group }: Props) {
                             projectId={project.id}
                             companyName={project.company_name}
                             projectTitle={project.title}
+                          />
+                          <TableArchiveButton
+                            projectId={project.id}
+                            projectName={project.title || project.company_name}
                           />
                           <TableDeleteButton
                             projectId={project.id}

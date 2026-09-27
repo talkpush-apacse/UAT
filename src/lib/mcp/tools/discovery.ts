@@ -43,6 +43,7 @@ export function registerDiscoveryTools(server: McpServer) {
       const { data, error } = await supabase
         .from("projects")
         .select("slug, company_name, title, test_scenario")
+        .is("archived_at", null)
         .or(`title.ilike.%${q}%,company_name.ilike.%${q}%`)
         .order("created_at", { ascending: false })
         .limit(20);
