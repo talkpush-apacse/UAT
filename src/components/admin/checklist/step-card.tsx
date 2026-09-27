@@ -341,6 +341,7 @@ export function SortableStepCard({
                 {...attributes}
                 {...listeners}
                 aria-label="Drag to reorder section header"
+                title="Drag to reorder"
               >
                 <GripVertical className="h-5 w-5 text-brand-lavender-lighter cursor-grab active:cursor-grabbing hover:text-brand-lavender transition-colors" />
               </div>
@@ -466,6 +467,7 @@ export function SortableStepCard({
               {...attributes}
               {...listeners}
               aria-label="Drag to reorder step"
+              title="Drag to reorder"
             >
               <GripVertical className="h-5 w-5 text-gray-300 cursor-grab active:cursor-grabbing hover:text-gray-400 transition-colors" />
             </div>

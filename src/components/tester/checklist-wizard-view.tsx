@@ -272,7 +272,7 @@ export default function ChecklistWizardView({
         <div className="mt-8 space-y-3">
           <div className="flex items-center justify-center gap-2.5 rounded-xl bg-green-50 border border-green-200 py-5 px-6">
             <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-            <span className="text-sm font-semibold text-green-700">Test Marked Complete</span>
+            <span className="text-sm font-semibold text-green-700">Test Submitted</span>
           </div>
           <Link
             href={`/test/${project.slug}/results?tester=${tester.id}`}
@@ -488,7 +488,7 @@ export default function ChecklistWizardView({
               }`}
             >
               <Flag className="h-4 w-4" />
-              {isMarkingComplete ? "Saving…" : "Submit & Mark Complete"}
+              {isMarkingComplete ? "Submitting…" : "Submit Test"}
             </button>
           ) : (
             <button

@@ -174,6 +174,7 @@ export default function ChecklistItem({
   talkpushLoginLink,
   previewMode = false,
   trackingContext,
+  onSaveFailedChange,
 }: {
   item: ChecklistItemData
   testerId: string
@@ -185,6 +186,8 @@ export default function ChecklistItem({
   previewMode?: boolean
   /** Analytics-only: where this step sits in the checklist (see docs/analytics-events.md) */
   trackingContext: Omit<StepContext, "step_id" | "step_number">
+  // Lets the list show a page-level "didn't save" banner for this step.
+  onSaveFailedChange?: (itemId: string, failed: boolean) => void
 }) {
   const [status, setStatus] = useState<string | null>(response?.status || null)
   const [comment, setComment] = useState(response?.comment || "")
@@ -196,6 +199,11 @@ export default function ChecklistItem({
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const supabaseRef = useRef(createAnonClient())
+
+  const isSaveFailed = saveStatus === "error"
+  useEffect(() => {
+    onSaveFailedChange?.(item.id, isSaveFailed)
+  }, [isSaveFailed, item.id, onSaveFailedChange])
 
   // Tracks the latest status/comment on every render (no effect needed) so the
   // unmount-flush below can read fresh values without re-subscribing on every
@@ -346,14 +354,14 @@ export default function ChecklistItem({
     // Issue #10 — step ID anchor for deep-linking
     <Card
       id={`step-${item.step_number}`}
-      className={`${getCardStyles(status)} rounded-xl shadow-sm hover:shadow-md transition-all duration-200`}
+      className={`${getCardStyles(isSaveFailed ? null : status)} scroll-mt-44 rounded-xl shadow-sm hover:shadow-md transition-all duration-200`}
     >
       <CardContent className="py-4">
-        <div className="flex items-start gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3">
 
-          {/* === LEFT: Teal "Step N" pill badge === */}
-          <div className="flex-shrink-0 pt-0.5">
-            <div className="rounded-full bg-primary text-white text-xs font-bold px-3 py-1.5 shadow-sm select-none whitespace-nowrap">
+          {/* === LEFT: Teal "Step N" pill badge (above the text on phones) === */}
+          <div className="flex-shrink-0 sm:pt-0.5">
+            <div className="inline-block rounded-full bg-primary text-white text-xs font-bold px-3 py-1.5 shadow-sm select-none whitespace-nowrap">
               Step {item.step_number}
             </div>
           </div>
@@ -386,7 +394,13 @@ export default function ChecklistItem({
                   <span className="text-xs text-green-600">Saved</span>
                 )}
                 {saveStatus === "error" && (
-                  <span className="text-xs text-red-600">Error — tap to retry</span>
+                  <button
+                    type="button"
+                    onClick={() => save(status, comment, "status")}
+                    className="text-xs font-medium text-red-600 underline underline-offset-2 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 rounded"
+                  >
+                    Not saved — Retry
+                  </button>
                 )}
               </div>
             </div>
@@ -553,10 +567,17 @@ export default function ChecklistItem({
 
         {/* === STATUS BUTTONS — Issue #2: active style applied via STATUS_STYLES[value].active === */}
         {!previewMode && (
-          <div className="flex gap-2 mb-4">
-            {STATUS_OPTIONS.map(({ value, label }) => {
+          <div className="grid grid-cols-6 sm:flex gap-2 mb-4">
+            {STATUS_OPTIONS.map(({ value, label }, index) => {
               const isActive = status === value
               const styles = STATUS_STYLES[value]
+              // A selected-but-unsaved answer looks outlined, not filled, so it
+              // doesn't read as done.
+              const stateClass = isActive
+                ? isSaveFailed
+                  ? `${styles.inactive} border-2 border-dashed`
+                  : styles.active
+                : styles.inactive
               return (
                 <button
                   key={value}
@@ -565,9 +586,9 @@ export default function ChecklistItem({
                   aria-pressed={isActive}
                   className={`
                     px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
-                    min-h-[44px] flex-1
+                    min-h-[44px] sm:flex-1 ${index < 3 ? "col-span-2" : "col-span-3"}
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2
-                    ${isActive ? styles.active : styles.inactive}
+                    ${stateClass}
                   `}
                 >
                   {label}

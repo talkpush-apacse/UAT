@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useMemo, useEffect, useId } from "react"
+import { useState, useMemo, useEffect, useId, useCallback, useRef } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight, CheckCircle, XCircle, MinusCircle, Ban, HelpCircle, Eye } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight, CheckCircle, XCircle, MinusCircle, Ban, HelpCircle, Eye, AlertTriangle, ArrowDown } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
@@ -67,6 +67,34 @@ type ChecklistViewProps = {
   attachments: AttachmentData[]
   testCompleted?: string | null
   previewMode?: boolean
+}
+
+function scrollToStep(stepNumber: number | null) {
+  if (stepNumber == null) return
+  document.getElementById(`step-${stepNumber}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+}
+
+// Renders "Step 3 · Step 8 · …" as jump links, capped so a long list stays readable.
+function StepJumpLinks({ items, max = 8 }: { items: ChecklistItemData[]; max?: number }) {
+  const shown = items.slice(0, max)
+  const hidden = items.length - shown.length
+  return (
+    <>
+      {shown.map((item, i) => (
+        <span key={item.id}>
+          {i > 0 && <span className="text-gray-300"> · </span>}
+          <button
+            type="button"
+            onClick={() => scrollToStep(item.step_number)}
+            className="font-medium text-brand-sage-darker underline underline-offset-2 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker rounded"
+          >
+            Step {item.step_number}
+          </button>
+        </span>
+      ))}
+      {hidden > 0 && <span className="text-gray-500"> and {hidden} more</span>}
+    </>
+  )
 }
 
 export default function ChecklistView(props: ChecklistViewProps) {
@@ -158,8 +186,28 @@ function ClassicChecklistView({
   // Issue #3 — CTA is only active when every step has a status and no flagged step is missing evidence
   const allStepsCompleted =
     totalCount > 0 && completedCount === totalCount && stepsMissingEvidence.length === 0
-  const displayCompletedCount = previewMode ? totalCount : completedCount
-  const displayProgressPct = previewMode && totalCount > 0 ? 100 : progressPct
+
+  const unansweredItems = useMemo(
+    () => stepItems.filter((i) => responses[i.id]?.status == null),
+    [stepItems, responses]
+  )
+  const missingEvidenceItems = useMemo(() => {
+    const ids = new Set(stepsMissingEvidence)
+    return stepItems.filter((i) => ids.has(i.id))
+  }, [stepItems, stepsMissingEvidence])
+
+  // Steps whose last save failed — surfaced as a banner so they aren't missed.
+  const [failedSaveIds, setFailedSaveIds] = useState<Set<string>>(() => new Set())
+  const handleSaveFailedChange = useCallback((itemId: string, failed: boolean) => {
+    setFailedSaveIds((prev) => {
+      if (prev.has(itemId) === failed) return prev
+      const next = new Set(prev)
+      if (failed) next.add(itemId)
+      else next.delete(itemId)
+      return next
+    })
+  }, [])
+  const failedSaveItems = stepItems.filter((i) => failedSaveIds.has(i.id))
 
   // Find the first Talkpush actor *step* (not a phase header that defaults to Talkpush)
   // to show the login link.
@@ -170,20 +218,38 @@ function ClassicChecklistView({
 
   // "Before You Begin" guide — collapsed state persisted per project
   const guideStorageKey = `uat-guide-collapsed-${project.id}`
+  const guideSeenKey = `uat-guide-seen-${project.id}`
   const [isGuideOpen, setIsGuideOpen] = useState(true)
 
   // Issue #8 — stable IDs for aria-controls
   const guideBodyId = useId()
 
+  // Open on the first visit only; afterwards collapsed (a one-line legend
+  // stays visible) unless the tester explicitly reopened it.
+  const guideInitRef = useRef(false)
   useEffect(() => {
-    const stored = localStorage.getItem(guideStorageKey)
-    if (stored === "true") setIsGuideOpen(false)
-  }, [guideStorageKey])
+    // Ref guard: React dev mode runs effects twice, and the second run would
+    // otherwise read the "seen" flag the first run just wrote.
+    if (guideInitRef.current) return
+    guideInitRef.current = true
+    try {
+      const stored = localStorage.getItem(guideStorageKey)
+      const seen = localStorage.getItem(guideSeenKey) === "true"
+      if (stored === "true" || (stored === null && seen)) setIsGuideOpen(false)
+      localStorage.setItem(guideSeenKey, "true")
+    } catch {
+      // Storage unavailable (private mode) — keep the guide open.
+    }
+  }, [guideStorageKey, guideSeenKey])
 
   const toggleGuide = () => {
     setIsGuideOpen((prev) => {
       const next = !prev
-      localStorage.setItem(guideStorageKey, next ? "false" : "true")
+      try {
+        localStorage.setItem(guideStorageKey, next ? "false" : "true")
+      } catch {
+        // Ignore — the toggle still works for this visit.
+      }
       return next
     })
   }
@@ -206,18 +272,40 @@ function ClassicChecklistView({
           </div>
           {/* Issue #5: keep fraction counter only; removed "X% complete" text */}
           <p className="text-sm sm:text-base font-semibold text-brand-sage-darker flex-shrink-0 ml-4">
-            {displayCompletedCount} / {totalCount}
+            {previewMode ? `${totalCount} steps` : `${completedCount} / ${totalCount}`}
           </p>
         </div>
         {/* Issue #7: ARIA attributes on progress bar; Issue #5: removed standalone "X%" label */}
-        <Progress
-          value={displayProgressPct}
-          className="h-2.5"
-          aria-label="Test completion progress"
-          aria-valuenow={displayCompletedCount}
-          aria-valuemin={0}
-          aria-valuemax={totalCount}
-        />
+        {!previewMode && (
+          <Progress
+            value={progressPct}
+            className="h-2.5"
+            aria-label="Test completion progress"
+            aria-valuenow={completedCount}
+            aria-valuemin={0}
+            aria-valuemax={totalCount}
+          />
+        )}
+        {!previewMode && !isTestComplete && unansweredItems.length > 0 && completedCount > 0 && (
+          <button
+            type="button"
+            onClick={() => scrollToStep(unansweredItems[0].step_number)}
+            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-sage-darker hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker rounded"
+          >
+            Next unanswered: Step {unansweredItems[0].step_number}
+            <ArrowDown className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {failedSaveItems.length > 0 && (
+          <div role="alert" className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <p>
+              {failedSaveItems.length === 1 ? "1 answer didn't save" : `${failedSaveItems.length} answers didn't save`}
+              {" — press Retry on "}
+              <StepJumpLinks items={failedSaveItems} max={5} />
+            </p>
+          </div>
+        )}
       </div>
 
       {previewMode && (
@@ -257,6 +345,17 @@ function ClassicChecklistView({
               )}
             </div>
           </button>
+
+          {!isGuideOpen && (
+            <p className="px-4 pb-3 -mt-1 text-xs text-gray-600">
+              Mark each step{" "}
+              <span className="font-semibold text-green-700">Pass</span>,{" "}
+              <span className="font-semibold text-red-600">Fail</span>,{" "}
+              <span className="font-semibold text-gray-600">N/A</span>,{" "}
+              <span className="font-semibold text-orange-600">Blocked</span> or{" "}
+              <span className="font-semibold text-amber-600">Up For Review</span>. Fail, Blocked and Review need a comment or screenshot.
+            </p>
+          )}
 
           {/* Collapsible body */}
           <div
@@ -392,18 +491,19 @@ function ClassicChecklistView({
                 total_steps: totalCount,
                 view_mode: "classic",
               }}
+              onSaveFailedChange={handleSaveFailedChange}
             />
           )
         })}
 
-        {/* Mark Test Complete — Issue #3: disabled until all steps have a status */}
+        {/* Submit Test — Issue #3: disabled until all steps have a status */}
         {!previewMode && checklistItems.length > 0 && (
           <div className="pt-4 pb-6 border-t border-gray-200 mt-2">
             {isTestComplete ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-center gap-2.5 rounded-xl bg-green-50 border border-green-200 py-5 px-6">
                   <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-green-700">Test Marked Complete</span>
+                  <span className="text-sm font-semibold text-green-700">Test Submitted</span>
                 </div>
                 <Link
                   href={`/test/${project.slug}/results?tester=${tester.id}`}
@@ -429,17 +529,29 @@ function ClassicChecklistView({
                   `}
                 >
                   <Flag className="h-4 w-4" />
-                  {isMarkingComplete ? "Saving…" : "Mark My Test as Complete"}
+                  {isMarkingComplete ? "Submitting…" : "Submit Test"}
                 </button>
                 {/* Issue #3: dynamic helper text */}
-                <p className="text-xs text-gray-400 text-center mt-2">
-                  {allStepsCompleted
-                    ? "All steps completed — ready to mark as complete"
-                    : completedCount < totalCount
-                      ? `${completedCount} of ${totalCount} steps completed — finish all steps before marking complete`
-                      : `${stepsMissingEvidence.length} step${stepsMissingEvidence.length === 1 ? "" : "s"} need a comment or screenshot before you can finish`
-                  }
-                </p>
+                <div className="text-xs text-gray-500 text-center mt-2 space-y-1">
+                  {allStepsCompleted ? (
+                    <p>All steps answered — ready to submit</p>
+                  ) : (
+                    <>
+                      {unansweredItems.length > 0 && (
+                        <p>
+                          {completedCount} of {totalCount} answered. Still to answer:{" "}
+                          <StepJumpLinks items={unansweredItems} />
+                        </p>
+                      )}
+                      {missingEvidenceItems.length > 0 && (
+                        <p>
+                          Add a comment or screenshot to:{" "}
+                          <StepJumpLinks items={missingEvidenceItems} />
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
                 {completeError && (
                   <p className="text-xs text-red-600 text-center mt-2">{completeError}</p>
                 )}

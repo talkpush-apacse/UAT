@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAnonSupabaseClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyAdminSession } from '@/lib/utils/admin-auth'
-import { registerTesterSchema } from '@/lib/schemas/tester'
+import { registerTesterSchema, lookupTesterSchema } from '@/lib/schemas/tester'
 import { getStepsMissingEvidence } from '@/lib/utils/response-validation'
 
 export interface RegisterTesterState {
@@ -14,6 +14,36 @@ export interface RegisterTesterState {
   testerId?: string
   returning?: boolean
   testerName?: string
+}
+
+export interface LookupTesterResult {
+  error?: string
+  found?: boolean
+  testerId?: string
+  testerName?: string
+}
+
+// Email-first sign-in for returning testers. Exposes nothing registerTester
+// didn't already: that action also returns an existing tester's id and name
+// for a matching email (name/mobile values are not checked).
+export async function lookupTesterByEmail(
+  projectId: string,
+  email: string
+): Promise<LookupTesterResult> {
+  const parsed = lookupTesterSchema.safeParse({ projectId, email })
+  if (!parsed.success) return { error: 'Enter a valid email' }
+
+  const supabase = createAnonSupabaseClient()
+  const { data, error } = await supabase
+    .from('testers')
+    .select('id, name')
+    .eq('project_id', parsed.data.projectId)
+    .eq('email', parsed.data.email)
+    .maybeSingle()
+
+  if (error) return { error: 'Something went wrong. Please try again.' }
+  if (!data) return { found: false }
+  return { found: true, testerId: data.id, testerName: data.name }
 }
 
 export async function registerTester(

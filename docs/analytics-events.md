@@ -66,7 +66,7 @@ A tester picks, changes or clears a step's status (not fired in preview mode).
 | `previous_status` | same values; `null` = first answer |
 
 ### `Test Completed`
-"Mark My Test as Complete" / "Submit & Mark Complete" succeeded.
+"Submit Test" succeeded (label was "Mark My Test as Complete" / "Submit & Mark Complete" before 2026-09-27).
 Properties: `project_slug`, `view_mode`, `total_steps`, `pass`, `fail`, `na`,
 `blocked`, `review` (counts). To see how long a test took, use a funnel from
 the first `Step Status Set` to `Test Completed` and read its time to convert.
@@ -98,6 +98,11 @@ Properties: `project_slug`, `reason`, `fields`.
 `reason`: `form_check` (blocked in the browser) \| `server_check` (server
 validation) \| `already_registered` \| `server_error`.
 `fields`: names only, e.g. `["email", "mobile"]`.
+
+Since 2026-09-27 sign-up is email-first: the first button is **"Continue"**
+(returning testers go straight to their checklist from here); only new
+testers then see **"Start Testing"**. For sign-up funnels, use "Continue"
+clicks as the entry step — "Start Testing" now counts new testers only.
 
 ## `error_category`
 

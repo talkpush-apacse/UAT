@@ -266,11 +266,12 @@ export default function FileUpload({
               <button
                 type="button"
                 onClick={() => handleDelete(att)}
-                className="ml-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-gray-300 hover:text-red-500 focus-visible:opacity-100 focus-visible:outline-none"
+                className="-my-1 -mr-1.5 ml-0 inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                 aria-label={`Remove ${att.file_name}`}
                 data-track="Remove attachment"
+                title="Remove attachment"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}

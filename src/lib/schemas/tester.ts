@@ -7,4 +7,9 @@ export const registerTesterSchema = z.object({
   projectId: z.string().uuid(),
 })
 
+export const lookupTesterSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  projectId: z.string().uuid(),
+})
+
 export type RegisterTesterInput = z.infer<typeof registerTesterSchema>
