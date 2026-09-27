@@ -37,16 +37,58 @@ export function areaForPath(pathname: string): MixpanelArea {
   return "other"
 }
 
+// Share-analytics links carry their access token as the last path segment.
+const SHARE_TOKEN_PATH = /^(\/share\/analytics\/[^/]+\/)[^/?#]+/
+
+export function scrubPath(pathname: string): string {
+  return pathname.replace(SHARE_TOKEN_PATH, "$1[token]")
+}
+
+// Origin + scrubbed path only. The query string is dropped because it holds
+// ?tester=<id> on tester pages; anything unparsable is dropped entirely.
+function scrubUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    return u.origin + scrubPath(u.pathname)
+  } catch {
+    return ""
+  }
+}
+
+// mixpanel-browser attaches the raw page URL and referrers to every event;
+// event properties win over its defaults, so overwrite them with scrubbed
+// copies. Without this, share tokens and tester ids reach Mixpanel even when
+// our own `path` property is clean.
+function urlOverrides(): Record<string, string> {
+  if (typeof window === "undefined") return {}
+  const overrides: Record<string, string> = { $current_url: scrubUrl(window.location.href) }
+  if (document.referrer) overrides.$referrer = scrubUrl(document.referrer)
+  if (initialized) {
+    const initialReferrer = mixpanel.get_property("$initial_referrer")
+    if (typeof initialReferrer === "string" && initialReferrer !== "$direct") {
+      overrides.$initial_referrer = scrubUrl(initialReferrer)
+    }
+  }
+  return overrides
+}
+
+// Every event goes through here so the URL scrubbing can't be skipped.
+function send(event: string, props: Record<string, unknown>): void {
+  const safe = typeof props.path === "string" ? { ...props, path: scrubPath(props.path) } : props
+  if (!isEnabled()) {
+    logLocally(event, { ...safe, ...urlOverrides() })
+    return
+  }
+  ensureInitialized()
+  mixpanel.track(event, { ...safe, ...urlOverrides() })
+}
+
 export function trackPageView(pathname: string, area: MixpanelArea): void {
-  logLocally("Page View", { path: pathname, area })
-  if (!ensureInitialized()) return
-  mixpanel.track("Page View", { path: pathname, area })
+  send("Page View", { path: pathname, area })
 }
 
 export function trackButtonClick(label: string, pathname: string, area: MixpanelArea): void {
-  logLocally("Button Clicked", { label, path: pathname, area })
-  if (!ensureInitialized()) return
-  mixpanel.track("Button Clicked", { label, path: pathname, area })
+  send("Button Clicked", { label, path: pathname, area })
 }
 
 // ---------------------------------------------------------------------------
@@ -110,10 +152,7 @@ type TrackedEvents = {
 
 export function trackEvent<E extends keyof TrackedEvents>(event: E, props: TrackedEvents[E]): void {
   const pathname = typeof window !== "undefined" ? window.location.pathname : ""
-  const full = { ...props, path: pathname, area: areaForPath(pathname) }
-  logLocally(event, full)
-  if (!ensureInitialized()) return
-  mixpanel.track(event, full)
+  send(event, { ...props, path: pathname, area: areaForPath(pathname) })
 }
 
 // Reduces a Supabase/fetch error to a short category — the raw message can

@@ -15,6 +15,11 @@ dev, every event is printed to the browser console as `[mixpanel:dev]` instead.
   values, or raw error messages/stack traces.
 - Send only: ids, step numbers, counts, and the short enums listed below.
 - Raw errors go through `errorCategoryFor()` before being tracked.
+- URLs are scrubbed on every event (`send()` in `src/lib/mixpanel.ts`): the
+  share-link token becomes `[token]` in `path`, and Mixpanel's automatic
+  `$current_url`, `$referrer` and `$initial_referrer` are overwritten with
+  origin + scrubbed path (no query string, so no `?tester=<id>`). Before
+  2026-09-27, share page views stored the real token in `path`.
 
 ## Naming
 
@@ -112,7 +117,7 @@ clicks as the entry step — "Start Testing" now counts new testers only.
 
 - Admin server-action failures (checklist save/delete/reorder) are not
   tracked yet; they show a toast only.
-- The share-link token appears in `Page View.path` and in Mixpanel's automatic
-  `$current_url` for `/share/analytics/[slug]/[token]`. Tester pages'
-  `$current_url` also includes `?tester=<id>`. Planned as a separate
-  privacy fix.
+- Events before 2026-09-27 still contain share tokens (`path`,
+  `$current_url`) and tester ids (`$current_url`). Removing them needs a
+  Mixpanel data-deletion request; the tokens stay valid unless share links are
+  regenerated.
