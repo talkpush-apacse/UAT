@@ -26,6 +26,7 @@ Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party
 | agent-consultant-to-spec | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | core | dist/agent-consultant-to-spec.zip | `21c9c681321c7cfae8e54b442e1f5830796cdbd67be1e874e8e59a8301bab6ce` |
 | agent-consultant-to-tickets | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | core | dist/agent-consultant-to-tickets.zip | `eb22385a4a52d8e28efaf7ff163f5e0e001a05d5dcd735dd5de14577b1d445a8` |
 | agent-consultant-codebase-design | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | optional | dist/agent-consultant-codebase-design.zip | `16aa06c22a416c80ff54e84ef93318ad1959d1d850b2175e6fca5d14d8c40709` |
+| agent-consultant-vibecoder-project-skill-builder | Original (this project) | Original, no third-party content | A | builder | dist/agent-consultant-vibecoder-project-skill-builder.zip | `194f1afd51b8e3a5878e7ec0313ff023990e2ccb39834c97d044a00451ed4f26` |
 
 ## Per-skill detail
 
@@ -210,6 +211,19 @@ Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party
 - Features unavailable in Claude.ai: Parallel sub-agents.
 - ZIP filename: dist/agent-consultant-codebase-design.zip
 - SHA-256: `16aa06c22a416c80ff54e84ef93318ad1959d1d850b2175e6fca5d14d8c40709`
+
+### agent-consultant-vibecoder-project-skill-builder
+
+- Upstream name: none (original skill)
+- Repository: Original (this project)
+- License: Original, no third-party content
+- Claude Code installation method: ZIP from dist/claude-code via install script (same ZIP as Claude.ai; the name keeps the prefix because you specified it)
+- Claude Code installation status: Not installed in container (ZIPs only, your decision). Discovered by Claude Code in a throwaway folder; 20 script tests passed; invoked once and opened with 3 interview questions.
+- Claude.ai compatibility class: A
+- Adaptations made: None (original). Includes three Python scripts (render, validate, zip) and templates.
+- Features unavailable in Claude.ai: Scripts need Python and code execution; without it the skill builds by hand and says validation was not run.
+- ZIP filename: dist/agent-consultant-vibecoder-project-skill-builder.zip
+- SHA-256: `194f1afd51b8e3a5878e7ec0313ff023990e2ccb39834c97d044a00451ed4f26`
 
 ## Not packaged for Claude.ai
 

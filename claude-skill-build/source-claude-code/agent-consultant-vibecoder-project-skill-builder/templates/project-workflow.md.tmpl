@@ -1,0 +1,157 @@
+# Project workflow: {{project_label}}
+
+How to run each phase. SKILL.md has the rules and the gate summary. This file has the working detail.
+
+{{#if open_items}}## Open items at creation
+
+These were unresolved when this skill was generated. Treat them as open questions, not decisions.
+
+{{list:open_items}}
+{{/if}}
+
+## Standing artifacts
+
+Keep these current. In Claude.ai they live in the conversation or project files; in the repository they live in the shared project documentation (the source of truth).
+
+| Artifact | What it holds |
+|---|---|
+| Confirmed requirements | One row each: ID, statement, source (who said it, where, when), status |
+| Assumptions | One row each: ID, statement, why assumed, who can confirm, impact if wrong |
+| Open questions | One row each: ID, question, why it matters (scope, security, legal, architecture, cost), owner |
+| Contradictions | Two sources quoted side by side, what each implies, who decides |
+| Decision log | Date, decision, alternatives considered, who approved, source |
+| Risk register | Risk, likelihood, impact, mitigation, owner, status |
+
+Requirement IDs stay stable across phases (for example `REQ-014`) so reviews and milestones can point at them.
+
+## Recovering context
+
+Before asking the user anything:
+
+1. List what you can see: project files, a project brief, uploaded documents, earlier messages, any decision log.
+2. Extract confirmed requirements and decisions. Quote the source.
+3. Extract things that look decided but have no source. Mark them as assumptions.
+4. Note conflicts between sources.
+5. Present a short summary: "Here is what I found. Here is what looks missing. Here are up to 3 questions that matter most."
+
+If nothing exists yet, say so and start phase 1 with the three highest-impact questions. For a brand new product with no brief, a discovery framework such as `product-scoping-playbook` (if installed) can produce the brief first.
+
+## Asking good questions
+
+High-impact means the answer changes scope, security posture, legal exposure, architecture, or cost.{{#if open_question_examples}} Examples of high-impact topics for this project: {{inline:open_question_examples}}.{{/if}}
+
+Rules:
+
+- At most 3 questions per turn.
+- Offer a suggested answer only if clearly labelled as a suggestion.
+- A question the documents already answer is not asked. Quote the answer instead.
+- Park lower-impact questions in the open-questions list.
+
+## Phase 1: Context Lock
+
+**Purpose:** agree on what is known before designing anything.
+**Inputs:** whatever exists (briefs, emails, contracts, prior specs, user statements).
+**Work:** run the context recovery steps. Build the standing artifacts. Identify contradictions. Identify the 3 questions that block the spec.
+**Output:** context summary (one page), confirmed requirements, assumptions, open questions, contradictions.
+**Exit criteria:** no unresolved contradiction that affects scope; blocking questions answered or explicitly parked with an owner.
+{{#if phase_extra_1}}**Also cover (project-specific):**
+
+{{list:phase_extra_1}}
+{{/if}}
+**Gate question:** "Is this the right picture of the project? Anything wrong, missing, or assumed that should be confirmed?"
+
+## Phase 2: Product Specification
+
+**Purpose:** define the product in plain language so everyone builds the same thing.
+**Cover:** users and roles, core records and their fields, flows and statuses and who can change them, notifications (who is told what, through which channel), retention and deletion rules, reporting needs, and out of scope stated explicitly.
+{{#if phase_extra_2}}**Also cover (project-specific):**
+
+{{list:phase_extra_2}}
+{{/if}}
+**Output:** product spec with requirement IDs.
+**Exit criteria:** every requirement is traceable to a source or flagged as an assumption.
+**Gate question:** "Do you approve this spec as the source of truth? Which assumptions are now confirmed?"
+
+## Phase 3: System Design
+
+**Purpose:** choose the simplest architecture that meets the approved spec and the security principles.
+**Cover:** components and responsibilities, data model, authentication and authorization model, where trust boundaries sit, integrations, hosting and regions, file storage if any, logging and monitoring, environments, backup and recovery.
+{{#if phase_extra_3}}**Also cover (project-specific):**
+
+{{list:phase_extra_3}}
+{{/if}}
+**Diagrams:** architecture with trust boundaries, data or entity diagram, state machine for the main record, main user journeys.
+**Simplicity pass:** for each component and dependency, ask what requirement it serves. Remove anything that serves none. Never remove security, privacy, authorization, auditability, integrity, or confirmed client requirements.
+**Output:** design document, diagrams, list of decisions with alternatives considered.
+**Exit criteria:** every requirement maps to a component; every external dependency has a stated purpose and data it receives.
+**Gate question:** "Do you approve this design? Any component or dependency you want removed or added?"
+
+## Phase 4: UX Definition
+
+**Purpose:** define what each type of user sees and does, before screens are built.
+**Cover:** flows, screen list, form fields (with the reason each field exists), error and empty states, confirmation states, accessibility needs, mobile behavior, language and tone, who approves sensitive wording.
+{{#if phase_extra_4}}**Also cover (project-specific):**
+
+{{list:phase_extra_4}}
+{{/if}}
+**Output:** flows and screen specs, copy requirements, list of texts that need owner approval.
+**Exit criteria:** every field traces to a requirement; every sensitive statement has an owner for approval.
+**Gate question:** "Do you approve these flows and screens? Who signs off the sensitive wording?"
+
+## Phase 5: Security and Privacy Design Review
+
+**Purpose:** find and decide on risks before code exists.
+**Work:**
+1. Walk `security-checklist.md` against the approved design. Mark each item Met, Gap, Not applicable, or Unknown, with evidence.
+2. Build a threat model: assets, actors (outsider, other user, privileged user, vendor), entry points, trust boundaries.
+3. Record risks and decisions. Unknown items become open questions.
+{{#if phase_extra_5}}**Also cover (project-specific):**
+
+{{list:phase_extra_5}}
+{{/if}}
+**Output:** threat model, security and privacy requirements (with IDs), risk register.
+**Exit criteria:** no Unknown on a critical item; every Gap has a decision (fix, accept with owner, or defer with date).
+**Gate question:** "Do you approve these security and privacy requirements and the accepted risks?"
+
+## Phase 6: {{builder_tool}} Build Plan
+
+**Purpose:** turn the approved spec, design, UX, and security requirements into milestones {{builder_tool}} can build.
+**Work:** start with Milestone 0: a development environment and database that are separate from production, confirmed before any feature work (a forked codebase must not point at the parent's production database). Then split into thin vertical milestones, each demonstrable on its own. Put foundations first (authentication, authorization, audit logging if required, data model) so later milestones do not retrofit them. Write each milestone with `replit-handoff-template.md`.
+{{#if phase_extra_6}}**Also cover (project-specific):**
+
+{{list:phase_extra_6}}
+{{/if}}
+**Output:** ordered milestone list, then one full handoff at a time.
+**Exit criteria:** each milestone lists requirement IDs, exclusions, dependencies, tests, and checks.
+**Gate question:** "Milestone N is ready. Approve sending it to {{builder_tool}}?"
+
+## Phase 7: Implementation Review
+
+**Purpose:** independently check what {{builder_tool}} built against the approved documents.
+**Work:** collect evidence (code, screenshots, test output, a description of what was run). Review against the milestone's acceptance criteria, security checks, and UX checks. Write findings with `review-finding-template.md`. Do not modify code.
+{{#if phase_extra_7}}**Also cover (project-specific):**
+
+{{list:phase_extra_7}}
+{{/if}}
+**Output:** findings list, summary of what passed, what failed, what could not be verified.
+**Exit criteria:** every acceptance criterion marked Pass, Fail, or Not verified.
+**Gate question:** "Do you accept these findings? Should they go to {{builder_tool}} as written?"
+
+## Phase 8: Production Readiness Review
+
+**Purpose:** decide whether the system is safe to put in front of real users.
+**Check:** all milestones reviewed; no open critical or high findings without an approved exception; security checklist has no Unknown on critical items; retention and deletion work as specified; backups and recovery tested; monitoring and alerting exist without logging sensitive content; an incident plan exists; access review of privileged accounts done; sensitive wording approved by its owner; a pilot or staged rollout plan exists if the client wants one.
+{{#if phase_extra_8}}**Also check (project-specific):**
+
+{{list:phase_extra_8}}
+{{/if}}
+**Output:** go or no-go summary, remaining risks with owners, launch conditions.
+**Gate question:** "Approve for production, or not approved?"
+
+Three delivery states must not be blurred in anything you write: built and internally tested, shared for client testing, live for real users. Use the right one.
+
+## When something changes mid-project
+
+- A new requirement: add it as an assumption or a confirmed requirement with its source, then check which approved phases it affects. Re-open those gates.
+- A defect found in review that comes from the spec: go back to the spec, fix, re-approve, then update the milestone.
+- {{builder_tool}} reports the spec is silent on something: log it as an open question, get a decision, record it, then update the handoff.

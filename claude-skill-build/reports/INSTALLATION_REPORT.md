@@ -6,7 +6,7 @@ Date: 2026-10-03. Built in a cloud container. Nothing was installed into any Cla
 
 Repository folder (branch `claude/gifted-cerf-7r70ce`, draft PR https://github.com/talkpush-apacse/UAT/pull/14): `claude-skill-build/`. In the session container: `/home/user/UAT/claude-skill-build/`.
 
-**Claude.ai ZIPs (adapted, 14): `claude-skill-build/dist/`**
+**Claude.ai ZIPs (15, thirteen adapted third-party plus two original): `claude-skill-build/dist/`**
 
 - `dist/agent-consultant-employee-hotline-product-lead.zip`  (SHA-256 `48df7a90e330edb2f6f0e5f5309d1948c7613681aae9231006ae9975c16c3f7a`)
 - `dist/agent-consultant-security-audit.zip`  (SHA-256 `02999c753f243e61939bc9fc851df5b6a171615f319860125276ce9f44f582e3`)
@@ -22,8 +22,9 @@ Repository folder (branch `claude/gifted-cerf-7r70ce`, draft PR https://github.c
 - `dist/agent-consultant-ponytail-audit.zip`  (SHA-256 `6f73122d32bedc94f8bb300ecd8c3d2e004b61934e148c1fd91ad7c5c4ce46c7`)
 - `dist/agent-consultant-grill-with-docs.zip`  (SHA-256 `de58fe9a32db185fc5ae6c9668bc2cb4640cd0e85c344666fd9744656153ae28`)
 - `dist/agent-consultant-codebase-design.zip`  (SHA-256 `16aa06c22a416c80ff54e84ef93318ad1959d1d850b2175e6fca5d14d8c40709`)
+- `dist/agent-consultant-vibecoder-project-skill-builder.zip`  (SHA-256 `194f1afd51b8e3a5878e7ec0313ff023990e2ccb39834c97d044a00451ed4f26`)
 
-**Claude Code ZIPs (unmodified upstream, upstream names with no prefix, no hooks, 6): `claude-skill-build/dist/claude-code/`**
+**Claude Code ZIPs (unmodified upstream, upstream names with no prefix, no hooks, 7): `claude-skill-build/dist/claude-code/`**
 
 - `dist/claude-code/employee-hotline-product-lead.zip`  (SHA-256 `580fd0b07c2ddd680507ac86f84469677f95957840097bae89e038e0cd5e78a6`)
 - `dist/claude-code/impeccable.zip`  (SHA-256 `f721f649fce0fc3858252475fede1b5766d6f74a0ad4b74fa8206e4d41322aa7`)
@@ -31,6 +32,7 @@ Repository folder (branch `claude/gifted-cerf-7r70ce`, draft PR https://github.c
 - `dist/claude-code/ponytail.zip`  (SHA-256 `14dc553d77204f9f47967c26e69e188fb0e4249f0587bbdae19a432d8afacecb`)
 - `dist/claude-code/ponytail-review.zip`  (SHA-256 `e03f48e7f93a36839609dd7d8f2720726a1c7b51f7e79f9745876713fc455f7f`)
 - `dist/claude-code/ponytail-audit.zip`  (SHA-256 `f6b878825b3e005d74d5617ac7170adef0660fd5c650fd4e0fb8db76d7f68aa4`)
+- `dist/claude-code/agent-consultant-vibecoder-project-skill-builder.zip`  (SHA-256 `194f1afd51b8e3a5878e7ec0313ff023990e2ccb39834c97d044a00451ed4f26`)
 
 Checksum files: `dist/SHA256SUMS.txt` and `dist/claude-code/SHA256SUMS.txt`. Source folders: `source/` (Claude.ai) and `source-claude-code/`.
 
@@ -42,7 +44,7 @@ Checksum files: `dist/SHA256SUMS.txt` and `dist/claude-code/SHA256SUMS.txt`. Sou
 | Already installed | None of the requested skills were present. |
 | Updated | None. |
 | Failed | None. |
-| Requires manual action | 1. Run `./install-claude-code-skills.sh` on your machine (verifies checksums, never overwrites, no sudo, no hooks) to add the 6 skills in `dist/claude-code/`. 2. Run the plugin commands below inside Claude Code. 3. Restart Claude Code. |
+| Requires manual action | 1. Run `./install-claude-code-skills.sh` on your machine (verifies checksums, never overwrites, no sudo, no hooks) to add the 7 skills in `dist/claude-code/`. 2. Run the plugin commands below inside Claude Code. 3. Restart Claude Code. |
 
 Claude Code uses the upstream names with no prefix (your decision). Plugin commands (official methods, NOT executed here, so unverified):
 
@@ -55,13 +57,13 @@ Claude Code uses the upstream names with no prefix (your decision). Plugin comma
 
 Do not install the Claude.ai ZIPs from `dist/` into Claude Code. The plugins give you those skills with full features, and installing both gives you every skill twice.
 
-Checks run: all 20 skills were discovered by Claude Code when placed in throwaway project folders (not `~/.claude`). The hotline skill was invoked once and listed its 8 phases correctly. The install script was tested against a throwaway folder (dry run, install, second run skipped everything).
+Checks run: all 22 skills (15 Claude.ai, 7 Claude Code) were discovered by Claude Code when placed in throwaway project folders (not `~/.claude`). The hotline skill was invoked once and listed its 8 phases correctly. The install script was tested against a throwaway folder (dry run, install, second run skipped everything).
 
 ## Claude.ai
 
 | Status | Items |
 |---|---|
-| ZIP ready | All 14 in `dist/` (9 core, 5 optional) |
+| ZIP ready | All 15 in `dist/` (9 core, 5 optional, 1 reusable builder) |
 | Adapted | All 13 third-party skills have an ADAPTATION-NOTES.md (the 14th, the hotline skill, is original). Ten have instruction edits: security-audit, diagram-design, ponytail, ponytail-audit, grilling, grill-with-docs, to-questionnaire, to-spec, to-tickets, codebase-design. Three have metadata edits plus an added note or guard only: domain-modeling, humanizer, ponytail-review. |
 | Not portable | `impeccable`, `graphify`, Matt Pocock `wayfinder` and `code-review` (Class C) |
 | Requires manual action | Upload each ZIP yourself. Anthropic's docs say Settings, then Features (label may differ), then upload a skill ZIP. Needs a plan with code execution enabled. Skills are per user and do not sync from Claude Code. |
@@ -82,6 +84,8 @@ Core set (9):
 
 Optional set (5): `agent-consultant-humanizer.zip`, `agent-consultant-ponytail.zip`, `agent-consultant-ponytail-audit.zip`, `agent-consultant-grill-with-docs.zip`, `agent-consultant-codebase-design.zip`. Upload `agent-consultant-grill-with-docs` together with `agent-consultant-grilling` and `agent-consultant-domain-modeling`.
 
+Reusable builder (1): `agent-consultant-vibecoder-project-skill-builder.zip`. Upload it when you want Claude.ai to create project skills for future projects.
+
 ## Limitations to know
 
 1. Claude.ai acceptance was not tested from here. Upload one small ZIP first (for example `agent-consultant-grilling.zip`).
@@ -93,6 +97,7 @@ Optional set (5): `agent-consultant-humanizer.zip`, `agent-consultant-ponytail.z
 7. Claude.ai descriptions are shortened to 200 characters or fewer, so trigger wording is less detailed than upstream.
 8. Naming: Claude.ai ZIPs use the `agent-consultant-` prefix. Claude Code skills and plugins use upstream names with no prefix (including `impeccable`).
 
+9. `agent-consultant-vibecoder-project-skill-builder` includes three Python scripts. They need code execution in Claude.ai, which I could not verify. Without it the skill builds files by hand and says validation was not run.
 ## Not installed, and why
 
 - Impeccable and Ponytail hooks: skipped by your decision.
