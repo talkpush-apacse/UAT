@@ -34,7 +34,7 @@ Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party
 - Upstream name: none (original skill)
 - Repository: Original (this project)
 - License: Original, no third-party content
-- Claude Code installation method: ZIP from dist/claude-code via install script
+- Claude Code installation method: ZIP from dist/claude-code via install script (Claude Code copy uses the name `employee-hotline-product-lead`, no prefix, and upstream-style names for the specialist skills)
 - Claude Code installation status: Not installed in container (ZIPs only, your decision). Discovered by Claude Code in a throwaway folder; invoked once and returned the 8 phases.
 - Claude.ai compatibility class: A
 - Adaptations made: None (original).
@@ -47,7 +47,7 @@ Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party
 - Upstream name: `security-audit`
 - Repository: https://github.com/cloudflare/security-audit-skill @ c1c8a8c
 - License: MIT (Cloudflare, Inc.)
-- Claude Code installation method: Upstream documents the Skills CLI (`npx skills add`). We ship a plain copy of the pinned folder (renamed) so no third-party package runs.
+- Claude Code installation method: Upstream documents the Skills CLI (`npx skills add`). We ship a plain copy of the pinned folder (unmodified, upstream name, no prefix) so no third-party package runs.
 - Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
 - Adaptations made: Frontmatter reduced, description shortened, renamed. Added 'Claude.ai availability' section: guidance mode only, full audit mode unavailable, findings labelled unverified, no running target code.
@@ -86,7 +86,7 @@ Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party
 - Upstream name: `ponytail`
 - Repository: https://github.com/DietrichGebert/ponytail @ bb0bdd7
 - License: MIT (DietrichGebert)
-- Claude Code installation method: Skill folder copied (renamed), hooks deliberately NOT installed (upstream plugin installs 3 hooks).
+- Claude Code installation method: Skill folder copied (unmodified, upstream name, no prefix), hooks deliberately NOT installed (upstream plugin installs 3 hooks).
 - Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
 - Adaptations made: Frontmatter reduced, description shortened, renamed. Slash-command levels replaced with asking in chat. 'Active every response' changed to 'active once invoked'. Added a guard under Boundaries that simplicity never removes security, privacy, authorization, auditability, integrity or confirmed client requirements (not in upstream).
@@ -99,7 +99,7 @@ Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party
 - Upstream name: `ponytail-review`
 - Repository: https://github.com/DietrichGebert/ponytail @ bb0bdd7
 - License: MIT (DietrichGebert)
-- Claude Code installation method: Skill folder copied (renamed), no hooks.
+- Claude Code installation method: Skill folder copied (unmodified, upstream name, no prefix), no hooks.
 - Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: A
 - Adaptations made: Frontmatter and description shortened, renamed. Added the same sensitive-project guard under Boundaries.
@@ -112,7 +112,7 @@ Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party
 - Upstream name: `ponytail-audit`
 - Repository: https://github.com/DietrichGebert/ponytail @ bb0bdd7
 - License: MIT (DietrichGebert)
-- Claude Code installation method: Skill folder copied (renamed), no hooks.
+- Claude Code installation method: Skill folder copied (unmodified, upstream name, no prefix), no hooks.
 - Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
 - Adaptations made: Frontmatter and description shortened, renamed. Added the same guard. It can only scan code the user shares.
@@ -213,12 +213,12 @@ Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party
 
 ## Not packaged for Claude.ai
 
-### impeccable (Class C), not renamed
+### impeccable (Class C)
 
 - Repository: https://github.com/pbakaus/impeccable @ e103efe. License: Apache-2.0 (NOTICE.md credits ehmo/platform-design-skills, MIT).
 - Why not for Claude.ai: its SKILL.md requires running a local engine program at the start of every session, and every command goes through it. The engine downloads a binary from GitHub Releases on first use.
 - Claude Code: unmodified upstream skill folder, hooks NOT installed. ZIP: dist/claude-code/impeccable.zip, SHA-256 `f721f649fce0fc3858252475fede1b5766d6f74a0ad4b74fa8206e4d41322aa7`.
-- Kept as `impeccable`, not `agent-consultant-impeccable`: its engine is a compiled program I cannot inspect, so I did not risk renaming the folder. Say the word and I will rename it and re-test.
+- Name: `impeccable` (no prefix, per your decision).
 - Claude.ai alternative: your existing `agent-consultant-ux-*` and `agent-consultant-product-design-frontend-ux` skills, plus the UX principles in `agent-consultant-employee-hotline-product-lead`.
 
 ### graphify (Class C)

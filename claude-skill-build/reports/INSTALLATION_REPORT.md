@@ -23,14 +23,14 @@ Repository folder (branch `claude/gifted-cerf-7r70ce`, draft PR https://github.c
 - `dist/agent-consultant-grill-with-docs.zip`  (SHA-256 `de58fe9a32db185fc5ae6c9668bc2cb4640cd0e85c344666fd9744656153ae28`)
 - `dist/agent-consultant-codebase-design.zip`  (SHA-256 `16aa06c22a416c80ff54e84ef93318ad1959d1d850b2175e6fca5d14d8c40709`)
 
-**Claude Code ZIPs (unmodified upstream apart from the rename, no hooks, 6): `claude-skill-build/dist/claude-code/`**
+**Claude Code ZIPs (unmodified upstream, upstream names with no prefix, no hooks, 6): `claude-skill-build/dist/claude-code/`**
 
-- `dist/claude-code/agent-consultant-employee-hotline-product-lead.zip`  (SHA-256 `48df7a90e330edb2f6f0e5f5309d1948c7613681aae9231006ae9975c16c3f7a`)
+- `dist/claude-code/employee-hotline-product-lead.zip`  (SHA-256 `580fd0b07c2ddd680507ac86f84469677f95957840097bae89e038e0cd5e78a6`)
 - `dist/claude-code/impeccable.zip`  (SHA-256 `f721f649fce0fc3858252475fede1b5766d6f74a0ad4b74fa8206e4d41322aa7`)
-- `dist/claude-code/agent-consultant-security-audit.zip`  (SHA-256 `a2497cec2443c3bd6ee35c7f6288609cf9a210237098246b3f7397df7a2b4a2a`)
-- `dist/claude-code/agent-consultant-ponytail.zip`  (SHA-256 `799eaf3fddf3eb6dd79caa337b56fc64eb17d15b7d36bb8b729e893039d0488d`)
-- `dist/claude-code/agent-consultant-ponytail-review.zip`  (SHA-256 `1ca4fcfa488da46716b499194694c6f51cf422ef141774e0bfac846fd6aa3cc3`)
-- `dist/claude-code/agent-consultant-ponytail-audit.zip`  (SHA-256 `bf31bf1dac2b19e79ac3a37ffdb776d33951322631f88cc06e9bb4378a8cdff7`)
+- `dist/claude-code/security-audit.zip`  (SHA-256 `69b5d9a92964c38902b3eabf23d7f98db9941466d627e0323ebb0de50d3cfc47`)
+- `dist/claude-code/ponytail.zip`  (SHA-256 `14dc553d77204f9f47967c26e69e188fb0e4249f0587bbdae19a432d8afacecb`)
+- `dist/claude-code/ponytail-review.zip`  (SHA-256 `e03f48e7f93a36839609dd7d8f2720726a1c7b51f7e79f9745876713fc455f7f`)
+- `dist/claude-code/ponytail-audit.zip`  (SHA-256 `f6b878825b3e005d74d5617ac7170adef0660fd5c650fd4e0fb8db76d7f68aa4`)
 
 Checksum files: `dist/SHA256SUMS.txt` and `dist/claude-code/SHA256SUMS.txt`. Source folders: `source/` (Claude.ai) and `source-claude-code/`.
 
@@ -44,7 +44,7 @@ Checksum files: `dist/SHA256SUMS.txt` and `dist/claude-code/SHA256SUMS.txt`. Sou
 | Failed | None. |
 | Requires manual action | 1. Run `./install-claude-code-skills.sh` on your machine (verifies checksums, never overwrites, no sudo, no hooks) to add the 6 skills in `dist/claude-code/`. 2. Run the plugin commands below inside Claude Code. 3. Restart Claude Code. |
 
-Plugin commands (official methods, NOT executed here, so unverified). Plugin skills keep their upstream names (no `agent-consultant-` prefix), because the plugin manager controls them:
+Claude Code uses the upstream names with no prefix (your decision). Plugin commands (official methods, NOT executed here, so unverified):
 
 ```
 /plugin marketplace add mattpocock/skills
@@ -53,7 +53,7 @@ Plugin commands (official methods, NOT executed here, so unverified). Plugin ski
 /plugin install diagram-design@diagram-design
 ```
 
-If you want the prefixed names in Claude Code instead, install the renamed Claude.ai ZIPs from `dist/` into `~/.claude/skills/` and skip the plugins. You lose some upstream features (see each ADAPTATION-NOTES.md). Do not do both.
+Do not install the Claude.ai ZIPs from `dist/` into Claude Code. The plugins give you those skills with full features, and installing both gives you every skill twice.
 
 Checks run: all 20 skills were discovered by Claude Code when placed in throwaway project folders (not `~/.claude`). The hotline skill was invoked once and listed its 8 phases correctly. The install script was tested against a throwaway folder (dry run, install, second run skipped everything).
 
@@ -91,7 +91,7 @@ Optional set (5): `agent-consultant-humanizer.zip`, `agent-consultant-ponytail.z
 5. `agent-consultant-ponytail` in Claude.ai applies only once invoked. No always-on mode, by design.
 6. Impeccable (Claude Code) downloads its engine on first use from GitHub Releases. Approve that deliberately.
 7. Claude.ai descriptions are shortened to 200 characters or fewer, so trigger wording is less detailed than upstream.
-8. `impeccable` is the only shipped skill without the prefix (reason in the portability report).
+8. Naming: Claude.ai ZIPs use the `agent-consultant-` prefix. Claude Code skills and plugins use upstream names with no prefix (including `impeccable`).
 
 ## Not installed, and why
 

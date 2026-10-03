@@ -228,65 +228,17 @@
     "zip": "dist/agent-consultant-to-tickets.zip",
     "zip_bytes": 4241
   },
-  "claude-code/agent-consultant-employee-hotline-product-lead": {
+  "claude-code/employee-hotline-product-lead": {
     "set": "claude-code",
     "errors": [],
     "warnings": [],
     "desc_len": 199,
     "files": 5,
-    "bytes": 39480,
+    "bytes": 39222,
     "binaries": [],
-    "sha256": "48df7a90e330edb2f6f0e5f5309d1948c7613681aae9231006ae9975c16c3f7a",
-    "zip": "dist/claude-code/agent-consultant-employee-hotline-product-lead.zip",
-    "zip_bytes": 17962
-  },
-  "claude-code/agent-consultant-ponytail": {
-    "set": "claude-code",
-    "errors": [],
-    "warnings": [],
-    "desc_len": 825,
-    "files": 3,
-    "bytes": 8223,
-    "binaries": [],
-    "sha256": "799eaf3fddf3eb6dd79caa337b56fc64eb17d15b7d36bb8b729e893039d0488d",
-    "zip": "dist/claude-code/agent-consultant-ponytail.zip",
-    "zip_bytes": 4815
-  },
-  "claude-code/agent-consultant-ponytail-audit": {
-    "set": "claude-code",
-    "errors": [],
-    "warnings": [],
-    "desc_len": 400,
-    "files": 3,
-    "bytes": 3256,
-    "binaries": [],
-    "sha256": "bf31bf1dac2b19e79ac3a37ffdb776d33951322631f88cc06e9bb4378a8cdff7",
-    "zip": "dist/claude-code/agent-consultant-ponytail-audit.zip",
-    "zip_bytes": 2455
-  },
-  "claude-code/agent-consultant-ponytail-review": {
-    "set": "claude-code",
-    "errors": [],
-    "warnings": [],
-    "desc_len": 456,
-    "files": 3,
-    "bytes": 3990,
-    "binaries": [],
-    "sha256": "1ca4fcfa488da46716b499194694c6f51cf422ef141774e0bfac846fd6aa3cc3",
-    "zip": "dist/claude-code/agent-consultant-ponytail-review.zip",
-    "zip_bytes": 2825
-  },
-  "claude-code/agent-consultant-security-audit": {
-    "set": "claude-code",
-    "errors": [],
-    "warnings": [],
-    "desc_len": 359,
-    "files": 22,
-    "bytes": 316291,
-    "binaries": [],
-    "sha256": "a2497cec2443c3bd6ee35c7f6288609cf9a210237098246b3f7397df7a2b4a2a",
-    "zip": "dist/claude-code/agent-consultant-security-audit.zip",
-    "zip_bytes": 108387
+    "sha256": "580fd0b07c2ddd680507ac86f84469677f95957840097bae89e038e0cd5e78a6",
+    "zip": "dist/claude-code/employee-hotline-product-lead.zip",
+    "zip_bytes": 17698
   },
   "claude-code/impeccable": {
     "set": "claude-code",
@@ -299,5 +251,53 @@
     "sha256": "f721f649fce0fc3858252475fede1b5766d6f74a0ad4b74fa8206e4d41322aa7",
     "zip": "dist/claude-code/impeccable.zip",
     "zip_bytes": 841779
+  },
+  "claude-code/ponytail": {
+    "set": "claude-code",
+    "errors": [],
+    "warnings": [],
+    "desc_len": 825,
+    "files": 3,
+    "bytes": 8029,
+    "binaries": [],
+    "sha256": "14dc553d77204f9f47967c26e69e188fb0e4249f0587bbdae19a432d8afacecb",
+    "zip": "dist/claude-code/ponytail.zip",
+    "zip_bytes": 4583
+  },
+  "claude-code/ponytail-audit": {
+    "set": "claude-code",
+    "errors": [],
+    "warnings": [],
+    "desc_len": 400,
+    "files": 3,
+    "bytes": 3050,
+    "binaries": [],
+    "sha256": "f6b878825b3e005d74d5617ac7170adef0660fd5c650fd4e0fb8db76d7f68aa4",
+    "zip": "dist/claude-code/ponytail-audit.zip",
+    "zip_bytes": 2220
+  },
+  "claude-code/ponytail-review": {
+    "set": "claude-code",
+    "errors": [],
+    "warnings": [],
+    "desc_len": 456,
+    "files": 3,
+    "bytes": 3782,
+    "binaries": [],
+    "sha256": "e03f48e7f93a36839609dd7d8f2720726a1c7b51f7e79f9745876713fc455f7f",
+    "zip": "dist/claude-code/ponytail-review.zip",
+    "zip_bytes": 2590
+  },
+  "claude-code/security-audit": {
+    "set": "claude-code",
+    "errors": [],
+    "warnings": [],
+    "desc_len": 359,
+    "files": 22,
+    "bytes": 316085,
+    "binaries": [],
+    "sha256": "69b5d9a92964c38902b3eabf23d7f98db9941466d627e0323ebb0de50d3cfc47",
+    "zip": "dist/claude-code/security-audit.zip",
+    "zip_bytes": 107509
   }
 }

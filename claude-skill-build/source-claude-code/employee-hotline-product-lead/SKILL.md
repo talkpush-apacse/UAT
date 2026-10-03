@@ -1,5 +1,5 @@
 ---
-name: agent-consultant-employee-hotline-product-lead
+name: employee-hotline-product-lead
 description: Use when planning, defining, reviewing or preparing Replit handoffs for an employee hotline, HR hotline, ethics or whistleblowing portal, workplace complaint portal or employee relations case system.
 ---
 
@@ -51,16 +51,16 @@ Phases 6 and 7 repeat per milestone. If review in phase 7 finds a problem that t
 
 | Need | Skill | Use it for |
 |---|---|---|
-| Requirements discovery | `agent-consultant-grilling`, `agent-consultant-grill-with-docs`, `agent-consultant-to-questionnaire` | Stress-testing the idea round by round, building a glossary, producing questionnaires for HR, legal, or the client |
-| Specification and planning | `agent-consultant-to-spec`, `agent-consultant-to-tickets`, `agent-consultant-domain-modeling` | Turning agreed decisions into a spec and thin vertical milestones |
-| Architecture review | `agent-consultant-codebase-design` | Module and interface vocabulary during system design and review |
-| Security | `agent-consultant-security-audit` | Threat modeling and application security review in guidance mode. Full multi-agent audit only in Claude Code |
-| Diagrams | `agent-consultant-diagram-design` | Workflows, architecture, trust boundaries, entity diagrams, user journeys, state machines |
+| Requirements discovery | `grilling`, `grill-with-docs`, `to-questionnaire` | Stress-testing the idea round by round, building a glossary, producing questionnaires for HR, legal, or the client |
+| Specification and planning | `to-spec`, `to-tickets`, `domain-modeling` | Turning agreed decisions into a spec and thin vertical milestones |
+| Architecture review | `codebase-design` | Module and interface vocabulary during system design and review |
+| Security | `security-audit` | Threat modeling and application security review in guidance mode. Full multi-agent audit only in Claude Code |
+| Diagrams | `diagram-design` | Workflows, architecture, trust boundaries, entity diagrams, user journeys, state machines |
 | UI and UX | An Impeccable-style design review, if available (Claude Code), otherwise the UX principles below | Accessibility, visual hierarchy, forms, responsive checks |
-| Simplicity | `agent-consultant-ponytail-review`, `agent-consultant-ponytail-audit` | Finding needless dependencies and abstractions |
-| Copy | `agent-consultant-humanizer` | Ordinary UI copy only. See the copy rule below |
+| Simplicity | `ponytail-review`, `ponytail-audit` | Finding needless dependencies and abstractions |
+| Copy | `humanizer` | Ordinary UI copy only. See the copy rule below |
 
-In Claude Code, skills installed from plugins keep their upstream names (for example `grilling`, `to-spec`, `diagram-design`). Use whichever name is installed.
+In Claude Code these skills use their upstream names, without a prefix (plugins and copied folders alike). Use whichever name is installed.
 
 ## Employee hotline security principles
 
@@ -108,7 +108,7 @@ People may be reporting harassment, retaliation, discrimination, fraud, miscondu
 
 ## Copy and the Humanizer rule
 
-If `agent-consultant-humanizer` or similar editing is used, it may improve ordinary UI text, tooltips, empty states, general emails, and help text. It must not freely rewrite approved legal notices, privacy statements, whistleblower protections, consent language, compliance text, or data-retention disclosures. Any change to those goes to the owner as a marked suggestion, never as a silent edit.
+If `humanizer` or similar editing is used, it may improve ordinary UI text, tooltips, empty states, general emails, and help text. It must not freely rewrite approved legal notices, privacy statements, whistleblower protections, consent language, compliance text, or data-retention disclosures. Any change to those goes to the owner as a marked suggestion, never as a silent edit.
 
 ## Replit handoffs
 

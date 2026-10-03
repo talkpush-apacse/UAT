@@ -1,5 +1,5 @@
 ---
-name: agent-consultant-ponytail-review
+name: ponytail-review
 description: >
   Code review focused exclusively on over-engineering. Finds what to delete:
   reinvented standard library, unneeded dependencies, speculative abstractions,
