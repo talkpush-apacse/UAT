@@ -1,222 +1,237 @@
 # Claude.ai portability report
 
-Generated 2026-10-03. Third-party skills are minimally adapted copies, not the official upstream versions. Every change is listed in each skill's ADAPTATION-NOTES.md.
+Generated 2026-10-03. All skills use the `agent-consultant-` prefix. Third-party skills are minimally adapted copies, not the official upstream versions. Every change is listed in each skill's ADAPTATION-NOTES.md, including the rename from the upstream name.
 
 **Not verified:** the ZIPs were validated structurally and discovered by Claude Code in a throwaway project folder. They were NOT uploaded to Claude.ai from this environment, so Claude.ai acceptance is unconfirmed.
 
-**Class key:** A = portable directly (metadata edits and small additions only). B = portable with adaptation (instructions edited). C = Claude Code only (no meaningful Claude.ai version).
+**Class key:** A = portable directly (metadata edits and small additions only). B = portable with adaptation (instructions edited). C = Claude Code only.
 
-**Description limit:** the Claude.ai help center states 200 characters for the description; the platform docs state 1024. The two disagree, so every Claude.ai ZIP uses 200 or fewer. Names are lowercase letters, numbers and hyphens and contain no reserved words.
+**Description limit:** the Claude.ai help center states 200 characters; the platform docs state 1024. They disagree, so every Claude.ai ZIP uses 200 or fewer. Names use lowercase letters, numbers and hyphens, no reserved words, 64 characters or fewer.
 
 ## Packaged for Claude.ai
 
-| Skill | Repository | License | Class | ZIP | SHA-256 |
-|---|---|---|---|---|---|
-| employee-hotline-product-lead | Original (this project) | Original, no third-party content | A | dist/employee-hotline-product-lead.zip | `1f34faa4482ae7db6b081df1f7617d51bf22e32d0519ccaf672ca3c9fcdea29d` |
-| security-audit | https://github.com/cloudflare/security-audit-skill @ c1c8a8c | MIT (Cloudflare, Inc.) | B | dist/security-audit.zip | `a022fc03082dcc928f3c0c43a1615a9415d5d58f6060455cb984d4709b689848` |
-| diagram-design | https://github.com/cathrynlavery/diagram-design @ f903933 | MIT (Cathryn Lavery) plus THIRD_PARTY_LICENSES.md | B | dist/diagram-design.zip | `4bc6de31d0fb762c5477bb15be74d03de04e361953367ef914ea01ea944981d1` |
-| humanizer | https://github.com/blader/humanizer @ 225a6f3 | MIT (Siqi Chen) | A | dist/humanizer.zip | `a2025c47dd8e73278a2e9ac6ae7e8d840d9aea0fc8183ea88e1cdf684d765343` |
-| ponytail | https://github.com/DietrichGebert/ponytail @ bb0bdd7 | MIT (DietrichGebert) | B | dist/ponytail.zip | `d7b7cd8d6115b2404764beb35c5f79073e9ad0699e7fca8604960fe9927174e0` |
-| ponytail-review | https://github.com/DietrichGebert/ponytail @ bb0bdd7 | MIT (DietrichGebert) | A | dist/ponytail-review.zip | `fc0ba4e6f7be2b7927a7c177f02e704442e93df54589a9ce451cc60eaa1cf113` |
-| ponytail-audit | https://github.com/DietrichGebert/ponytail @ bb0bdd7 | MIT (DietrichGebert) | B | dist/ponytail-audit.zip | `f7fb88651612df09176b1421a5f9e5d1fa00bf9d45d647866d97067b96e293de` |
-| grilling | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | dist/grilling.zip | `43926a3990d9d54b4bbad9172554c6b2cc3572b16e4fe0edc91b0086a553a928` |
-| grill-with-docs | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | dist/grill-with-docs.zip | `e896968f6c23c9989350fe7c33c7743b32e5057d1cbe40eb81cf95ef4fefbb53` |
-| domain-modeling | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | A | dist/domain-modeling.zip | `16207482bbf9ba639f846a0772941e4ac7f9357934bacf7e044e6ec725409b46` |
-| to-questionnaire | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | dist/to-questionnaire.zip | `8beb0816989d7ddc2ebc068e1f4a8134e7ffce6252c379bebd267888eea0f3bf` |
-| to-spec | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | dist/to-spec.zip | `d8b8507d882ef44d4bbde3ec99e1d7fc1f2c9b1d01e74f1c6f32cf1cea99e1ae` |
-| to-tickets | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | dist/to-tickets.zip | `68c065cfa3d950360a120ff5b1501885f0bc97eed6291af99bd574f1744cdb42` |
-| codebase-design | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | dist/codebase-design.zip | `fca4040f04d5059e7fce4df49022d9ea05577b96d51f2ac4b554db5c5a118f84` |
+| Skill | Repository | License | Class | Set | ZIP | SHA-256 |
+|---|---|---|---|---|---|---|
+| agent-consultant-employee-hotline-product-lead | Original (this project) | Original, no third-party content | A | core | dist/agent-consultant-employee-hotline-product-lead.zip | `48df7a90e330edb2f6f0e5f5309d1948c7613681aae9231006ae9975c16c3f7a` |
+| agent-consultant-security-audit | https://github.com/cloudflare/security-audit-skill @ c1c8a8c | MIT (Cloudflare, Inc.) | B | core | dist/agent-consultant-security-audit.zip | `02999c753f243e61939bc9fc851df5b6a171615f319860125276ce9f44f582e3` |
+| agent-consultant-diagram-design | https://github.com/cathrynlavery/diagram-design @ f903933 | MIT (Cathryn Lavery) plus THIRD_PARTY_LICENSES.md | B | core | dist/agent-consultant-diagram-design.zip | `56853c29cf67f6dd4a6882afa0b6b227fb54c8136555d4fd84afb0a7a0134bd9` |
+| agent-consultant-humanizer | https://github.com/blader/humanizer @ 225a6f3 | MIT (Siqi Chen) | A | optional | dist/agent-consultant-humanizer.zip | `becf2018c178c75bf75ea664399bf92178adf92c485ce07c51124404cf092e89` |
+| agent-consultant-ponytail | https://github.com/DietrichGebert/ponytail @ bb0bdd7 | MIT (DietrichGebert) | B | optional | dist/agent-consultant-ponytail.zip | `9330d33d59e38cbe38f476d682975799787a6245190cd9182eb11bad0ec90ce0` |
+| agent-consultant-ponytail-review | https://github.com/DietrichGebert/ponytail @ bb0bdd7 | MIT (DietrichGebert) | A | core | dist/agent-consultant-ponytail-review.zip | `e607af9b35095e2cd47793c009b8aa5837b03ed68522189f43d0b935d889eabf` |
+| agent-consultant-ponytail-audit | https://github.com/DietrichGebert/ponytail @ bb0bdd7 | MIT (DietrichGebert) | B | optional | dist/agent-consultant-ponytail-audit.zip | `6f73122d32bedc94f8bb300ecd8c3d2e004b61934e148c1fd91ad7c5c4ce46c7` |
+| agent-consultant-grilling | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | core | dist/agent-consultant-grilling.zip | `4119a4441521e5d11c933e6d677ccd812b75cc1e0bba6e1b1cafa7d39d466343` |
+| agent-consultant-grill-with-docs | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | optional | dist/agent-consultant-grill-with-docs.zip | `de58fe9a32db185fc5ae6c9668bc2cb4640cd0e85c344666fd9744656153ae28` |
+| agent-consultant-domain-modeling | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | A | core | dist/agent-consultant-domain-modeling.zip | `50281d102c32f6bf74f04ab7d7fa7ed641ce1431288a06ff77f2da44934a3179` |
+| agent-consultant-to-questionnaire | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | core | dist/agent-consultant-to-questionnaire.zip | `ab2fbc7eeca9bb282f57d252426dd61f27025622f4d27f81a7e42123124a4b42` |
+| agent-consultant-to-spec | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | core | dist/agent-consultant-to-spec.zip | `21c9c681321c7cfae8e54b442e1f5830796cdbd67be1e874e8e59a8301bab6ce` |
+| agent-consultant-to-tickets | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | core | dist/agent-consultant-to-tickets.zip | `eb22385a4a52d8e28efaf7ff163f5e0e001a05d5dcd735dd5de14577b1d445a8` |
+| agent-consultant-codebase-design | https://github.com/mattpocock/skills @ d81f3a1 | MIT (Matt Pocock) | B | optional | dist/agent-consultant-codebase-design.zip | `16aa06c22a416c80ff54e84ef93318ad1959d1d850b2175e6fca5d14d8c40709` |
 
 ## Per-skill detail
 
-### employee-hotline-product-lead
+### agent-consultant-employee-hotline-product-lead
 
+- Upstream name: none (original skill)
 - Repository: Original (this project)
 - License: Original, no third-party content
-- Claude Code installation method: Copy ZIP into ~/.claude/skills (script provided)
-- Claude Code installation status: Not installed in the cloud container (your decision). ZIP discovered by Claude Code in a throwaway project folder, and a harmless invocation returned the 8 phases correctly.
+- Claude Code installation method: ZIP from dist/claude-code via install script
+- Claude Code installation status: Not installed in container (ZIPs only, your decision). Discovered by Claude Code in a throwaway folder; invoked once and returned the 8 phases.
 - Claude.ai compatibility class: A
 - Adaptations made: None (original).
 - Features unavailable in Claude.ai: None.
-- ZIP filename: dist/employee-hotline-product-lead.zip
-- SHA-256: `1f34faa4482ae7db6b081df1f7617d51bf22e32d0519ccaf672ca3c9fcdea29d`
+- ZIP filename: dist/agent-consultant-employee-hotline-product-lead.zip
+- SHA-256: `48df7a90e330edb2f6f0e5f5309d1948c7613681aae9231006ae9975c16c3f7a`
 
-### security-audit
+### agent-consultant-security-audit
 
+- Upstream name: `security-audit`
 - Repository: https://github.com/cloudflare/security-audit-skill @ c1c8a8c
 - License: MIT (Cloudflare, Inc.)
-- Claude Code installation method: Upstream documents the Skills CLI (`npx skills add`). Plan used a plain copy of the pinned folder instead, so no third-party package runs.
-- Claude Code installation status: Not installed in container. Claude Code ZIP discovered in throwaway folder.
+- Claude Code installation method: Upstream documents the Skills CLI (`npx skills add`). We ship a plain copy of the pinned folder (renamed) so no third-party package runs.
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
-- Adaptations made: Frontmatter reduced and description shortened. Added 'Claude.ai availability' section: guidance mode only, full audit mode unavailable, findings must be labelled unverified, no running target code.
+- Adaptations made: Frontmatter reduced, description shortened, renamed. Added 'Claude.ai availability' section: guidance mode only, full audit mode unavailable, findings labelled unverified, no running target code.
 - Features unavailable in Claude.ai: Full audit mode: sub-agents, sandboxed execution, run directory, coverage ledger, independent verification.
-- ZIP filename: dist/security-audit.zip
-- SHA-256: `a022fc03082dcc928f3c0c43a1615a9415d5d58f6060455cb984d4709b689848`
+- ZIP filename: dist/agent-consultant-security-audit.zip
+- SHA-256: `02999c753f243e61939bc9fc851df5b6a171615f319860125276ce9f44f582e3`
 
-### diagram-design
+### agent-consultant-diagram-design
 
+- Upstream name: `diagram-design`
 - Repository: https://github.com/cathrynlavery/diagram-design @ f903933
 - License: MIT (Cathryn Lavery) plus THIRD_PARTY_LICENSES.md
-- Claude Code installation method: Official plugin: `/plugin marketplace add cathrynlavery/diagram-design` then `/plugin install diagram-design@diagram-design` (no hooks).
-- Claude Code installation status: Not installed in container. Plugin commands NOT executed here, so unverified. Run them on your machine.
+- Claude Code installation method: Official plugin (keeps upstream name `diagram-design`): `/plugin marketplace add cathrynlavery/diagram-design` then `/plugin install diagram-design@diagram-design` (no hooks).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision). Plugin commands NOT executed here, so unverified.
 - Claude.ai compatibility class: B
-- Adaptations made: Frontmatter reduced and description shortened. Added 'Claude.ai availability' section. Known unresolved references to repository-only maintainer scripts, same as upstream's installed skill.
+- Adaptations made: Frontmatter reduced, description shortened, renamed. Added 'Claude.ai availability' section. Known unresolved references to repository-only maintainer scripts, same as upstream's installed skill.
 - Features unavailable in Claude.ai: Plugin slash commands, saved brand profiles and project markers, PNG export without Playwright.
-- ZIP filename: dist/diagram-design.zip
-- SHA-256: `4bc6de31d0fb762c5477bb15be74d03de04e361953367ef914ea01ea944981d1`
+- ZIP filename: dist/agent-consultant-diagram-design.zip
+- SHA-256: `56853c29cf67f6dd4a6882afa0b6b227fb54c8136555d4fd84afb0a7a0134bd9`
 
-### humanizer
+### agent-consultant-humanizer
 
+- Upstream name: `humanizer`
 - Repository: https://github.com/blader/humanizer @ 225a6f3
 - License: MIT (Siqi Chen)
 - Claude Code installation method: Official plugin: `/plugin marketplace add blader/humanizer` then `/plugin install humanizer@humanizer`.
-- Claude Code installation status: Optional, not installed. Plugin commands not executed.
+- Claude Code installation status: Optional. Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: A
-- Adaptations made: Frontmatter reduced (removed license and metadata keys) and description shortened. Added a scope guard excluding legal, privacy, consent, whistleblower, compliance and retention text. Dropped agents/openai.yaml and scripts/validate-package.py.
+- Adaptations made: Frontmatter reduced (license, metadata removed), description shortened, renamed. Added a scope guard excluding legal, privacy, consent, whistleblower, compliance and retention text. Dropped agents/openai.yaml and scripts/validate-package.py.
 - Features unavailable in Claude.ai: None of substance.
-- ZIP filename: dist/humanizer.zip
-- SHA-256: `a2025c47dd8e73278a2e9ac6ae7e8d840d9aea0fc8183ea88e1cdf684d765343`
+- ZIP filename: dist/agent-consultant-humanizer.zip
+- SHA-256: `becf2018c178c75bf75ea664399bf92178adf92c485ce07c51124404cf092e89`
 
-### ponytail
+### agent-consultant-ponytail
 
+- Upstream name: `ponytail`
 - Repository: https://github.com/DietrichGebert/ponytail @ bb0bdd7
 - License: MIT (DietrichGebert)
-- Claude Code installation method: Skill folder copied, hooks deliberately NOT installed (upstream plugin installs 3 hooks).
-- Claude Code installation status: Not installed in container. Claude Code ZIP is the unmodified upstream skill.
+- Claude Code installation method: Skill folder copied (renamed), hooks deliberately NOT installed (upstream plugin installs 3 hooks).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
-- Adaptations made: Frontmatter reduced and description shortened. Slash-command levels replaced with asking in chat. 'Active every response' changed to 'active once invoked'. Added a guard under Boundaries that simplicity never removes security, privacy, authorization, auditability, integrity or confirmed client requirements (not in upstream).
+- Adaptations made: Frontmatter reduced, description shortened, renamed. Slash-command levels replaced with asking in chat. 'Active every response' changed to 'active once invoked'. Added a guard under Boundaries that simplicity never removes security, privacy, authorization, auditability, integrity or confirmed client requirements (not in upstream).
 - Features unavailable in Claude.ai: Hooks, /ponytail slash commands, statusline, subagent injection.
-- ZIP filename: dist/ponytail.zip
-- SHA-256: `d7b7cd8d6115b2404764beb35c5f79073e9ad0699e7fca8604960fe9927174e0`
+- ZIP filename: dist/agent-consultant-ponytail.zip
+- SHA-256: `9330d33d59e38cbe38f476d682975799787a6245190cd9182eb11bad0ec90ce0`
 
-### ponytail-review
+### agent-consultant-ponytail-review
 
+- Upstream name: `ponytail-review`
 - Repository: https://github.com/DietrichGebert/ponytail @ bb0bdd7
 - License: MIT (DietrichGebert)
-- Claude Code installation method: Skill folder copied, no hooks.
-- Claude Code installation status: Not installed in container.
+- Claude Code installation method: Skill folder copied (renamed), no hooks.
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: A
-- Adaptations made: Frontmatter and description shortened. Added the same sensitive-project guard under Boundaries.
+- Adaptations made: Frontmatter and description shortened, renamed. Added the same sensitive-project guard under Boundaries.
 - Features unavailable in Claude.ai: /ponytail-review slash command.
-- ZIP filename: dist/ponytail-review.zip
-- SHA-256: `fc0ba4e6f7be2b7927a7c177f02e704442e93df54589a9ce451cc60eaa1cf113`
+- ZIP filename: dist/agent-consultant-ponytail-review.zip
+- SHA-256: `e607af9b35095e2cd47793c009b8aa5837b03ed68522189f43d0b935d889eabf`
 
-### ponytail-audit
+### agent-consultant-ponytail-audit
 
+- Upstream name: `ponytail-audit`
 - Repository: https://github.com/DietrichGebert/ponytail @ bb0bdd7
 - License: MIT (DietrichGebert)
-- Claude Code installation method: Skill folder copied, no hooks.
-- Claude Code installation status: Not installed in container.
+- Claude Code installation method: Skill folder copied (renamed), no hooks.
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
-- Adaptations made: Frontmatter and description shortened. Added the same guard. Note that it can only scan code the user shares.
+- Adaptations made: Frontmatter and description shortened, renamed. Added the same guard. It can only scan code the user shares.
 - Features unavailable in Claude.ai: /ponytail-audit slash command; scanning an unshared repository.
-- ZIP filename: dist/ponytail-audit.zip
-- SHA-256: `f7fb88651612df09176b1421a5f9e5d1fa00bf9d45d647866d97067b96e293de`
+- ZIP filename: dist/agent-consultant-ponytail-audit.zip
+- SHA-256: `6f73122d32bedc94f8bb300ecd8c3d2e004b61934e148c1fd91ad7c5c4ce46c7`
 
-### grilling
+### agent-consultant-grilling
 
+- Upstream name: `grilling`
 - Repository: https://github.com/mattpocock/skills @ d81f3a1
 - License: MIT (Matt Pocock)
-- Claude Code installation method: Official plugin: `/plugin marketplace add mattpocock/skills` then `/plugin install mattpocock-skills@mattpocock` (managed, no hooks, all 27 skills).
-- Claude Code installation status: Not installed in container. Plugin commands NOT executed here, so unverified.
+- Claude Code installation method: Official plugin (keeps upstream name `grilling`): `/plugin marketplace add mattpocock/skills` then `/plugin install mattpocock-skills@mattpocock`. Or install the renamed ZIP from dist/ instead (fewer features, see ADAPTATION-NOTES.md).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision). Plugin commands NOT executed here, so unverified.
 - Claude.ai compatibility class: B
-- Adaptations made: Replaced the sub-agent lookup sentence with direct lookup or an explicit unconfirmed assumption.
+- Adaptations made: Renamed. Replaced the sub-agent lookup sentence with direct lookup or an explicit unconfirmed assumption.
 - Features unavailable in Claude.ai: Sub-agents.
-- ZIP filename: dist/grilling.zip
-- SHA-256: `43926a3990d9d54b4bbad9172554c6b2cc3572b16e4fe0edc91b0086a553a928`
+- ZIP filename: dist/agent-consultant-grilling.zip
+- SHA-256: `4119a4441521e5d11c933e6d677ccd812b75cc1e0bba6e1b1cafa7d39d466343`
 
-### grill-with-docs
+### agent-consultant-grill-with-docs
 
+- Upstream name: `grill-with-docs`
 - Repository: https://github.com/mattpocock/skills @ d81f3a1
 - License: MIT (Matt Pocock)
-- Claude Code installation method: Via the same plugin.
-- Claude Code installation status: Not installed in container.
+- Claude Code installation method: Official plugin (keeps upstream name `grill-with-docs`): `/plugin marketplace add mattpocock/skills` then `/plugin install mattpocock-skills@mattpocock`. Or install the renamed ZIP from dist/ instead (fewer features, see ADAPTATION-NOTES.md).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
-- Adaptations made: Replaced 'call the Skill tool twice' with an instruction to apply grilling and domain-modeling, with a fallback if either is missing (fallback wording is new). Removed disable-model-invocation.
+- Adaptations made: Renamed. Replaced 'call the Skill tool twice' with an instruction to apply the renamed grilling and domain-modeling skills, with a fallback if either is missing (fallback wording is new). Removed disable-model-invocation.
 - Features unavailable in Claude.ai: Skill tool invocation.
-- ZIP filename: dist/grill-with-docs.zip
-- SHA-256: `e896968f6c23c9989350fe7c33c7743b32e5057d1cbe40eb81cf95ef4fefbb53`
+- ZIP filename: dist/agent-consultant-grill-with-docs.zip
+- SHA-256: `de58fe9a32db185fc5ae6c9668bc2cb4640cd0e85c344666fd9744656153ae28`
 
-### domain-modeling
+### agent-consultant-domain-modeling
 
+- Upstream name: `domain-modeling`
 - Repository: https://github.com/mattpocock/skills @ d81f3a1
 - License: MIT (Matt Pocock)
-- Claude Code installation method: Via the same plugin.
-- Claude Code installation status: Not installed in container.
+- Claude Code installation method: Official plugin (keeps upstream name `domain-modeling`): `/plugin marketplace add mattpocock/skills` then `/plugin install mattpocock-skills@mattpocock`. Or install the renamed ZIP from dist/ instead (fewer features, see ADAPTATION-NOTES.md).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: A
-- Adaptations made: Added a note: GLOSSARY.md and ADRs are delivered as documents, not written to a repository.
+- Adaptations made: Renamed. Added a note: GLOSSARY.md and ADRs are delivered as documents, not written to a repository.
 - Features unavailable in Claude.ai: Writing into a repository.
-- ZIP filename: dist/domain-modeling.zip
-- SHA-256: `16207482bbf9ba639f846a0772941e4ac7f9357934bacf7e044e6ec725409b46`
+- ZIP filename: dist/agent-consultant-domain-modeling.zip
+- SHA-256: `50281d102c32f6bf74f04ab7d7fa7ed641ce1431288a06ff77f2da44934a3179`
 
-### to-questionnaire
+### agent-consultant-to-questionnaire
 
+- Upstream name: `to-questionnaire`
 - Repository: https://github.com/mattpocock/skills @ d81f3a1
 - License: MIT (Matt Pocock)
-- Claude Code installation method: Via the same plugin.
-- Claude Code installation status: Not installed in container.
+- Claude Code installation method: Official plugin (keeps upstream name `to-questionnaire`): `/plugin marketplace add mattpocock/skills` then `/plugin install mattpocock-skills@mattpocock`. Or install the renamed ZIP from dist/ instead (fewer features, see ADAPTATION-NOTES.md).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
-- Adaptations made: Delivery as file or in chat instead of writing to the current directory. Removed disable-model-invocation.
+- Adaptations made: Renamed. Delivery as file or in chat instead of writing to the current directory. Removed disable-model-invocation.
 - Features unavailable in Claude.ai: Writing to a working directory.
-- ZIP filename: dist/to-questionnaire.zip
-- SHA-256: `8beb0816989d7ddc2ebc068e1f4a8134e7ffce6252c379bebd267888eea0f3bf`
+- ZIP filename: dist/agent-consultant-to-questionnaire.zip
+- SHA-256: `ab2fbc7eeca9bb282f57d252426dd61f27025622f4d27f81a7e42123124a4b42`
 
-### to-spec
+### agent-consultant-to-spec
 
+- Upstream name: `to-spec`
 - Repository: https://github.com/mattpocock/skills @ d81f3a1
 - License: MIT (Matt Pocock)
-- Claude Code installation method: Via the same plugin.
-- Claude Code installation status: Not installed in container.
+- Claude Code installation method: Official plugin (keeps upstream name `to-spec`): `/plugin marketplace add mattpocock/skills` then `/plugin install mattpocock-skills@mattpocock`. Or install the renamed ZIP from dist/ instead (fewer features, see ADAPTATION-NOTES.md).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
-- Adaptations made: Removed dependency on /setup-matt-pocock-skills and the issue tracker. Spec is delivered as a Markdown document. Description rewritten.
+- Adaptations made: Renamed. Removed dependency on /setup-matt-pocock-skills and the issue tracker. Spec is delivered as a Markdown document. Description rewritten.
 - Features unavailable in Claude.ai: Publishing to an issue tracker, triage labels.
-- ZIP filename: dist/to-spec.zip
-- SHA-256: `d8b8507d882ef44d4bbde3ec99e1d7fc1f2c9b1d01e74f1c6f32cf1cea99e1ae`
+- ZIP filename: dist/agent-consultant-to-spec.zip
+- SHA-256: `21c9c681321c7cfae8e54b442e1f5830796cdbd67be1e874e8e59a8301bab6ce`
 
-### to-tickets
+### agent-consultant-to-tickets
 
+- Upstream name: `to-tickets`
 - Repository: https://github.com/mattpocock/skills @ d81f3a1
 - License: MIT (Matt Pocock)
-- Claude Code installation method: Via the same plugin.
-- Claude Code installation status: Not installed in container.
+- Claude Code installation method: Official plugin (keeps upstream name `to-tickets`): `/plugin marketplace add mattpocock/skills` then `/plugin install mattpocock-skills@mattpocock`. Or install the renamed ZIP from dist/ instead (fewer features, see ADAPTATION-NOTES.md).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
-- Adaptations made: Step 5 replaced: tickets are delivered as Markdown in dependency order. Removed dependency on /setup-matt-pocock-skills. Description rewritten.
+- Adaptations made: Renamed. Step 5 replaced: tickets are delivered as Markdown in dependency order. Removed dependency on /setup-matt-pocock-skills. Description rewritten.
 - Features unavailable in Claude.ai: Publishing to a tracker, native blocking links.
-- ZIP filename: dist/to-tickets.zip
-- SHA-256: `68c065cfa3d950360a120ff5b1501885f0bc97eed6291af99bd574f1744cdb42`
+- ZIP filename: dist/agent-consultant-to-tickets.zip
+- SHA-256: `eb22385a4a52d8e28efaf7ff163f5e0e001a05d5dcd735dd5de14577b1d445a8`
 
-### codebase-design
+### agent-consultant-codebase-design
 
+- Upstream name: `codebase-design`
 - Repository: https://github.com/mattpocock/skills @ d81f3a1
 - License: MIT (Matt Pocock)
-- Claude Code installation method: Via the same plugin.
-- Claude Code installation status: Not installed in container.
+- Claude Code installation method: Official plugin (keeps upstream name `codebase-design`): `/plugin marketplace add mattpocock/skills` then `/plugin install mattpocock-skills@mattpocock`. Or install the renamed ZIP from dist/ instead (fewer features, see ADAPTATION-NOTES.md).
+- Claude Code installation status: Not installed in container (ZIPs only, your decision).
 - Claude.ai compatibility class: B
-- Adaptations made: Clarified that the design-it-twice exercise runs sequentially. DESIGN-IT-TWICE.md unchanged and still describes sub-agents.
+- Adaptations made: Renamed. Clarified that the design-it-twice exercise runs sequentially. DESIGN-IT-TWICE.md unchanged and still describes sub-agents.
 - Features unavailable in Claude.ai: Parallel sub-agents.
-- ZIP filename: dist/codebase-design.zip
-- SHA-256: `fca4040f04d5059e7fce4df49022d9ea05577b96d51f2ac4b554db5c5a118f84`
+- ZIP filename: dist/agent-consultant-codebase-design.zip
+- SHA-256: `16aa06c22a416c80ff54e84ef93318ad1959d1d850b2175e6fca5d14d8c40709`
 
 ## Not packaged for Claude.ai
 
-### impeccable (Class C)
+### impeccable (Class C), not renamed
 
 - Repository: https://github.com/pbakaus/impeccable @ e103efe. License: Apache-2.0 (NOTICE.md credits ehmo/platform-design-skills, MIT).
-- Why not: its SKILL.md requires running a local engine program (`scripts/impeccable context`) at the start of every session, and every command goes through it. The engine downloads a binary from GitHub Releases on first use. Without it the skill is not meaningful.
-- Claude Code: unmodified upstream skill folder, hooks NOT installed. ZIP: dist/claude-code/impeccable.zip, SHA-256 `f721f649fce0fc3858252475fede1b5766d6f74a0ad4b74fa8206e4d41322aa7`. First use will try to download the engine into `~/.impeccable/bin/`; the launcher checks it against a checksum file from the same release page.
-- Claude.ai alternative: your existing `agent-consultant-ux-*` and `product-design-frontend-ux` skills, plus the UX principles in `employee-hotline-product-lead`.
+- Why not for Claude.ai: its SKILL.md requires running a local engine program at the start of every session, and every command goes through it. The engine downloads a binary from GitHub Releases on first use.
+- Claude Code: unmodified upstream skill folder, hooks NOT installed. ZIP: dist/claude-code/impeccable.zip, SHA-256 `f721f649fce0fc3858252475fede1b5766d6f74a0ad4b74fa8206e4d41322aa7`.
+- Kept as `impeccable`, not `agent-consultant-impeccable`: its engine is a compiled program I cannot inspect, so I did not risk renaming the folder. Say the word and I will rename it and re-test.
+- Claude.ai alternative: your existing `agent-consultant-ux-*` and `agent-consultant-product-design-frontend-ux` skills, plus the UX principles in `agent-consultant-employee-hotline-product-lead`.
 
 ### graphify (Class C)
 
 - Repository: https://github.com/Graphify-Labs/graphify @ 0b60d47. License: Apache-2.0 (plus MIT file and NOTICE).
-- Why not: it is a local Python command-line tool (about 30 dependencies) that builds a graph from a repository, and its installer edits CLAUDE.md and adds a hook. Parked until you have a large repository to map. Not installed, not packaged.
+- Why not: a local Python command-line tool (about 30 dependencies) whose installer edits CLAUDE.md and adds a hook. Not installed, not packaged. This is the one optional skill that cannot be included.
 
 ### Matt Pocock skills not packaged
 
-- `wayfinder` (Class C): its core mechanic is a shared map on an issue tracker with assignee claims and parallel sessions.
-- `code-review` (Class C): needs `git diff` on a repository and parallel sub-agents. Use the review finding template in `employee-hotline-product-lead` instead.
-- The other upstream skills (tdd, implement, triage, and so on) were not in the approved set. They are available in Claude Code through the plugin.
+- `wayfinder` (Class C): core mechanic is a shared map on an issue tracker with assignee claims and parallel sessions.
+- `code-review` (Class C): needs `git diff` on a repository and parallel sub-agents. Use the review finding template in the hotline skill instead.
+- The other upstream skills were not in the approved set. They are available in Claude Code through the plugin.
 
-## Overlap with skills you already have in Claude.ai
+## Name collisions and overlap
 
-`diagram-design` overlaps with `agent-assistant-workflow-diagrammer`. `humanizer` overlaps with `agent-consultant-natural-writing-voice-writing-books`. `ponytail-*` and `security-audit` have no direct equivalent. If triggering feels crowded, upload the core set first (see INSTALLATION_REPORT.md).
+No new name collides with your existing skills. Topic overlap: `agent-consultant-diagram-design` with `agent-assistant-workflow-diagrammer`; `agent-consultant-humanizer` with `agent-consultant-natural-writing-voice-writing-books`.

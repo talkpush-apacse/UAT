@@ -1,6 +1,6 @@
 # Employee Hotline Skills: Discovery and Proposed Plan
 
-**Update 2026-10-03:** the plan below was approved with these decisions: (1) no installs in the container, ZIPs only, for both Claude.ai and local Claude Code; (2) skip the Impeccable and Ponytail hooks; (3) Matt Pocock reco accepted, and after reading the skills the Claude.ai set became 7 (`wayfinder` and `code-review` were dropped as Claude Code only). Results are in INSTALLATION_REPORT.md. The text below is the original discovery record.
+**Update 2026-10-03:** the plan below was approved with these decisions: (1) no installs in the container, ZIPs only, for both Claude.ai and local Claude Code; (2) skip the Impeccable and Ponytail hooks; (3) Matt Pocock reco accepted, and after reading the skills the Claude.ai set became 7 (`wayfinder` and `code-review` were dropped as Claude Code only). Later change: all shipped skills were renamed with the `agent-consultant-` prefix (except `impeccable`), and the 5 optional skills were included. Results are in INSTALLATION_REPORT.md. The text below is the original discovery record.
 
 Status when written: DISCOVERY ONLY. Nothing has been installed. No Claude settings were changed.
 Date: 2026-10-03
