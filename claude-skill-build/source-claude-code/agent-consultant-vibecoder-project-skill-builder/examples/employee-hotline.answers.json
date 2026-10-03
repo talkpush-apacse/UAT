@@ -1,0 +1,162 @@
+{
+  "skill_name": "agent-consultant-example-hotline-product-lead",
+  "description": "EXAMPLE ONLY. Use when planning, defining, reviewing or preparing handoffs for an employee hotline, ethics or whistleblowing portal, or workplace complaint case system.",
+  "project_label": "Employee Hotline",
+  "project_aliases": [
+    "HR hotline",
+    "ethics hotline",
+    "whistleblowing portal",
+    "workplace complaint portal",
+    "employee relations case portal"
+  ],
+  "purpose": "The portal may hold highly sensitive employee information.",
+  "builder_tool": "Replit",
+  "reviewer_tool": "Claude Code",
+  "security_principles": [
+    "anonymous reporting",
+    "confidential reporting",
+    "reporter identity protection",
+    "authentication",
+    "authorization",
+    "role-based access",
+    "case-level access",
+    "investigator scope",
+    "administrator privileges",
+    "evidence and file uploads",
+    "file metadata",
+    "malware and file handling",
+    "API exposure",
+    "private investigator notes",
+    "audit logs",
+    "audit-log integrity",
+    "session security",
+    "secrets",
+    "notifications",
+    "sensitive application logging",
+    "analytics and tracking",
+    "data retention",
+    "deletion",
+    "cross-tenant isolation (if applicable)",
+    "business-unit isolation (if applicable)"
+  ],
+  "domain_notes_md": "### Anonymous versus confidential\n\nThese are different promises. Never blur them.\n\n- **Anonymous reporting:** the application does not intentionally identify the reporter beyond what is necessary and explicitly disclosed.\n- **Confidential or identified reporting:** the application knows who the reporter is, but access to that identity is restricted to named roles.\n\nBefore using the word \"anonymous\" in any spec, screen, or message, check each of these for anything that could identify the reporter: IP address logging, reverse proxy and CDN logs, analytics and tracking, cookies, authentication, session identifiers, browser and device identifiers, uploaded-file metadata, application logs, notification systems (email, SMS, push).\n\nIf any of these can identify the reporter and cannot be removed, the honest options are: remove it, redesign, or describe the limit in the reporter-facing text (with owner approval of the wording). Record the decision.",
+  "never_claim": [
+    "Never claim the system provides true anonymity unless the architecture actually supports it.",
+    "Never describe a path as anonymous if the reporter can be identified through any item in the list above."
+  ],
+  "ux_principles": [
+    "People may be reporting harassment, retaliation, discrimination, fraud, misconduct, workplace safety issues, or other sensitive concerns. The interface should feel safe, not like a marketing site.",
+    "Trust, calm, and clarity over visual impact. No flashy styling, no urgency tricks, no celebratory animations.",
+    "Accessible by default (keyboard use, screen readers, contrast, readable text size, plain language).",
+    "Works well on a phone. Many reporters will not use a work laptop.",
+    "Say clearly, at the point of decision, what is anonymous, what is confidential, who can see the report, and what is stored. Wording of these statements needs approval from the client owner (legal, HR, or compliance).",
+    "Short, simple forms. Ask only what the case process needs.",
+    "Safe confirmation states: tell the reporter what happens next, how to follow up, and how to keep their reference code. Never show information that could expose another person.",
+    "Offer help for people in distress or immediate danger according to the client's approved guidance. Do not write that guidance yourself."
+  ],
+  "protected_text": [
+    "legal notices",
+    "privacy statements",
+    "whistleblower protections",
+    "consent language",
+    "compliance text",
+    "data-retention disclosures"
+  ],
+  "specialist_skills": [
+    {
+      "need": "Requirements discovery",
+      "skill": "agent-consultant-grilling",
+      "use": "Stress-testing the idea round by round"
+    },
+    {
+      "need": "Specification and planning",
+      "skill": "agent-consultant-to-spec",
+      "use": "Turning agreed decisions into a spec"
+    },
+    {
+      "need": "Security",
+      "skill": "agent-consultant-security-audit",
+      "use": "Threat modeling and application security review in guidance mode"
+    },
+    {
+      "need": "Diagrams",
+      "skill": "agent-consultant-diagram-design",
+      "use": "Workflows, architecture, trust boundaries, state machines"
+    },
+    {
+      "need": "Simplicity",
+      "skill": "agent-consultant-ponytail-review",
+      "use": "Finding needless dependencies and abstractions"
+    }
+  ],
+  "open_question_examples": [
+    "who may report (employees only, contractors, third parties)",
+    "whether anonymous reporting is offered at all",
+    "who may see reporter identity",
+    "how long data is kept",
+    "which regions' employees use it",
+    "single-company or multi-tenant",
+    "which channels exist beyond the web portal"
+  ],
+  "open_items": [
+    "Example only: this file demonstrates the answers format and is not a real project."
+  ],
+  "phase_extras": {
+    "2": [
+      "Reporting modes offered: anonymous, confidential, or both, and exactly what each means in this product.",
+      "Conflict-of-interest handling (what happens if the report is about an investigator or administrator).",
+      "Reporter follow-up, especially if anonymous."
+    ],
+    "3": [
+      "Where reporter identity is stored and who can reach it."
+    ],
+    "4": [
+      "Reporter-facing explanations of anonymity and confidentiality, and who approves the wording."
+    ],
+    "5": [
+      "Run the anonymity analysis for every identifier listed in SKILL.md."
+    ],
+    "8": [
+      "A plan for a suspected exposure of reporter identity."
+    ]
+  },
+  "handoff_security_checks": [
+    "Anonymous paths do not capture or store identifiers (see the approved anonymity analysis).",
+    "Investigator-only notes cannot be returned by any reporter-facing endpoint."
+  ],
+  "handoff_ux_checks": [
+    "Legal, privacy, consent, and anonymity text is used exactly as approved."
+  ],
+  "checklist_domain_sections": [
+    {
+      "title": "Reporting modes",
+      "items": [
+        "The spec defines exactly what \"anonymous\" and \"confidential\" mean in this product.",
+        "The product never uses the word \"anonymous\" for a path where the reporter can be identified.",
+        "Reporter-facing text about anonymity and confidentiality is approved by the client owner."
+      ]
+    },
+    {
+      "title": "Case content",
+      "items": [
+        "Private investigator notes are separate from reporter-visible content.",
+        "A person named in a case cannot access or administer it."
+      ]
+    }
+  ],
+  "checklist_extra_md": "### Anonymity threat table (check every row for anonymous reports)\n\n| Possible identifier | Question | Result |\n|---|---|---|\n| IP address | Is it logged by the app, proxy, CDN, or hosting platform? For how long? Who can read it? | |\n| Cookies and sessions | Do any persist or identify a person? | |\n| Analytics and tracking | Are any loaded on reporting pages? | |\n| Uploaded-file metadata | Are author, device, and location data removed or disclosed? | |\n| Notifications | Do messages pass through a provider that sees the content? | |",
+  "review_categories": [
+    "Security",
+    "Privacy and anonymity",
+    "Authorization",
+    "Audit logging",
+    "Data integrity",
+    "Retention and deletion",
+    "Functional (spec mismatch)",
+    "UX and accessibility",
+    "Copy and legal text",
+    "Simplicity",
+    "Documentation"
+  ],
+  "version": "1.0.0"
+}

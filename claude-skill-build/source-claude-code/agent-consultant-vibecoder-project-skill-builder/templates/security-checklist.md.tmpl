@@ -1,0 +1,107 @@
+# Security and privacy checklist: {{project_label}}
+
+Use in phase 5 (design review), phase 7 (implementation review), and phase 8 (production readiness).
+
+For each item record: **Met / Gap / Not applicable / Unknown**, plus the **evidence** (where you saw it) or the **question** to resolve. Unknown is not a pass. This checklist supports a review. It is not a certification and does not replace a professional security assessment or legal advice.
+
+Sections 1 to 10 are a general baseline for web applications. The domain-specific section after them was drafted from interview answers and needs review by someone who knows the domain.
+
+## 1. Authentication and sessions
+
+- [ ] Users authenticate with a method the client has approved (for example single sign-on with multi-factor for staff).
+- [ ] No shared accounts. No default or hardcoded credentials.
+- [ ] Session lifetime, idle timeout, and logout behavior are defined.
+- [ ] Session cookies are protected against script access and sent only over secure connections.
+- [ ] Password reset and account recovery cannot be used to take over accounts.
+- [ ] Rate limiting or lockout exists on sign-in and on any public lookup endpoint.
+
+## 2. Authorization and access
+
+- [ ] Roles are defined and match the approved spec.
+- [ ] Access is checked on the server for every request, not only hidden in the interface.
+- [ ] Users see only the records they are meant to see (record-level access).
+- [ ] Privileged and administrator accounts have the least access they need, and their use is reviewed.
+- [ ] Record identifiers in links or APIs cannot be changed to reach another user's data.
+- [ ] If multi-tenant: one tenant cannot read, list, or infer another tenant's data.
+- [ ] Search, lists, and exports respect the same access rules as the record view.
+
+## 3. Input and API exposure
+
+- [ ] Every endpoint is listed, with the role allowed to call it.
+- [ ] No endpoint returns more fields than the caller needs.
+- [ ] Input is validated on the server. Error messages do not leak internals.
+- [ ] Public endpoints are protected against abuse and enumeration.
+- [ ] Cross-origin settings are as narrow as possible.
+- [ ] Admin and debug endpoints are not exposed to the public.
+
+## 4. File uploads (mark Not applicable if there are none)
+
+- [ ] Allowed file types and sizes are defined.
+- [ ] Files are scanned for malware before anyone can open them, or the risk is accepted and recorded.
+- [ ] Files are stored outside the web root, with access checked per record.
+- [ ] File names are not trusted (no path traversal, no execution).
+- [ ] File metadata handling is defined.
+- [ ] Downloads are served with safe headers so they cannot run in the browser.
+- [ ] Files are included in retention and deletion rules and in backups.
+
+## 5. Secrets and configuration
+
+- [ ] No secrets in the code, repository, client-side code, or logs.
+- [ ] Secrets are kept in the platform's secret store and rotated on a schedule and after any exposure.
+- [ ] Separate secrets and separate databases for development, testing, and production.
+- [ ] Least-privilege credentials for the database and third-party services.
+
+## 6. Logging, monitoring, analytics
+
+- [ ] Application and error logs exclude sensitive content, tokens, and personal identifiers beyond what is needed.
+- [ ] Monitoring alerts do not include sensitive content.
+- [ ] Third-party analytics, tracking pixels, and session replay are absent or explicitly approved and assessed.
+- [ ] Reports and statistics avoid small groups that can identify people, where that matters.
+
+## 7. Audit trail (if the spec requires one)
+
+- [ ] Logged events are listed: sign-ins and failures, record created, viewed, edited, status changed, exports, role and permission changes, deletions.
+- [ ] Each entry records who, what, when, and which record, without storing sensitive content.
+- [ ] Integrity: entries cannot be edited or deleted by the people they record, or tampering is detectable. State which.
+- [ ] Retention for the audit trail is approved by the client, and someone reviews it on a schedule.
+
+## 8. Data retention and deletion
+
+- [ ] Retention periods per data type are confirmed by the client.
+- [ ] Deletion actually removes data from the database, file storage, search indexes, caches, and backups within a stated period.
+- [ ] Legal hold, if needed, is defined.
+- [ ] User-facing text about retention matches what the system does.
+
+## 9. Notifications
+
+- [ ] Each notification type is listed with recipient, channel, and content.
+- [ ] Messages do not include sensitive details, only a neutral prompt to sign in, unless the spec says otherwise.
+- [ ] The notification provider's access to content and recipient data is understood and approved.
+
+## 10. Platform and delivery
+
+- [ ] Data stays in the regions the client approved.
+- [ ] Transport encryption is enforced. Data at rest is encrypted.
+- [ ] Backups are protected, tested, and covered by deletion rules.
+- [ ] Dependencies are listed, kept to what is needed, and checked for known vulnerabilities.
+- [ ] Production and test data are separate. Real production data is never used for testing.
+- [ ] A development database separate from production exists and is confirmed before feature work.
+- [ ] An incident plan exists.
+
+## 11. Domain-specific checks for {{project_label}}
+
+{{checklist_domain_note}}
+
+{{#if checklist_domain_sections}}{{sections:checklist_domain_sections}}{{/if}}
+
+{{checklist_extra_md}}
+
+## 12. Verdicts
+
+| Verdict | Meaning |
+|---|---|
+| Ready | No open critical or high items. Unknowns are low impact and recorded. |
+| Ready with conditions | Open items have an approved exception, an owner, and a date. |
+| Not ready | Any critical or high item open, or an Unknown on a critical item. |
+
+State the verdict with the scope of what was actually reviewed (design only, one milestone, or the full system) and what was not verified.
