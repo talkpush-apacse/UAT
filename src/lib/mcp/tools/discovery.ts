@@ -23,17 +23,6 @@ export function registerDiscoveryTools(server: McpServer) {
             "Search query — matches UAT checklist title or company name (case-insensitive, partial match)"
           ),
       },
-      outputSchema: {
-        results: z
-          .array(
-            z.object({
-              id: z.string().describe("UAT checklist slug — pass this as `id` to the fetch tool"),
-              title: z.string().describe("Display title formatted as 'Company — Checklist Title'"),
-              url: z.string().describe("Public tester URL for the UAT checklist"),
-            })
-          )
-          .describe("Matching UAT checklists, up to 20, ordered by creation date descending"),
-      },
     },
     async ({ query }) => {
       const supabase = createAdminClient();
@@ -76,19 +65,6 @@ export function registerDiscoveryTools(server: McpServer) {
           .describe(
             "The UAT checklist id (slug) returned from the search tool"
           ),
-      },
-      outputSchema: {
-        id: z.string().describe("UAT checklist slug"),
-        title: z.string().describe("Display title formatted as 'Company — Checklist Title'"),
-        text: z.string().describe("Full UAT checklist document as markdown-formatted text including test scenario and all UAT steps"),
-        url: z.string().describe("Public tester URL for the UAT checklist"),
-        metadata: z.object({
-          company_name: z.string(),
-          project_title: z.string().nullable(),
-          slug: z.string(),
-          created_at: z.string().nullable().describe("ISO 8601 timestamp"),
-          total_steps: z.number().describe("Number of testable UAT steps (phase headers excluded)"),
-        }),
       },
     },
     async ({ id }) => {
