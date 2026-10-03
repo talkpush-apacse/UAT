@@ -1,6 +1,8 @@
 # Employee Hotline Skills: Discovery and Proposed Plan
 
-Status: DISCOVERY ONLY. Nothing has been installed. No Claude settings were changed.
+**Update 2026-10-03:** the plan below was approved with these decisions: (1) no installs in the container, ZIPs only, for both Claude.ai and local Claude Code; (2) skip the Impeccable and Ponytail hooks; (3) Matt Pocock reco accepted, and after reading the skills the Claude.ai set became 7 (`wayfinder` and `code-review` were dropped as Claude Code only). Results are in INSTALLATION_REPORT.md. The text below is the original discovery record.
+
+Status when written: DISCOVERY ONLY. Nothing has been installed. No Claude settings were changed.
 Date: 2026-10-03
 Upstream clones used for inspection live in the session scratchpad (not in this repo). All were shallow clones of the default branch, pinned below.
 
