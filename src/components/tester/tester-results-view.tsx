@@ -292,7 +292,7 @@ export default function TesterResultsView({
                   </div>
 
                   {/* Action — promoted to heading */}
-                  <p className="text-base font-medium text-gray-900 leading-snug whitespace-pre-line">
+                  <p className="text-base font-medium text-gray-900 leading-snug whitespace-pre-line [overflow-wrap:anywhere]">
                     {cleanedAction}
                   </p>
 
@@ -307,7 +307,7 @@ export default function TesterResultsView({
                       {response.status}
                     </span>
                     {response.comment ? (
-                      <p className="mt-1 text-gray-600 leading-relaxed whitespace-pre-line">
+                      <p className="mt-1 text-gray-600 leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">
                         {response.comment}
                       </p>
                     ) : (
@@ -326,7 +326,7 @@ export default function TesterResultsView({
                           Talkpush Response
                         </p>
                       </div>
-                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">
                         {review.notes}
                       </p>
                     </div>

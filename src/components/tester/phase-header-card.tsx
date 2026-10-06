@@ -2,8 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Bookmark, Lightbulb } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import rehypeSanitize from "rehype-sanitize"
+import RichText from "./rich-text"
 
 /**
  * Visual section divider rendered for `item_type === 'phase_header'`.
@@ -40,20 +39,26 @@ export default function PhaseHeaderCard({
               )}
             </div>
 
-            <div className="prose prose-sm prose-gray max-w-none text-base leading-relaxed text-gray-800
-              prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
-              prose-strong:text-gray-900 prose-a:text-brand-lavender-darker prose-a:no-underline hover:prose-a:underline">
-              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{action}</ReactMarkdown>
-            </div>
+            <RichText
+              linkClassName="text-brand-lavender-darker"
+              className="prose prose-sm prose-gray max-w-none text-base leading-relaxed text-gray-800
+                prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
+                prose-strong:text-gray-900"
+            >
+              {action}
+            </RichText>
 
             {tip && (
               <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
                 <Lightbulb className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                <div className="text-sm text-amber-800 leading-relaxed prose prose-sm max-w-none
-                  prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900
-                  prose-a:text-amber-700">
+                <div className="min-w-0 flex-1 text-sm text-amber-800 leading-relaxed">
                   <span className="font-semibold">Tip: </span>
-                  <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{tip}</ReactMarkdown>
+                  <RichText
+                    linkClassName="text-amber-900"
+                    className="prose prose-sm max-w-none prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900"
+                  >
+                    {tip}
+                  </RichText>
                 </div>
               </div>
             )}

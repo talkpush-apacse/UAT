@@ -11,7 +11,7 @@ export default function MarkdownRenderer({
   className?: string
 }) {
   return (
-    <div className={`prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-brand-sage-darker prose-strong:text-gray-900 prose-li:my-0.5 ${className}`}>
+    <div className={`[overflow-wrap:anywhere] prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-brand-sage-darker prose-strong:text-gray-900 prose-li:my-0.5 ${className}`}>
       <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
         {content}
       </ReactMarkdown>

@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Lightbulb, Eye, ExternalLink } from "lucide-react"
 import FileUpload from "./file-upload"
-import ReactMarkdown from "react-markdown"
-import rehypeSanitize from "rehype-sanitize"
+import RichText from "./rich-text"
 import { resolveViewSampleUrl } from "@/lib/utils/sample-url"
 import { errorCategoryFor, trackEvent, type StepContext } from "@/lib/mixpanel"
 
@@ -134,34 +133,6 @@ function getCardStyles(status: string | null): string {
     default:
       return "border-l-4 border-l-brand-sage-lighter bg-white"
   }
-}
-
-/**
- * Splits `text` into alternating plain-text and URL segments and returns
- * them as React-renderable nodes. Detected http/https URLs become <a> tags.
- */
-function AutoLink({ text }: { text: string }) {
-  const URL_PATTERN = /(https?:\/\/[^\s<>"]+)/g
-  const parts = text.split(URL_PATTERN)
-  return (
-    <>
-      {parts.map((part, i) =>
-        URL_PATTERN.test(part) ? (
-          <a
-            key={i}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-brand-sage-darker underline underline-offset-2 hover:text-primary break-all"
-          >
-            {part}
-          </a>
-        ) : (
-          <span key={i}>{part}</span>
-        )
-      )}
-    </>
-  )
 }
 
 export default function ChecklistItem({
@@ -406,37 +377,27 @@ export default function ChecklistItem({
             </div>
 
         {/* === INSTRUCTION ZONE — Issue #6: URLs auto-linked via prose-a styles === */}
-        <div className="prose prose-sm prose-gray max-w-none mb-4 text-base leading-relaxed text-gray-800
-          prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
-          prose-strong:text-gray-900 prose-a:text-brand-sage-darker prose-a:no-underline hover:prose-a:underline">
-          <ReactMarkdown
-            rehypePlugins={[rehypeSanitize]}
-            components={{
-              // Override plain-text <p> nodes to auto-linkify bare URLs — #6
-              p: ({ children }) => (
-                <p>
-                  {typeof children === "string" ? (
-                    <AutoLink text={children} />
-                  ) : (
-                    children
-                  )}
-                </p>
-              ),
-            }}
-          >
-            {item.action}
-          </ReactMarkdown>
-        </div>
+        <RichText
+          linkClassName="text-brand-sage-darker hover:text-primary"
+          className="prose prose-sm prose-gray max-w-none mb-4 text-base leading-relaxed text-gray-800
+            prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
+            prose-strong:text-gray-900"
+        >
+          {item.action}
+        </RichText>
 
         {/* === TIP CALLOUT === */}
         {item.tip && (
           <div className="mb-4 flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
             <Lightbulb className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-            <div className="text-sm text-amber-800 leading-relaxed prose prose-sm max-w-none
-              prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900
-              prose-a:text-amber-700">
+            <div className="min-w-0 flex-1 text-sm text-amber-800 leading-relaxed">
               <span className="font-semibold">Tip: </span>
-              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{item.tip}</ReactMarkdown>
+              <RichText
+                linkClassName="text-amber-900"
+                className="prose prose-sm max-w-none prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900"
+              >
+                {item.tip}
+              </RichText>
             </div>
           </div>
         )}
