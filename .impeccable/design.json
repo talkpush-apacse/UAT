@@ -1,0 +1,479 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-06T10:03:45Z",
+  "title": "Design System: Talkpush UAT Tester Pages",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Ink",
+        "canonical": "hsl(240 10% 8%)",
+        "tonalRamp": [
+          "#16161a",
+          "#323237",
+          "#525257",
+          "#747479",
+          "#98989d",
+          "#bdbdc3",
+          "#dddde3",
+          "#f1f1f7"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "hsl(60 100% 98%)",
+        "tonalRamp": [
+          "#171610",
+          "#33332c",
+          "#53534b",
+          "#75756c",
+          "#999990",
+          "#bebeb5",
+          "#dfdfd5",
+          "#f3f3e9"
+        ]
+      },
+      "card-white": {
+        "role": "neutral",
+        "displayName": "Card White",
+        "canonical": "hsl(0 0% 100%)",
+        "tonalRamp": [
+          "#161616",
+          "#333333",
+          "#525252",
+          "#747474",
+          "#989898",
+          "#bebebe",
+          "#dedede",
+          "#f2f2f2"
+        ]
+      },
+      "ink-cream": {
+        "role": "neutral",
+        "displayName": "Ink Cream",
+        "canonical": "hsl(50 30% 92%)",
+        "tonalRamp": [
+          "#18160e",
+          "#35332b",
+          "#54534a",
+          "#76756b",
+          "#9a998e",
+          "#c0beb3",
+          "#e0ded3",
+          "#f4f2e7"
+        ]
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "hsl(60 30% 95%)",
+        "tonalRamp": [
+          "#161611",
+          "#33332d",
+          "#53534c",
+          "#75756e",
+          "#999991",
+          "#bebeb7",
+          "#dfdfd7",
+          "#f2f2ea"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Secondary Text",
+        "canonical": "#374151",
+        "tonalRamp": [
+          "#0e1624",
+          "#2a3343",
+          "#495364",
+          "#6a7587",
+          "#8d99ac",
+          "#b2bfd2",
+          "#d2dff3",
+          "#ebf2ff"
+        ]
+      },
+      "text-body": {
+        "role": "neutral",
+        "displayName": "Body Text",
+        "canonical": "#1f2937",
+        "tonalRamp": [
+          "#0d1623",
+          "#293442",
+          "#485363",
+          "#6a7586",
+          "#8d99ab",
+          "#b2bfd1",
+          "#d2dff2",
+          "#eaf3fe"
+        ]
+      },
+      "placeholder-gray": {
+        "role": "neutral",
+        "displayName": "Placeholder Gray",
+        "canonical": "hsl(240 5% 45%)",
+        "tonalRamp": [
+          "#15151e",
+          "#32323b",
+          "#51515c",
+          "#73737e",
+          "#9797a3",
+          "#bcbcc9",
+          "#dddde9",
+          "#f0f0fd"
+        ]
+      },
+      "sage-wash": {
+        "role": "tertiary",
+        "displayName": "Sage Wash",
+        "canonical": "hsl(139 25% 93%)",
+        "tonalRamp": [
+          "#121814",
+          "#2e3530",
+          "#4d5550",
+          "#6f7771",
+          "#929b95",
+          "#b8c0ba",
+          "#d8e1db",
+          "#ebf4ee"
+        ]
+      },
+      "lavender-wash": {
+        "role": "tertiary",
+        "displayName": "Lavender Wash",
+        "canonical": "hsl(223 55% 94%)",
+        "tonalRamp": [
+          "#13161e",
+          "#2f333c",
+          "#4e525c",
+          "#70747f",
+          "#9498a3",
+          "#b9bec9",
+          "#d9deea",
+          "#edf2fe"
+        ]
+      },
+      "amber-wash": {
+        "role": "tertiary",
+        "displayName": "Amber Wash",
+        "canonical": "hsl(36 75% 92%)",
+        "tonalRamp": [
+          "#1d1407",
+          "#3b3122",
+          "#5b5141",
+          "#7d7362",
+          "#a29785",
+          "#c8bcaa",
+          "#e8dcca",
+          "#fcf0dd"
+        ]
+      },
+      "brand-amber": {
+        "role": "tertiary",
+        "displayName": "Brand Amber",
+        "canonical": "#f2b457",
+        "tonalRamp": [
+          "#211301",
+          "#462d00",
+          "#6e4b0e",
+          "#9a6a16",
+          "#c78b27",
+          "#efb154",
+          "#fdd7a3",
+          "#ffefdb"
+        ]
+      },
+      "brand-pink": {
+        "role": "tertiary",
+        "displayName": "Brand Pink",
+        "canonical": "#f1c1f3",
+        "tonalRamp": [
+          "#28032a",
+          "#48214a",
+          "#6a416c",
+          "#8e6390",
+          "#b386b5",
+          "#daabdc",
+          "#fccbfe",
+          "#feeaff"
+        ]
+      },
+      "brand-lavender": {
+        "role": "tertiary",
+        "displayName": "Brand Lavender",
+        "canonical": "#bbcaf0",
+        "tonalRamp": [
+          "#0b142f",
+          "#27314f",
+          "#455172",
+          "#667496",
+          "#8a98bc",
+          "#aebde3",
+          "#d1defe",
+          "#edf2fe"
+        ]
+      },
+      "brand-sage": {
+        "role": "tertiary",
+        "displayName": "Brand Sage",
+        "canonical": "#accdb5",
+        "tonalRamp": [
+          "#011c0b",
+          "#1e3a27",
+          "#3d5b46",
+          "#5f7d67",
+          "#82a28b",
+          "#a7c7b0",
+          "#c6e8cf",
+          "#dafce3"
+        ]
+      },
+      "status-pass": {
+        "role": "secondary",
+        "displayName": "Pass Green",
+        "canonical": "#15803d",
+        "tonalRamp": [
+          "#001d08",
+          "#063e1a",
+          "#0b632d",
+          "#258a46",
+          "#50af69",
+          "#77d68e",
+          "#98f8ad",
+          "#d4ffdb"
+        ]
+      },
+      "status-fail": {
+        "role": "secondary",
+        "displayName": "Fail Red",
+        "canonical": "#b91c1c",
+        "tonalRamp": [
+          "#310202",
+          "#640507",
+          "#9d080f",
+          "#cc342e",
+          "#f85e52",
+          "#fba398",
+          "#fed2cc",
+          "#feedeb"
+        ]
+      },
+      "status-na": {
+        "role": "secondary",
+        "displayName": "N/A Slate",
+        "canonical": "#374151",
+        "tonalRamp": [
+          "#0e1624",
+          "#2a3343",
+          "#495364",
+          "#6a7587",
+          "#8d99ac",
+          "#b2bfd2",
+          "#d2dff3",
+          "#ebf2ff"
+        ]
+      },
+      "status-blocked": {
+        "role": "secondary",
+        "displayName": "Blocked Orange",
+        "canonical": "#c2410c",
+        "tonalRamp": [
+          "#2d0800",
+          "#5a1b05",
+          "#8d2f0a",
+          "#c44310",
+          "#ef6a3f",
+          "#fda387",
+          "#fdd4c6",
+          "#ffeee8"
+        ]
+      },
+      "status-review": {
+        "role": "secondary",
+        "displayName": "Review Amber",
+        "canonical": "#b45309",
+        "tonalRamp": [
+          "#280d00",
+          "#522304",
+          "#823b08",
+          "#b6540c",
+          "#de793d",
+          "#fea575",
+          "#fdd4bf",
+          "#ffeee6"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Title",
+        "purpose": "Client name in the sticky header and page headings."
+      },
+      "instruction": {
+        "displayName": "Instruction",
+        "purpose": "The step text; the largest copy on the page."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Tips, comments, helper lines, results text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Actor, field labels, save state, counts."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Status buttons and actions."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "color-transition",
+        "value": "150ms ease",
+        "purpose": "Hover fill changes on outline controls. Nothing else animates."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Step badge",
+      "kind": "chip",
+      "refersTo": "step-badge",
+      "description": "Dark label that names the step number on each card.",
+      "html": "<span class=\"ds-step-badge\">Step 2</span>",
+      "css": ".ds-step-badge{display:inline-block;background:hsl(240 10% 8%);color:hsl(50 30% 92%);font:700 14px/1.2 'DM Sans', ui-sans-serif, system-ui, sans-serif;padding:4px 10px;border-radius:6px;white-space:nowrap}"
+    },
+    {
+      "name": "Status buttons",
+      "kind": "custom",
+      "refersTo": "status-button",
+      "description": "Five outline answers; only the chosen one fills with its status colour.",
+      "html": "<div class=\"ds-status-row\"><button class=\"ds-status ds-on\">Pass</button><button class=\"ds-status\">Fail</button><button class=\"ds-status\">N/A</button><button class=\"ds-status\">Blocked</button><button class=\"ds-status\">Up For Review</button></div>",
+      "css": ".ds-status-row{display:flex;gap:8px;flex-wrap:wrap}.ds-status{flex:1;min-width:76px;min-height:48px;background:#fff;color:hsl(240 10% 8%);border:2px solid hsl(240 10% 8%);border-radius:6px;font:700 15px/1.2 'DM Sans', ui-sans-serif, system-ui, sans-serif;padding:8px 12px;cursor:pointer;transition:background .15s}.ds-status:hover{background:hsl(60 30% 95%)}.ds-status:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px hsl(240 10% 8%);}.ds-status.ds-on{background:#15803d;color:#fff}"
+    },
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action in a view: Next, Submit Test, Continue.",
+      "html": "<button class=\"ds-btn-primary\">Next</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:hsl(240 10% 8%);color:hsl(50 30% 92%);border:2px solid hsl(240 10% 8%);border-radius:9px;padding:12px 24px;font:700 16px/1.2 'DM Sans', ui-sans-serif, system-ui, sans-serif;cursor:pointer;transition:background .15s}.ds-btn-primary:hover{background:hsl(240 10% 8% / .9)}.ds-btn-primary:active{background:hsl(240 10% 8% / .8)}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px hsl(240 10% 8%);}"
+    },
+    {
+      "name": "Outline button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions: Back, View My Results, Preview UAT Steps, guide toggle.",
+      "html": "<button class=\"ds-btn-outline\">Back</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:hsl(240 10% 8%);border:2px solid hsl(240 10% 8%);border-radius:9px;padding:12px 24px;font:700 16px/1.2 'DM Sans', ui-sans-serif, system-ui, sans-serif;cursor:pointer;transition:background .15s}.ds-btn-outline:hover{background:hsl(60 30% 95%)}.ds-btn-outline:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px hsl(240 10% 8%);}"
+    },
+    {
+      "name": "Step card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "One checklist step: badge, actor, instruction, tip and answer controls inside a 2px ink outline.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-meta\"><span class=\"ds-card-badge\">Step 2</span><span><b>Candidate</b> \u00b7 Application form</span></div><p class=\"ds-card-text\">Open the careers page in your browser. Fill in the form with your own details.</p></div>",
+      "css": ".ds-card{background:#fff;color:hsl(240 10% 8%);border:2px solid hsl(240 10% 8%);border-radius:9px;padding:20px;font-family:'DM Sans', ui-sans-serif, system-ui, sans-serif}.ds-card-meta{display:flex;align-items:center;gap:10px;margin-bottom:12px;font:500 14px/1.4 'DM Sans', ui-sans-serif, system-ui, sans-serif;color:#374151}.ds-card-meta b{color:hsl(240 10% 8%);font-weight:700}.ds-card-badge{background:hsl(240 10% 8%);color:hsl(50 30% 92%);font:700 14px/1.2 'DM Sans', ui-sans-serif, system-ui, sans-serif;padding:4px 10px;border-radius:6px}.ds-card-text{margin:0;font:500 17px/1.625 'DM Sans', ui-sans-serif, system-ui, sans-serif}"
+    },
+    {
+      "name": "Tip callout",
+      "kind": "custom",
+      "refersTo": "tip-callout",
+      "description": "Amber wash with a 2px ink outline for hints and the login link.",
+      "html": "<div class=\"ds-tip\"><b>Tip:</b> The AI calls only the mobile number you type here.</div>",
+      "css": ".ds-tip{background:hsl(36 75% 92%);color:hsl(240 10% 8%);border:2px solid hsl(240 10% 8%);border-radius:6px;padding:10px 12px;font:500 15px/1.6 'DM Sans', ui-sans-serif, system-ui, sans-serif}.ds-tip b{font-weight:700}"
+    },
+    {
+      "name": "Comment field",
+      "kind": "input",
+      "refersTo": "textarea",
+      "description": "Multi-line comment box with a heavy ink outline.",
+      "html": "<textarea class=\"ds-textarea\" rows=\"2\" placeholder=\"Please describe the issue you encountered\"></textarea>",
+      "css": ".ds-textarea{width:100%;box-sizing:border-box;background:#fff;color:hsl(240 10% 8%);border:2px solid hsl(240 10% 8%);border-radius:6px;padding:8px 12px;font:500 16px/1.5 'DM Sans', ui-sans-serif, system-ui, sans-serif;resize:vertical}.ds-textarea::placeholder{color:hsl(240 5% 45%)}.ds-textarea:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px hsl(240 10% 8%);}"
+    },
+    {
+      "name": "Upload zone",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Dashed outline that invites a screenshot or file.",
+      "html": "<div class=\"ds-upload\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48\"/></svg><div><b>Add screenshot or file</b><span>Max 10MB. Pasting a screenshot works too.</span></div></div>",
+      "css": ".ds-upload{display:flex;align-items:center;gap:12px;background:#fff;color:hsl(240 10% 8%);border:2px dashed hsl(240 10% 8%);border-radius:6px;padding:12px;font-family:'DM Sans', ui-sans-serif, system-ui, sans-serif;cursor:pointer}.ds-upload:hover{background:hsl(60 30% 95%)}.ds-upload div{display:flex;flex-direction:column}.ds-upload b{font:700 15px/1.2 'DM Sans', ui-sans-serif, system-ui, sans-serif}.ds-upload span{font:500 14px/1.4 'DM Sans', ui-sans-serif, system-ui, sans-serif;color:#374151;margin-top:2px}"
+    },
+    {
+      "name": "Progress bar",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Thick outlined pill that fills with ink as steps are answered.",
+      "html": "<div class=\"ds-progress\" role=\"progressbar\" aria-valuenow=\"2\" aria-valuemin=\"0\" aria-valuemax=\"10\"><i></i></div>",
+      "css": ".ds-progress{height:14px;background:#fff;border:2px solid hsl(240 10% 8%);border-radius:9999px;overflow:hidden}.ds-progress i{display:block;height:100%;width:20%;background:hsl(240 10% 8%)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Field Checklist",
+    "overview": "The tester pages are a checklist you hold while doing a real task somewhere else: a call on your phone, a profile in the Talkpush CRM. They are read in glances. So the interface is sturdy, plain and high-contrast. Every container is drawn with a heavy ink outline, labels are bold, instructions are the largest text on the screen, and colour is rationed to small, meaningful accents. Nothing is decorative, because the tester's attention belongs to the step.\n\nThe look is flat ink on warm paper. Depth comes from outlines and spacing, never shadows. The Talkpush Sign pastels (sage, lavender, pink, amber) survive only as pale washes behind a tip, a section header or a first-use callout, plus the gradient strip on the register page. Status is told by a filled button and a word, not by tinted cards.",
+    "keyCharacteristics": [
+      "2px ink outlines on every card, control, input and the progress bar.",
+      "Weight 500 body, weight 700 labels and buttons; nothing lighter than 14px.",
+      "Flat: no shadows, no blur, no coloured side stripes.",
+      "One filled answer per step; every other control stays an outline.",
+      "A single column about 768px wide, aligned edge to edge: header, banners and cards share the same left and right edges."
+    ],
+    "rules": [
+      {
+        "name": "The One Filled Answer Rule",
+        "body": "On a step, exactly one control may be filled with a colour: the chosen status. Everything else is an outline. If five buttons are coloured at rest, none of them means anything.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Wash Rule",
+        "body": "Pastels are pale washes behind a small block of text, never a full-card tint or a border colour. A tester should be able to ignore colour and still use the page.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink Floor Rule",
+        "body": "Text is ink or one of the two secondary grays, never lighter. Body text meets 4.5:1 contrast and no text is below 14px.",
+        "section": "colors"
+      },
+      {
+        "name": "The Weight Over Size Rule",
+        "body": "Emphasis comes from 500 to 700 weight steps. Do not introduce small light text to mean \"less important\"; reduce it by position and colour from the ink to the secondary gray instead.",
+        "section": "typography"
+      },
+      {
+        "name": "The No-Shadow Rule",
+        "body": "Do not add shadows, glows or blur to indicate importance. Add an outline, a fill or whitespace.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** draw every container, control and input with a 2px ink outline.",
+      "**Do** fill only the chosen status; keep all other controls as outlines.",
+      "**Do** use weight 500 for body and 700 for labels; keep text at 14px or larger.",
+      "**Do** keep the header, banners and cards on the same left and right edges.",
+      "**Do** make long text and links wrap inside their container; shorten long URLs for display and keep the full address in the link and a Copy control.",
+      "**Do** keep tester styling in tester components and the tester style helpers, so admin pages are unaffected.",
+      "**Do** keep existing button labels, because analytics reads them."
+    ],
+    "donts": [
+      "**Don't** use shadows, glows or blur.",
+      "**Don't** tint a whole card or add a coloured left or right stripe to show status.",
+      "**Don't** use light gray text or any text under 14px.",
+      "**Don't** put a small uppercase label above a heading.",
+      "**Don't** repeat the same explanation in two places on one screen.",
+      "**Don't** let content widen the page; there must be no sideways scroll at 375px.",
+      "**Don't** change shared UI primitives to restyle tester pages."
+    ]
+  }
+}
