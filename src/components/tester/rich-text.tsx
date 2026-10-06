@@ -52,7 +52,7 @@ function CopyLinkButton({ url }: { url: string }) {
  * A link whose visible text is the URL itself. Long URLs are shortened for
  * display; the href, tooltip and Copy button keep the full address.
  */
-function UrlLink({ url, linkClassName }: { url: string; linkClassName: string }) {
+export function UrlLink({ url, linkClassName }: { url: string; linkClassName: string }) {
   const { label, truncated } = shortenUrl(url)
   return (
     <>

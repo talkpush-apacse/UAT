@@ -3,13 +3,14 @@
 import { useState, useMemo, useEffect, useId, useCallback, useRef } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, ChevronDown, ChevronUp, Search, Mail, LogIn, Flag, CheckCircle2, ArrowRight, CheckCircle, XCircle, MinusCircle, Ban, HelpCircle, Eye, AlertTriangle, ArrowDown } from "lucide-react"
+import { ChevronDown, ChevronUp, Flag, CheckCircle2, ArrowRight, AlertTriangle, ArrowDown } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
 import { getStepsMissingEvidence } from "@/lib/utils/response-validation"
 import ChecklistWizardView from "./checklist-wizard-view"
-import { ClientLogosHeader } from "./client-logos-header"
+import TesterHeader from "./tester-header"
+import { TESTER_BTN_DISABLED, TESTER_BTN_OUTLINE, TESTER_BTN_PRIMARY, TESTER_LINK } from "./tester-ui"
 import { trackMarkCompleteFailed, trackTestCompleted } from "./completion-tracking"
 
 interface ChecklistItemData {
@@ -82,17 +83,17 @@ function StepJumpLinks({ items, max = 8 }: { items: ChecklistItemData[]; max?: n
     <>
       {shown.map((item, i) => (
         <span key={item.id}>
-          {i > 0 && <span className="text-gray-300"> · </span>}
+          {i > 0 && <span className="text-gray-500"> · </span>}
           <button
             type="button"
             onClick={() => scrollToStep(item.step_number)}
-            className="font-medium text-brand-sage-darker underline underline-offset-2 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker rounded"
+            className={TESTER_LINK}
           >
             Step {item.step_number}
           </button>
         </span>
       ))}
-      {hidden > 0 && <span className="text-gray-500"> and {hidden} more</span>}
+      {hidden > 0 && <span className="text-gray-700"> and {hidden} more</span>}
     </>
   )
 }
@@ -260,26 +261,16 @@ function ClassicChecklistView({
 
   return (
     <div className="max-w-3xl mx-auto px-4 pb-12">
-      {/* Sticky Header — Issue #9 (already sticky); Issue #5: removed "X% complete" text and standalone "X%" label */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pt-5 pb-4 px-4 sm:px-6 -mx-4 border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div className="min-w-0">
-            <ClientLogosHeader clientLogoUrl={project.client?.logo_url} />
-            <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
-            <p className="text-sm text-gray-500">
-              {previewMode ? "UAT Steps Preview" : `Hi ${tester.name}`}
-            </p>
-          </div>
-          {/* Issue #5: keep fraction counter only; removed "X% complete" text */}
-          <p className="text-sm sm:text-base font-semibold text-brand-sage-darker flex-shrink-0 ml-4">
-            {previewMode ? `${totalCount} steps` : `${completedCount} / ${totalCount}`}
-          </p>
-        </div>
-        {/* Issue #7: ARIA attributes on progress bar; Issue #5: removed standalone "X%" label */}
+      <TesterHeader
+        clientLogoUrl={project.client?.logo_url}
+        companyName={project.company_name}
+        subtitle={previewMode ? "UAT steps preview" : `Hi ${tester.name}`}
+        right={previewMode ? `${totalCount} steps` : `${completedCount} / ${totalCount}`}
+      >
         {!previewMode && (
           <Progress
             value={progressPct}
-            className="h-2.5"
+            className="h-3.5 border-2 border-primary bg-white"
             aria-label="Test completion progress"
             aria-valuenow={completedCount}
             aria-valuemin={0}
@@ -290,15 +281,15 @@ function ClassicChecklistView({
           <button
             type="button"
             onClick={() => scrollToStep(unansweredItems[0].step_number)}
-            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-sage-darker hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker rounded"
+            className={`mt-2.5 inline-flex items-center gap-1 text-sm ${TESTER_LINK}`}
           >
             Next unanswered: Step {unansweredItems[0].step_number}
-            <ArrowDown className="h-3.5 w-3.5" />
+            <ArrowDown className="h-4 w-4" />
           </button>
         )}
         {failedSaveItems.length > 0 && (
-          <div role="alert" className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div role="alert" className="mt-3 flex items-start gap-2 rounded-lg border-2 border-red-700 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <p>
               {failedSaveItems.length === 1 ? "1 answer didn't save" : `${failedSaveItems.length} answers didn't save`}
               {" — press Retry on "}
@@ -306,157 +297,61 @@ function ClassicChecklistView({
             </p>
           </div>
         )}
-      </div>
+      </TesterHeader>
 
-      {previewMode && (
-        <div className="mt-4 rounded-xl border border-brand-sage-lighter bg-brand-sage-lightest px-4 py-3 text-sm text-brand-sage-darker flex items-start gap-2.5">
-          <Eye className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <p>
-            You are previewing the UAT steps. Register when you are ready to save responses, upload screenshots, and submit your test.
+
+      {/* How to answer — one-line rule always visible, definitions behind a toggle */}
+      <div className="mt-4 rounded-xl border-2 border-primary bg-white">
+        <div className="flex items-start justify-between gap-3 px-4 py-3">
+          <p className="text-sm font-medium leading-relaxed text-primary">
+            <span className="font-bold">How to answer: </span>
+            mark each step Pass, Fail, N/A, Blocked or Up for review. Fail, Blocked and Review need a comment or screenshot.
           </p>
-        </div>
-      )}
-
-      {/* Before You Begin — collapsible guide */}
-      <div className="mt-4">
-        <div className="rounded-xl border border-brand-lavender-lighter bg-brand-lavender-lightest shadow-sm overflow-hidden">
-          {/* Toggle header — full row clickable, shows Hide/Show Guide label */}
           <button
+            type="button"
             onClick={toggleGuide}
             aria-expanded={isGuideOpen}
             aria-controls={guideBodyId}
-            aria-label={isGuideOpen ? "Collapse instructions" : "Expand instructions"}
-            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-brand-lavender-lighter/40 transition-colors"
+            data-track={isGuideOpen ? "Collapse instructions" : "Expand instructions"}
+            className={`${TESTER_BTN_OUTLINE} flex-shrink-0 rounded-lg px-3 py-1.5 text-sm`}
           >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-brand-lavender-lighter flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-4 h-4 text-brand-lavender-darker" />
-              </div>
-              <span className="text-sm font-medium text-brand-lavender-darker">Before You Begin</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-brand-lavender-darker">
-                {isGuideOpen ? "Hide" : "Show Guide"}
-              </span>
-              {isGuideOpen ? (
-                <ChevronUp className="w-4 h-4 text-brand-lavender-darker" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-brand-lavender-darker" />
-              )}
-            </div>
+            {isGuideOpen ? "Hide" : "Details"}
+            {isGuideOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
+        </div>
 
-          {!isGuideOpen && (
-            <p className="px-4 pb-3 -mt-1 text-xs text-gray-600">
-              Mark each step{" "}
-              <span className="font-semibold text-green-700">Pass</span>,{" "}
-              <span className="font-semibold text-red-600">Fail</span>,{" "}
-              <span className="font-semibold text-gray-600">N/A</span>,{" "}
-              <span className="font-semibold text-orange-600">Blocked</span> or{" "}
-              <span className="font-semibold text-amber-600">Up For Review</span>. Fail, Blocked and Review need a comment or screenshot.
+        <div
+          id={guideBodyId}
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            isGuideOpen ? "max-h-[1200px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="space-y-4 border-t-2 border-primary px-4 py-4 text-sm font-medium leading-relaxed text-gray-800">
+            <p>Work through the steps in order, top to bottom. Add a comment or screenshot whenever something fails or looks off.</p>
+            <ul className="space-y-1.5">
+              <li><span className="font-bold text-green-800">Pass</span> — it worked exactly as described.</li>
+              <li><span className="font-bold text-red-700">Fail</span> — something went wrong or didn&apos;t match the expected result.</li>
+              <li><span className="font-bold text-gray-700">N/A</span> — this step doesn&apos;t apply to your test scenario.</li>
+              <li><span className="font-bold text-orange-700">Blocked</span> — you can&apos;t test it because an earlier step failed. Say which one.</li>
+              <li><span className="font-bold text-amber-800">Up for review</span> — you&apos;re unsure if it passed. An admin will take a look.</li>
+            </ul>
+            <p>
+              <span className="font-bold text-primary">Your progress saves automatically.</span> Close this page and come back to the same link anytime.
             </p>
-          )}
-
-          {/* Collapsible body */}
-          <div
-            id={guideBodyId}
-            className={`transition-all duration-300 ease-in-out ${
-              isGuideOpen ? "max-h-[680px] opacity-100" : "max-h-0 opacity-0"
-            } overflow-hidden`}
-          >
-            <div className="px-4 pb-4 space-y-4">
-              {/* Usage instructions */}
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">How to use these UAT steps</p>
-                <ul className="space-y-1.5 text-sm text-gray-600 mb-3">
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-lavender mt-0.5">&#8226;</span>
-                    Follow each step in order from top to bottom
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-lavender mt-0.5">&#8226;</span>
-                    Add comments or attach screenshots when something fails or looks off
-                  </li>
-                </ul>
-
-                {/* Status definitions — casual icon guide */}
-                <div className="space-y-2">
-                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
-                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-sm font-semibold text-green-700">Pass</span>
-                      <span className="text-sm text-gray-600"> — The step worked exactly as described. No issues.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
-                    <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-sm font-semibold text-red-600">Fail</span>
-                      <span className="text-sm text-gray-600"> — Something went wrong or didn&apos;t match the expected result.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
-                    <MinusCircle className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-sm font-semibold text-gray-600">N/A</span>
-                      <span className="text-sm text-gray-600"> — This step doesn&apos;t apply to your test scenario. Skip it.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
-                    <Ban className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-sm font-semibold text-orange-600">Blocked</span>
-                      <span className="text-sm text-gray-600"> — You can&apos;t test this step because a previous step failed. Tell us which step is blocking you.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 bg-white rounded-lg px-3 py-2.5 border border-gray-100">
-                    <HelpCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-sm font-semibold text-amber-600">Up For Review</span>
-                      <span className="text-sm text-gray-600"> — You&apos;re unsure if this is a pass or fail. Flag it and an admin will review.</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Autosave reassurance note */}
-                <div className="mt-3 px-3 py-2.5 bg-brand-lavender-lighter/60 rounded-lg border border-brand-lavender-lighter">
-                  <p className="text-sm text-brand-lavender-darker">
-                    <span className="font-medium">Your progress is saved automatically.</span> You can close this page and come back to the same link anytime to continue where you left off.
-                  </p>
-                </div>
-              </div>
-
-              {/* Troubleshooting */}
-              <div className="border-t border-brand-lavender-lighter pt-3">
-                <p className="text-xs font-medium text-brand-lavender-darker uppercase tracking-wide mb-2">Troubleshooting</p>
-                <div className="space-y-2">
-                  <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
-                    <Search className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">
-                      If unable to search profile in Talkpush, make sure to set your filter to <span className="font-medium text-gray-800">&quot;All Campaigns&quot;</span> and <span className="font-medium text-gray-800">&quot;All Folders&quot;</span> on the top section.
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
-                    <LogIn className="w-4 h-4 text-brand-sage mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">
-                      If unable to login, please check you have activated your account through an invitation email from Talkpush.
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-gray-100 flex items-start gap-3">
-                    <Mail className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">
-                      If the email is not yet received, wait 2-3 minutes, refresh and check your Spam folder too.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <p className="mb-1.5 font-bold text-primary">Troubleshooting</p>
+              <ul className="list-disc space-y-1.5 pl-5">
+                <li>Can&apos;t find a profile in Talkpush? Set the filters at the top to &quot;All Campaigns&quot; and &quot;All Folders&quot;.</li>
+                <li>Can&apos;t log in? Check you&apos;ve activated your account from the Talkpush invitation email.</li>
+                <li>Email not arriving? Wait 2-3 minutes, refresh, and check your Spam folder.</li>
+              </ul>
             </div>
           </div>
         </div>
       </div>
 
       {/* Checklist — flat sequential list, no actor section grouping */}
-      <div className="mt-6 space-y-3" id="checklist-sections">
+      <div className="mt-6 space-y-4" id="checklist-sections">
         {checklistItems.map((item) => {
           if (item.item_type === "phase_header") {
             return (
@@ -496,18 +391,18 @@ function ClassicChecklistView({
           )
         })}
 
-        {/* Submit Test — Issue #3: disabled until all steps have a status */}
+        {/* Submit Test — disabled until every step has a status */}
         {!previewMode && checklistItems.length > 0 && (
-          <div className="pt-4 pb-6 border-t border-gray-200 mt-2">
+          <div className="mt-2 border-t-2 border-primary pb-6 pt-5">
             {isTestComplete ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-center gap-2.5 rounded-xl bg-green-50 border border-green-200 py-5 px-6">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-green-700">Test Submitted</span>
+                <div className="flex items-center justify-center gap-2.5 rounded-xl border-2 border-green-700 bg-green-50 px-6 py-5">
+                  <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-green-700" />
+                  <span className="font-bold text-green-800">Test Submitted</span>
                 </div>
                 <Link
                   href={`/test/${project.slug}/results?tester=${tester.id}`}
-                  className="flex items-center justify-center gap-2 rounded-xl border-2 border-brand-sage-lighter bg-white py-3.5 px-6 text-sm font-semibold text-brand-sage-darker hover:bg-brand-sage-lightest hover:border-brand-sage transition-colors"
+                  className={`${TESTER_BTN_OUTLINE} w-full px-6 py-3.5 text-base`}
                 >
                   View My Results
                   <ArrowRight className="h-4 w-4" />
@@ -519,22 +414,16 @@ function ClassicChecklistView({
                   onClick={handleMarkComplete}
                   disabled={!allStepsCompleted || isMarkingComplete}
                   aria-disabled={!allStepsCompleted || isMarkingComplete}
-                  className={`w-full rounded-xl font-semibold py-4 px-6 text-sm transition-colors
-                    flex items-center justify-center gap-2 shadow-sm
-                    ${
-                      allStepsCompleted && !isMarkingComplete
-                        ? "bg-primary hover:bg-primary/90 active:bg-primary/80 text-white cursor-pointer"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    }
-                  `}
+                  className={`${
+                    allStepsCompleted && !isMarkingComplete ? TESTER_BTN_PRIMARY : TESTER_BTN_DISABLED
+                  } w-full px-6 py-4 text-base`}
                 >
                   <Flag className="h-4 w-4" />
                   {isMarkingComplete ? "Submitting…" : "Submit Test"}
                 </button>
-                {/* Issue #3: dynamic helper text */}
-                <div className="text-xs text-gray-500 text-center mt-2 space-y-1">
+                <div className="mt-3 space-y-1 text-center text-sm font-medium text-gray-800">
                   {allStepsCompleted ? (
-                    <p>All steps answered — ready to submit</p>
+                    <p>All steps answered. Ready to submit.</p>
                   ) : (
                     <>
                       {unansweredItems.length > 0 && (
@@ -553,7 +442,7 @@ function ClassicChecklistView({
                   )}
                 </div>
                 {completeError && (
-                  <p className="text-xs text-red-600 text-center mt-2">{completeError}</p>
+                  <p className="mt-2 text-center text-sm font-bold text-red-700">{completeError}</p>
                 )}
               </>
             )}

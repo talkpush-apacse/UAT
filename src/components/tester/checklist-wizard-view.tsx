@@ -3,13 +3,14 @@
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, List, Bookmark, Eye } from "lucide-react"
+import { ChevronLeft, ChevronRight, Flag, CheckCircle2, ArrowRight, List, Bookmark } from "lucide-react"
 import ChecklistItem from "./checklist-item"
 import PhaseHeaderCard from "./phase-header-card"
 import { markTestComplete } from "@/lib/actions/testers"
 import { getStepsMissingEvidence, EVIDENCE_REQUIRED_STATUSES } from "@/lib/utils/response-validation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { ClientLogosHeader } from "./client-logos-header"
+import TesterHeader from "./tester-header"
+import { TESTER_BTN_DISABLED, TESTER_BTN_OUTLINE, TESTER_BTN_PRIMARY } from "./tester-ui"
 import { trackMarkCompleteFailed, trackTestCompleted } from "./completion-tracking"
 
 interface ChecklistItemData {
@@ -69,19 +70,13 @@ type Props = {
   previewMode?: boolean
 }
 
-function TalkpushVerifyHeader({ item }: { item: ChecklistItemData }) {
+function TalkpushVerifyHeader() {
   return (
-    <div className="rounded-xl border border-brand-sage-lighter bg-brand-sage-lightest px-4 py-3 mb-3">
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className="inline-flex items-center rounded-md bg-brand-sage-lighter px-2 py-0.5 text-xs font-medium text-brand-sage-darker border border-brand-sage-lighter">
-          Talkpush
-        </span>
-        <span className="text-sm font-medium text-brand-sage-darker">
-          Step {item.step_number} · Performed by Talkpush
-        </span>
-      </div>
-      <p className="text-xs font-medium text-brand-sage-darker uppercase tracking-wide mb-0.5">Verify the automation triggered</p>
-      <p className="text-sm text-gray-600">This step is performed automatically. Confirm it ran as expected and mark Pass — or Fail / Blocked if it didn&apos;t.</p>
+    <div className="mb-3 rounded-xl border-2 border-primary bg-brand-sage-lightest px-4 py-3">
+      <p className="text-sm font-bold text-primary">Done by Talkpush: confirm it ran</p>
+      <p className="mt-0.5 text-sm font-medium text-gray-800">
+        This step runs automatically. Mark Pass if it ran as expected, or Fail / Blocked if it didn&apos;t.
+      </p>
     </div>
   )
 }
@@ -247,7 +242,7 @@ export default function ChecklistWizardView({
   if (totalCount === 0) {
     return (
       <div className="max-w-3xl mx-auto px-4 pb-12 pt-12 text-center">
-        <p className="text-gray-500 text-sm">No steps have been configured for this test yet.</p>
+        <p className="text-sm font-medium text-gray-700">No steps have been configured for this test yet.</p>
       </div>
     )
   }
@@ -256,27 +251,22 @@ export default function ChecklistWizardView({
   if (isTestComplete) {
     return (
       <div className="max-w-3xl mx-auto px-4 pb-12">
-        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pt-5 pb-4 px-4 sm:px-6 -mx-4 border-b border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="min-w-0">
-              <ClientLogosHeader clientLogoUrl={project.client?.logo_url} />
-              <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
-              <p className="text-sm text-gray-500">Hi {tester.name}</p>
-            </div>
-            <p className="text-sm sm:text-base font-semibold text-brand-sage-darker flex-shrink-0 ml-4">
-              Complete
-            </p>
-          </div>
-          <Progress value={100} className="h-2.5" aria-label="Test completion progress" />
-        </div>
+        <TesterHeader
+          clientLogoUrl={project.client?.logo_url}
+          companyName={project.company_name}
+          subtitle={`Hi ${tester.name}`}
+          right="Complete"
+        >
+          <Progress value={100} className="h-3.5 border-2 border-primary bg-white" aria-label="Test completion progress" />
+        </TesterHeader>
         <div className="mt-8 space-y-3">
-          <div className="flex items-center justify-center gap-2.5 rounded-xl bg-green-50 border border-green-200 py-5 px-6">
-            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-            <span className="text-sm font-semibold text-green-700">Test Submitted</span>
+          <div className="flex items-center justify-center gap-2.5 rounded-xl border-2 border-green-700 bg-green-50 px-6 py-5">
+            <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-green-700" />
+            <span className="font-bold text-green-800">Test Submitted</span>
           </div>
           <Link
             href={`/test/${project.slug}/results?tester=${tester.id}`}
-            className="flex items-center justify-center gap-2 rounded-xl border-2 border-brand-sage-lighter bg-white py-3.5 px-6 text-sm font-semibold text-brand-sage-darker hover:bg-brand-sage-lightest hover:border-brand-sage transition-colors"
+            className={`${TESTER_BTN_OUTLINE} w-full px-6 py-3.5 text-base`}
           >
             View My Results
             <ArrowRight className="h-4 w-4" />
@@ -296,47 +286,33 @@ export default function ChecklistWizardView({
 
   return (
     <div className="max-w-3xl mx-auto px-4 pb-12">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pt-5 pb-4 px-4 sm:px-6 -mx-4 border-b border-gray-200 shadow-sm">
-        <div
-          aria-live="polite"
-          className="flex items-center justify-between mb-3"
-        >
-          <div className="min-w-0">
-            <ClientLogosHeader clientLogoUrl={project.client?.logo_url} />
-            <h1 className="font-semibold text-lg sm:text-xl text-gray-900 truncate">{project.company_name}</h1>
-            <p className="text-sm text-gray-500">
-              {previewMode ? "UAT Steps Preview" : `Hi ${tester.name}`}
-            </p>
-          </div>
+      <TesterHeader
+        clientLogoUrl={project.client?.logo_url}
+        companyName={project.company_name}
+        subtitle={previewMode ? "UAT steps preview" : `Hi ${tester.name}`}
+        ariaLive="polite"
+        right={
           <button
             type="button"
             onClick={() => setIsNavOpen(true)}
-            className="text-sm sm:text-base font-semibold text-brand-sage-darker flex-shrink-0 ml-4 flex items-center gap-1.5 hover:text-brand-sage transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2 rounded"
+            className="flex items-center gap-1.5 rounded text-base font-bold text-primary hover:text-primary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Open step navigation"
           >
             Step {currentIndex + 1} of {totalCount}
-            <List className="h-3.5 w-3.5" />
+            <List className="h-4 w-4" />
           </button>
-        </div>
+        }
+      >
         <Progress
           value={progressPct}
-          className="h-2.5"
+          className="h-3.5 border-2 border-primary bg-white"
           aria-label="Wizard step progress"
           aria-valuenow={currentIndex + 1}
           aria-valuemin={1}
           aria-valuemax={totalCount}
         />
-      </div>
+      </TesterHeader>
 
-      {previewMode && (
-        <div className="mt-4 rounded-xl border border-brand-sage-lighter bg-brand-sage-lightest px-4 py-3 text-sm text-brand-sage-darker flex items-start gap-2.5">
-          <Eye className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <p>
-            You are previewing the UAT steps. Register when you are ready to save responses, upload screenshots, and submit your test.
-          </p>
-        </div>
-      )}
 
       {/* Step body */}
       <div className="mt-6">
@@ -348,7 +324,7 @@ export default function ChecklistWizardView({
           />
         ) : (
           <>
-            {isTalkpushStep && <TalkpushVerifyHeader item={currentItem} />}
+            {isTalkpushStep && <TalkpushVerifyHeader />}
             <ChecklistItem
               key={currentItem.id}
               item={currentItem as ChecklistItemData & { step_number: number }}
@@ -381,21 +357,21 @@ export default function ChecklistWizardView({
       {/* Step navigation sheet */}
       <Sheet open={isNavOpen} onOpenChange={setIsNavOpen}>
         <SheetContent side="right" className="w-80 sm:w-96 overflow-y-auto p-0">
-          <SheetHeader className="px-4 pt-5 pb-3 border-b border-gray-100">
-            <SheetTitle className="text-base">All Steps</SheetTitle>
+          <SheetHeader className="border-b-2 border-primary px-4 pb-3 pt-5">
+            <SheetTitle className="text-lg font-bold">All Steps</SheetTitle>
           </SheetHeader>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y-2 divide-primary/15">
             {checklistItems.map((item, idx) => {
               const resp = responses[item.id]
               const isCurrent = idx === currentIndex
               const isHeader = item.item_type === "phase_header"
               const stepStatus = resp?.status ?? null
               const statusColors: Record<string, string> = {
-                Pass: "text-green-600",
-                Fail: "text-red-600",
-                "N/A": "text-gray-500",
-                Blocked: "text-orange-600",
-                "Up For Review": "text-amber-600",
+                Pass: "text-green-800",
+                Fail: "text-red-700",
+                "N/A": "text-gray-700",
+                Blocked: "text-orange-700",
+                "Up For Review": "text-amber-800",
               }
               return (
                 <button
@@ -408,39 +384,35 @@ export default function ChecklistWizardView({
                       ? isHeader
                         ? "bg-brand-lavender-lightest"
                         : "bg-brand-sage-lightest"
-                      : "hover:bg-gray-50"
+                      : "hover:bg-secondary"
                   }`}
                 >
                   <span
-                    className={`flex-shrink-0 w-6 h-6 rounded-full text-xs font-semibold flex items-center justify-center mt-0.5 ${
-                      isHeader
-                        ? "bg-brand-lavender-lighter text-brand-lavender-darker"
-                        : isCurrent
-                          ? "bg-brand-sage text-white"
-                          : "bg-gray-100 text-gray-600"
+                    className={`mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 border-primary text-sm font-bold ${
+                      isCurrent ? "bg-primary text-primary-foreground" : "bg-white text-primary"
                     }`}
                   >
-                    {isHeader ? <Bookmark className="h-3 w-3" /> : item.step_number}
+                    {isHeader ? <Bookmark className="h-3.5 w-3.5" /> : item.step_number}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-800 truncate">
+                    <p className="truncate text-sm font-medium text-primary">
                       {isHeader && item.header_label ? (
-                        <span className="text-[10px] font-mono uppercase tracking-wide text-brand-lavender-darker mr-1.5">
+                        <span className="mr-1.5 text-xs font-bold text-primary">
                           {item.header_label}
                         </span>
                       ) : null}
                       {item.action}
                     </p>
                     {isHeader ? (
-                      <span className="text-xs text-brand-lavender-darker">Section header</span>
+                      <span className="text-sm font-medium text-gray-700">Section header</span>
                     ) : previewMode ? (
-                      <span className="text-xs text-gray-400">Preview only</span>
+                      <span className="text-sm font-medium text-gray-700">Preview only</span>
                     ) : stepStatus ? (
-                      <span className={`text-xs font-medium ${statusColors[stepStatus] ?? "text-gray-500"}`}>
+                      <span className={`text-sm font-bold ${statusColors[stepStatus] ?? "text-gray-700"}`}>
                         {stepStatus}
                       </span>
                     ) : (
-                      <span className="text-xs text-gray-400">Not answered</span>
+                      <span className="text-sm font-medium text-gray-700">Not answered</span>
                     )}
                   </div>
                 </button>
@@ -451,17 +423,13 @@ export default function ChecklistWizardView({
       </Sheet>
 
       {/* Navigation */}
-      <div className="mt-6 pt-4 border-t border-gray-200 space-y-2">
+      <div className="mt-6 space-y-2 border-t-2 border-primary pt-4">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleBack}
             disabled={currentIndex === 0}
-            className={`flex items-center gap-1.5 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${
-              currentIndex === 0
-                ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed"
-                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer"
-            }`}
+            className={`${currentIndex === 0 ? TESTER_BTN_DISABLED : TESTER_BTN_OUTLINE} px-4 py-3 text-base`}
           >
             <ChevronLeft className="h-4 w-4" />
             Back
@@ -470,7 +438,7 @@ export default function ChecklistWizardView({
           {isLastStep && previewMode ? (
             <Link
               href={`/test/${project.slug}`}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary py-3 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 active:bg-primary/80"
+              className={`${TESTER_BTN_PRIMARY} flex-1 px-6 py-3 text-base`}
             >
               Register to Start Testing
               <ArrowRight className="h-4 w-4" />
@@ -481,11 +449,7 @@ export default function ChecklistWizardView({
               onClick={handleSubmit}
               disabled={submitDisabled}
               aria-disabled={submitDisabled}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-xl font-semibold py-3 px-6 text-sm transition-colors shadow-sm ${
-                !submitDisabled
-                  ? "bg-primary hover:bg-primary/90 active:bg-primary/80 text-white cursor-pointer"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
+              className={`${!submitDisabled ? TESTER_BTN_PRIMARY : TESTER_BTN_DISABLED} flex-1 px-6 py-3 text-base`}
             >
               <Flag className="h-4 w-4" />
               {isMarkingComplete ? "Submitting…" : "Submit Test"}
@@ -496,11 +460,7 @@ export default function ChecklistWizardView({
               onClick={handleNext}
               disabled={nextDisabled || isAdvancing}
               aria-disabled={nextDisabled || isAdvancing}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-xl font-semibold py-3 px-6 text-sm transition-colors shadow-sm ${
-                !nextDisabled && !isAdvancing
-                  ? "bg-primary hover:bg-primary/90 active:bg-primary/80 text-white cursor-pointer"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
+              className={`${!nextDisabled && !isAdvancing ? TESTER_BTN_PRIMARY : TESTER_BTN_DISABLED} flex-1 px-6 py-3 text-base`}
             >
               {isAdvancing ? "Saving…" : "Next"}
               {!isAdvancing && <ChevronRight className="h-4 w-4" />}
@@ -510,22 +470,22 @@ export default function ChecklistWizardView({
 
         {/* Helper text */}
         {isLastStep && (!allAnswered || stepsMissingEvidence.length > 0) ? (
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-center text-sm font-medium text-gray-800">
             {!isHeaderStep && currentCommentMissing
-              ? "Please add a comment or screenshot before submitting."
+              ? "Add a comment or screenshot before submitting."
               : stepsMissingEvidence.length > 0
-                ? `${stepsMissingEvidence.length} earlier step${stepsMissingEvidence.length === 1 ? "" : "s"} need a comment or screenshot — open the step list to go back and add one.`
-                : `${completedCount} of ${totalAnswerable} steps answered — finish all to submit.`}
+                ? `${stepsMissingEvidence.length} earlier step${stepsMissingEvidence.length === 1 ? "" : "s"} need a comment or screenshot. Open the step list to go back and add one.`
+                : `${completedCount} of ${totalAnswerable} steps answered. Finish all to submit.`}
           </p>
         ) : nextDisabled && !isLastStep ? (
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-center text-sm font-medium text-gray-800">
             {currentCommentMissing
-              ? "Please add a comment or screenshot before continuing."
+              ? "Add a comment or screenshot before continuing."
               : "Choose a status (Pass / Fail / N/A / Blocked / Up For Review) to continue."}
           </p>
         ) : null}
         {completeError && (
-          <p className="text-xs text-red-600 text-center">{completeError}</p>
+          <p className="text-center text-sm font-bold text-red-700">{completeError}</p>
         )}
       </div>
     </div>

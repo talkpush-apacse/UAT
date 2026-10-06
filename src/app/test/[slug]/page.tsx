@@ -2,7 +2,6 @@ import { notFound } from "next/navigation"
 import { createAnonSupabaseClient } from "@/lib/supabase/server"
 import RegistrationForm from "@/components/tester/registration-form"
 import MarkdownRenderer from "@/components/ui/markdown-renderer"
-import { ClipboardList } from "lucide-react"
 
 export default async function TesterRegistrationPage({
   params,
@@ -37,30 +36,26 @@ export default async function TesterRegistrationPage({
 
         {/* Test Scenario Card */}
         {project.test_scenario && (
-          <div className="bg-white rounded-2xl border border-brand-sage-lighter shadow-sm px-5 py-4">
-            <div className="flex items-center gap-2 mb-2">
-              <ClipboardList className="h-4 w-4 text-brand-sage-darker flex-shrink-0" />
-              <p className="text-xs font-semibold text-brand-sage-darker uppercase tracking-wide">
-                Test Scenario
-              </p>
-            </div>
-            {project.title && (
-              <h2 className="text-base font-semibold text-gray-900 mb-1.5">
+          <div className="rounded-2xl border-2 border-primary bg-white px-5 py-4">
+            {project.title ? (
+              <h2 className="mb-1.5 text-lg font-bold text-primary">
                 {project.title}
               </h2>
+            ) : (
+              <p className="mb-2 text-lg font-bold text-primary">Test scenario</p>
             )}
             <MarkdownRenderer content={project.test_scenario} />
           </div>
         )}
 
         {project.test_scenario && (
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-center text-sm font-medium text-gray-700">
             Enter your email below to begin — or pick up where you left off.
           </p>
         )}
 
         {/* Registration Form Card */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-md px-6 py-6">
+        <div className="rounded-2xl border-2 border-primary bg-white px-6 py-6">
           <RegistrationForm
             projectId={project.id}
             slug={project.slug}

@@ -4,10 +4,9 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { createAnonClient } from "@/lib/supabase/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Lightbulb, Eye, ExternalLink } from "lucide-react"
+import { ExternalLink } from "lucide-react"
 import FileUpload from "./file-upload"
-import RichText from "./rich-text"
+import RichText, { UrlLink } from "./rich-text"
 import { resolveViewSampleUrl } from "@/lib/utils/sample-url"
 import { errorCategoryFor, trackEvent, type StepContext } from "@/lib/mixpanel"
 
@@ -49,29 +48,20 @@ const STATUS_OPTIONS = [
   { value: "Up For Review", label: "Up For Review" },
 ] as const
 
-import { ACTOR_COLORS as ACTOR_CHIP_STYLES } from "@/lib/constants"
+// Only the chosen answer takes its colour; the rest stay neutral so a row of
+// five buttons doesn't read as five competing signals.
+const STATUS_ACTIVE: Record<string, string> = {
+  Pass: "bg-green-700 text-white",
+  Fail: "bg-red-700 text-white",
+  "N/A": "bg-gray-700 text-white",
+  Blocked: "bg-orange-700 text-white",
+  "Up For Review": "bg-amber-700 text-white",
+}
 
-const STATUS_STYLES: Record<string, { active: string; inactive: string }> = {
-  Pass: {
-    active: "bg-green-600 text-white border-green-600",
-    inactive: "border-green-300 text-green-700 hover:bg-green-50",
-  },
-  Fail: {
-    active: "bg-red-600 text-white border-red-600",
-    inactive: "border-red-300 text-red-700 hover:bg-red-50",
-  },
-  "N/A": {
-    active: "bg-gray-600 text-white border-gray-600",
-    inactive: "border-gray-300 text-gray-700 hover:bg-gray-50",
-  },
-  Blocked: {
-    active: "bg-orange-500 text-white border-orange-500",
-    inactive: "border-orange-300 text-orange-700 hover:bg-orange-50",
-  },
-  "Up For Review": {
-    active: "bg-amber-500 text-white border-amber-500",
-    inactive: "border-amber-300 text-amber-700 hover:bg-amber-50",
-  },
+const COMMENT_PROMPT_COLOR: Record<string, string> = {
+  Fail: "text-red-700",
+  Blocked: "text-orange-700",
+  "Up For Review": "text-amber-800",
 }
 
 /**
@@ -114,26 +104,18 @@ function extractGoogleDriveFileId(url: string): string | null {
   return match ? match[1] : null
 }
 
-/** Get card styling based on completion status */
-function getCardStyles(status: string | null): string {
-  if (!status) {
-    return "border-l-4 border-l-brand-sage-lighter bg-white"
-  }
-  switch (status) {
-    case "Pass":
-      return "border-l-4 border-l-green-500 bg-green-50/50"
-    case "Fail":
-      return "border-l-4 border-l-red-500 bg-red-50/50"
-    case "N/A":
-      return "border-l-4 border-l-gray-400 bg-gray-50/50"
-    case "Blocked":
-      return "border-l-4 border-l-orange-500 bg-orange-50/50"
-    case "Up For Review":
-      return "border-l-4 border-l-amber-500 bg-amber-50/50"
-    default:
-      return "border-l-4 border-l-brand-sage-lighter bg-white"
-  }
+/** Labelled wrapper for the "review this first" sample (image, video or link). */
+function ReferenceBlock({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-4">
+      <p className="mb-1.5 text-sm font-bold text-primary">Review before testing</p>
+      {children}
+    </div>
+  )
 }
+
+const OPEN_IN_NEW_TAB_LINK =
+  "mt-1.5 inline-block text-sm font-bold text-primary underline underline-offset-4 hover:text-primary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
 
 export default function ChecklistItem({
   item,
@@ -322,125 +304,85 @@ export default function ChecklistItem({
         : "Add a comment..."
 
   return (
-    // Issue #10 — step ID anchor for deep-linking
+    // Step ID anchor for deep-linking
     <Card
       id={`step-${item.step_number}`}
-      className={`${getCardStyles(isSaveFailed ? null : status)} scroll-mt-44 rounded-xl shadow-sm hover:shadow-md transition-all duration-200`}
+      className="scroll-mt-44 rounded-xl border-2 border-primary bg-white shadow-none"
     >
-      <CardContent className="py-4">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-
-          {/* === LEFT: Teal "Step N" pill badge (above the text on phones) === */}
-          <div className="flex-shrink-0 sm:pt-0.5">
-            <div className="inline-block rounded-full bg-primary text-white text-xs font-bold px-3 py-1.5 shadow-sm select-none whitespace-nowrap">
-              Step {item.step_number}
-            </div>
+      <CardContent className="p-4 sm:p-5">
+        {/* Meta line: step number, who acts, where, and save state */}
+        <div className="mb-3 flex items-center gap-2.5">
+          <span className="select-none whitespace-nowrap rounded-lg bg-primary px-2.5 py-1 text-sm font-bold text-primary-foreground">
+            Step {item.step_number}
+          </span>
+          <p className="min-w-0 flex-1 text-sm font-medium text-gray-700">
+            <span className="font-bold text-primary">{item.actor}</span>
+            {item.crm_module && <> · {item.crm_module}</>}
+          </p>
+          <div className="flex-shrink-0 text-sm">
+            {previewMode && <span className="font-medium text-gray-600">Preview only</span>}
+            {saveStatus === "saving" && (
+              <span className="animate-pulse font-medium text-gray-700">Saving…</span>
+            )}
+            {saveStatus === "saved" && <span className="font-bold text-green-700">Saved</span>}
+            {saveStatus === "error" && (
+              <button
+                type="button"
+                onClick={() => save(status, comment, "status")}
+                className="rounded font-bold text-red-700 underline underline-offset-2 hover:text-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+              >
+                Not saved — Retry
+              </button>
+            )}
           </div>
+        </div>
 
-          {/* === RIGHT: Everything else === */}
-          <div className="flex-1 min-w-0">
-
-            {/* Header row: actor chip + crm badge + save status */}
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span
-                  className={`text-xs font-medium px-2 py-0.5 rounded-full border leading-none ${ACTOR_CHIP_STYLES[item.actor] ?? "bg-gray-50 text-gray-600 border-gray-200"}`}
-                >
-                  {item.actor}
-                </span>
-                {item.crm_module && (
-                  <Badge variant="outline" className="text-xs text-gray-500 border-gray-200">
-                    {item.crm_module}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {previewMode && (
-                  <span className="text-xs text-gray-400">Preview only</span>
-                )}
-                {saveStatus === "saving" && (
-                  <span className="text-xs text-gray-400 animate-pulse">Saving...</span>
-                )}
-                {saveStatus === "saved" && (
-                  <span className="text-xs text-green-600">Saved</span>
-                )}
-                {saveStatus === "error" && (
-                  <button
-                    type="button"
-                    onClick={() => save(status, comment, "status")}
-                    className="text-xs font-medium text-red-600 underline underline-offset-2 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 rounded"
-                  >
-                    Not saved — Retry
-                  </button>
-                )}
-              </div>
-            </div>
-
-        {/* === INSTRUCTION ZONE — Issue #6: URLs auto-linked via prose-a styles === */}
+        {/* Instructions — URLs auto-linked, long ones shortened */}
         <RichText
-          linkClassName="text-brand-sage-darker hover:text-primary"
-          className="prose prose-sm prose-gray max-w-none mb-4 text-base leading-relaxed text-gray-800
-            prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
-            prose-strong:text-gray-900"
+          linkClassName="text-primary font-bold hover:text-primary/70"
+          className="prose prose-sm prose-gray mb-4 max-w-none text-[17px] font-medium leading-relaxed text-primary
+            prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5
+            prose-strong:font-bold prose-strong:text-primary"
         >
           {item.action}
         </RichText>
 
-        {/* === TIP CALLOUT === */}
         {item.tip && (
-          <div className="mb-4 flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
-            <Lightbulb className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-            <div className="min-w-0 flex-1 text-sm text-amber-800 leading-relaxed">
-              <span className="font-semibold">Tip: </span>
-              <RichText
-                linkClassName="text-amber-900"
-                className="prose prose-sm max-w-none prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900"
-              >
-                {item.tip}
-              </RichText>
-            </div>
+          <div className="mb-4 rounded-lg border-2 border-primary bg-brand-amber-lightest px-3 py-2.5 text-[15px] font-medium leading-relaxed text-primary">
+            <span className="font-bold">Tip: </span>
+            <RichText
+              linkClassName="text-primary font-bold hover:text-primary/70"
+              className="prose prose-sm max-w-none text-[15px] font-medium text-primary prose-p:my-0.5 prose-ul:my-0.5 prose-strong:font-bold prose-strong:text-primary"
+            >
+              {item.tip}
+            </RichText>
           </div>
         )}
 
-        {/* === VISUAL REFERENCE (image preview) — Issue #1: only rendered when viewSample is valid === */}
+        {/* Reference sample — image, Descript / Drive embed, or plain link */}
         {hasImageSample && (
-          <div className="mb-4 p-3 bg-brand-pink-lightest border-2 border-brand-pink-lighter rounded-lg">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-brand-pink-darker" />
-              <p className="text-xs font-bold text-brand-pink-darker uppercase tracking-wide">
-                Review this before testing
-              </p>
-            </div>
+          <ReferenceBlock>
             <a
               href={viewSample!}
               target="_blank"
               rel="noopener noreferrer"
-              className="block"
+              title="Open full size"
+              className="block cursor-zoom-in"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={viewSample!}
                 alt={`Reference for Step ${item.step_number}`}
-                className="max-h-[280px] rounded-md border border-brand-pink-lighter shadow-md hover:shadow-lg transition-shadow cursor-pointer object-contain w-full"
+                className="max-h-[280px] w-full rounded-lg border-2 border-primary bg-white object-contain"
                 loading="lazy"
               />
-              <span className="text-xs text-brand-pink-darker mt-1.5 inline-block hover:underline font-medium">
-                Click to view full size
-              </span>
             </a>
-          </div>
+          </ReferenceBlock>
         )}
 
-        {/* === DESCRIPT EMBED — Issue #1: only rendered when viewSample is valid === */}
         {isDescriptSample && (
-          <div className="mb-4 p-3 bg-brand-pink-lightest border-2 border-brand-pink-lighter rounded-lg">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-brand-pink-darker" />
-              <p className="text-xs font-bold text-brand-pink-darker uppercase tracking-wide">
-                Review this before testing
-              </p>
-            </div>
-            <div className="rounded-md overflow-hidden border border-brand-pink-lighter shadow-sm">
+          <ReferenceBlock>
+            <div className="overflow-hidden rounded-lg border-2 border-primary">
               <iframe
                 src={viewSample!}
                 className="w-full"
@@ -449,27 +391,15 @@ export default function ChecklistItem({
                 title={`Guide for Step ${item.step_number}`}
               />
             </div>
-            <a
-              href={viewSample!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-brand-pink-darker mt-1.5 inline-block hover:underline font-medium"
-            >
+            <a href={viewSample!} target="_blank" rel="noopener noreferrer" className={OPEN_IN_NEW_TAB_LINK}>
               Open in new tab
             </a>
-          </div>
+          </ReferenceBlock>
         )}
 
-        {/* === GOOGLE DRIVE EMBED — Issue #1: only rendered when viewSample is valid === */}
         {isGoogleDriveSample && (
-          <div className="mb-4 p-3 bg-brand-pink-lightest border-2 border-brand-pink-lighter rounded-lg">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-brand-pink-darker" />
-              <p className="text-xs font-bold text-brand-pink-darker uppercase tracking-wide">
-                Review this before testing
-              </p>
-            </div>
-            <div className="rounded-md overflow-hidden border border-brand-pink-lighter shadow-sm">
+          <ReferenceBlock>
+            <div className="overflow-hidden rounded-lg border-2 border-primary">
               <iframe
                 src={`https://drive.google.com/file/d/${driveFileId}/preview`}
                 className="w-full"
@@ -479,66 +409,47 @@ export default function ChecklistItem({
                 title={`Guide for Step ${item.step_number}`}
               />
             </div>
-            <a
-              href={viewSample!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-brand-pink-darker mt-1.5 inline-block hover:underline font-medium"
-            >
+            <a href={viewSample!} target="_blank" rel="noopener noreferrer" className={OPEN_IN_NEW_TAB_LINK}>
               Open in new tab
             </a>
-          </div>
+          </ReferenceBlock>
         )}
 
-        {/* === PLAIN LINK (fallback for other non-image URLs) — Issue #1: only rendered when viewSample is valid === */}
         {hasPlainLinkSample && (
-          <div className="mb-4 p-3 bg-brand-pink-lightest border-2 border-brand-pink-lighter rounded-lg">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Eye className="h-4 w-4 text-brand-pink-darker" />
-              <p className="text-xs font-bold text-brand-pink-darker uppercase tracking-wide">
-                Review this before testing
-              </p>
-            </div>
+          <ReferenceBlock>
             <a
               href={viewSample!}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-brand-pink-lighter rounded-md text-sm font-medium text-brand-pink-darker hover:bg-brand-pink-lightest transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 rounded-lg border-2 border-primary bg-white px-4 py-2.5 text-sm font-bold text-primary hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <ExternalLink className="h-4 w-4" />
-              <span>View Guide/Sample</span>
+              <span>View guide or sample</span>
             </a>
-          </div>
+          </ReferenceBlock>
         )}
 
-        {/* === TALKPUSH LOGIN LINK === */}
         {talkpushLoginLink && isValidGuideUrl(talkpushLoginLink) && (
-          <div className="mb-4 p-3 bg-brand-amber-lightest border border-brand-amber-lighter rounded-lg">
-            <p className="text-xs font-medium text-brand-amber-darker mb-1">Talkpush Login Link:</p>
-            <a
-              href={talkpushLoginLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-brand-amber-darker hover:underline break-all"
-            >
-              {talkpushLoginLink}
-            </a>
+          <div className="mb-4 rounded-lg border-2 border-primary bg-brand-amber-lightest px-3 py-2.5">
+            <p className="mb-0.5 text-sm font-bold text-primary">Talkpush login link</p>
+            <p className="text-sm font-medium text-primary [overflow-wrap:anywhere]">
+              <UrlLink url={talkpushLoginLink} linkClassName="font-bold text-primary hover:text-primary/70" />
+            </p>
           </div>
         )}
 
-        {/* === STATUS BUTTONS — Issue #2: active style applied via STATUS_STYLES[value].active === */}
+        {/* Status buttons — only the chosen answer is filled */}
         {!previewMode && (
-          <div className="grid grid-cols-6 sm:flex gap-2 mb-4">
+          <div className="mb-4 grid grid-cols-6 gap-2 sm:flex">
             {STATUS_OPTIONS.map(({ value, label }, index) => {
               const isActive = status === value
-              const styles = STATUS_STYLES[value]
-              // A selected-but-unsaved answer looks outlined, not filled, so it
-              // doesn't read as done.
+              // A selected-but-unsaved answer looks outlined (dashed), not filled,
+              // so it doesn't read as done.
               const stateClass = isActive
                 ? isSaveFailed
-                  ? `${styles.inactive} border-2 border-dashed`
-                  : styles.active
-                : styles.inactive
+                  ? "border-dashed bg-white text-primary"
+                  : STATUS_ACTIVE[value]
+                : "bg-white text-primary hover:bg-secondary"
               return (
                 <button
                   key={value}
@@ -546,9 +457,9 @@ export default function ChecklistItem({
                   onClick={() => handleStatusChange(value)}
                   aria-pressed={isActive}
                   className={`
-                    px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
-                    min-h-[44px] sm:flex-1 ${index < 3 ? "col-span-2" : "col-span-3"}
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2
+                    min-h-[48px] rounded-lg border-2 border-primary px-3 py-2 text-[15px] font-bold transition-colors
+                    sm:flex-1 ${index < 3 ? "col-span-2" : "col-span-3"}
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
                     ${stateClass}
                   `}
                 >
@@ -559,12 +470,12 @@ export default function ChecklistItem({
           </div>
         )}
 
-        {/* === COMMENT SECTION === */}
-        {!previewMode && !showComment && !status && (
+        {/* Comment */}
+        {!previewMode && !showComment && (
           <button
             type="button"
             onClick={() => setShowComment(true)}
-            className="text-xs text-gray-400 hover:text-brand-sage-darker transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2 rounded"
+            className="rounded text-sm font-bold text-primary underline underline-offset-4 hover:text-primary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             + Add comment
           </button>
@@ -572,30 +483,18 @@ export default function ChecklistItem({
         {!previewMode && (showComment || status === "Fail" || status === "Blocked" || status === "Up For Review") && (
           <div>
             {(status === "Fail" || status === "Blocked" || status === "Up For Review") && (
-              <p className={`text-xs font-medium mb-1 ${status === "Fail" ? "text-red-600" : status === "Blocked" ? "text-orange-600" : "text-amber-600"}`}>
-                {commentPrompt}
-              </p>
+              <p className={`mb-1 text-sm font-bold ${COMMENT_PROMPT_COLOR[status]}`}>{commentPrompt}</p>
             )}
             <Textarea
               placeholder={commentPrompt}
               value={comment}
               onChange={(e) => handleCommentChange(e.target.value)}
               rows={2}
-              className="text-sm"
+              className="rounded-lg border-2 border-primary text-base font-medium md:text-base"
             />
           </div>
         )}
-        {!previewMode && !showComment && status && status !== "Fail" && status !== "Blocked" && status !== "Up For Review" && (
-          <button
-            type="button"
-            onClick={() => setShowComment(true)}
-            className="text-xs text-gray-400 hover:text-brand-sage-darker transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender-darker focus-visible:ring-offset-2 rounded"
-          >
-            + Add comment
-          </button>
-        )}
 
-        {/* === FILE UPLOAD === */}
         {!previewMode && responseId && (
           <div className="mt-3">
             <FileUpload
@@ -612,9 +511,6 @@ export default function ChecklistItem({
             />
           </div>
         )}
-
-          </div>{/* end right column */}
-        </div>{/* end outer flex */}
       </CardContent>
     </Card>
   )

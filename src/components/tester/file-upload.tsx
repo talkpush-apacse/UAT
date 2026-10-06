@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react"
 import { createAnonClient } from "@/lib/supabase/client"
-import { Paperclip, FileText, File as FileIcon, X } from "lucide-react"
+import { Paperclip, FileText, File as FileIcon, X, Image as ImageIcon } from "lucide-react"
 import { toast } from "sonner"
 import { fileKindFor, trackEvent, type ViewMode } from "@/lib/mixpanel"
 
@@ -41,15 +41,14 @@ function isSafeAttachmentUrl(url: string): boolean {
   }
 }
 
-/** Icon for non-image attachments */
+/** Icon for an attachment chip */
 function AttachmentIcon({ mimeType }: { mimeType: string }) {
-  if (mimeType === "application/pdf") {
-    return <FileText className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+  const cls = "h-4 w-4 flex-shrink-0 text-primary"
+  if (mimeType.startsWith("image/")) return <ImageIcon className={cls} />
+  if (mimeType === "application/pdf" || mimeType.includes("word") || mimeType.includes("document")) {
+    return <FileText className={cls} />
   }
-  if (mimeType.includes("word") || mimeType.includes("document")) {
-    return <FileText className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
-  }
-  return <FileIcon className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+  return <FileIcon className={cls} />
 }
 
 export default function FileUpload({
@@ -81,7 +80,7 @@ export default function FileUpload({
       const fail = (error: string, stage: UploadStage): UploadFailure => ({ error, stage, mimeType: file.type })
 
       if (!ALLOWED_MIME_TYPES.has(file.type)) {
-        return fail(`${file.name}: unsupported file type`, "file_type")
+        return fail(`${file.name}: unsupported file type. Use an image, PDF, or Word file.`, "file_type")
       }
       if (file.size > MAX_FILE_SIZE) {
         return fail(`${file.name}: exceeds 10MB limit`, "file_size")
@@ -245,7 +244,7 @@ export default function FileUpload({
           {attachments.map((att) => (
             <div
               key={att.id}
-              className="group flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-gray-200 text-xs hover:bg-gray-50 transition-colors"
+              className="group flex items-center gap-1.5 rounded-lg border-2 border-primary bg-white px-2.5 py-1.5 text-sm"
             >
               {isSafeAttachmentUrl(att.file_url) ? (
                 <a
@@ -254,24 +253,24 @@ export default function FileUpload({
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5"
                 >
-                  {att.mime_type.startsWith("image/") ? <span>🖼</span> : <AttachmentIcon mimeType={att.mime_type} />}
-                  <span className="max-w-[140px] truncate text-gray-700">{att.file_name}</span>
+                  <AttachmentIcon mimeType={att.mime_type} />
+                  <span className="max-w-[160px] truncate font-bold text-primary">{att.file_name}</span>
                 </a>
               ) : (
-                <span className="flex items-center gap-1.5 text-gray-400" title="This file's link couldn't be verified as safe to open">
-                  {att.mime_type.startsWith("image/") ? <span>🖼</span> : <AttachmentIcon mimeType={att.mime_type} />}
+                <span className="flex items-center gap-1.5 text-gray-600" title="This file's link couldn't be verified as safe to open">
+                  <AttachmentIcon mimeType={att.mime_type} />
                   <span className="max-w-[140px] truncate">{att.file_name}</span>
                 </span>
               )}
               <button
                 type="button"
                 onClick={() => handleDelete(att)}
-                className="-my-1 -mr-1.5 ml-0 inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                className="-my-1 -mr-1.5 ml-0 inline-flex h-8 w-8 items-center justify-center rounded-md text-primary hover:bg-red-50 hover:text-red-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                 aria-label={`Remove ${att.file_name}`}
                 data-track="Remove attachment"
                 title="Remove attachment"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           ))}
@@ -289,13 +288,9 @@ export default function FileUpload({
           if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click()
         }}
         className={`
-          group relative rounded-xl border-2 border-dashed px-4 py-3
-          flex items-center gap-3 transition-all duration-150 cursor-pointer
-          ${uploading
-            ? "border-brand-sage-lighter bg-brand-sage-lightest cursor-default"
-            : "border-gray-200 bg-gray-50 hover:border-brand-sage-lighter hover:bg-brand-sage-lightest"
-          }
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-sage-lighter focus-visible:border-brand-sage-lighter
+          group relative flex cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed border-primary px-3 py-3 transition-colors
+          ${uploading ? "cursor-default bg-secondary" : "bg-white hover:bg-secondary"}
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
         `}
       >
         <input
@@ -307,23 +302,17 @@ export default function FileUpload({
           className="hidden"
         />
 
-        {/* Icon */}
-        <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 group-hover:border-brand-sage-lighter flex items-center justify-center flex-shrink-0 transition-colors">
-          {uploading ? (
-            <div className="h-4 w-4 border-2 border-brand-sage-lighter border-t-brand-sage-darker rounded-full animate-spin" />
-          ) : (
-            <Paperclip className="h-4 w-4 text-gray-400 group-hover:text-brand-sage-darker transition-colors" />
-          )}
-        </div>
+        {uploading ? (
+          <div className="h-5 w-5 flex-shrink-0 animate-spin rounded-full border-2 border-gray-300 border-t-primary" />
+        ) : (
+          <Paperclip className="h-5 w-5 flex-shrink-0 text-primary" />
+        )}
 
-        {/* Text */}
         <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-600 group-hover:text-brand-sage-darker transition-colors leading-tight">
-            {uploading ? "Uploading…" : "Click to attach files"}
+          <p className="text-[15px] font-bold leading-tight text-primary">
+            {uploading ? "Uploading…" : "Add screenshot or file"}
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            PNG, JPG, GIF, PDF, DOCX · Max 10MB · or paste a screenshot
-          </p>
+          <p className="mt-0.5 text-sm font-medium text-gray-700">Max 10MB. Pasting a screenshot works too.</p>
         </div>
       </div>
 
@@ -331,7 +320,7 @@ export default function FileUpload({
       {uploadErrors.length > 0 && (
         <div className="space-y-0.5">
           {uploadErrors.map((err, i) => (
-            <p key={i} className="text-xs text-red-600">
+            <p key={i} className="text-sm font-bold text-red-700">
               {err}
             </p>
           ))}

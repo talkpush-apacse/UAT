@@ -109,7 +109,7 @@ export default function RegistrationForm({
   }
 
   const previewButton = (
-    <Button asChild type="button" variant="outline" className="w-full h-10">
+    <Button asChild type="button" variant="outline" className="h-11 w-full rounded-xl border-2 border-primary font-bold">
       <Link href={`/test/${slug}/preview`}>
         <Eye className="h-4 w-4" />
         Preview UAT Steps
@@ -127,25 +127,25 @@ export default function RegistrationForm({
           logoClassName="h-7"
         />
         {companyName && (
-          <h2 className="text-lg font-semibold text-gray-900">{companyName}</h2>
+          <h2 className="text-xl font-bold text-primary">{companyName}</h2>
         )}
-        <p className="text-sm text-gray-500 mt-1">User Acceptance Testing</p>
+        <p className="mt-1 text-sm font-medium text-gray-700">User Acceptance Testing</p>
       </div>
 
       {step === "email" && (
         <form onSubmit={handleEmailContinue} className="space-y-4" noValidate>
           {welcomeName !== null ? (
-            <div className="p-3 bg-brand-sage-lightest border border-brand-sage-lighter rounded-lg text-sm text-brand-sage-darker">
+            <div className="rounded-lg border-2 border-primary bg-brand-sage-lightest p-3 text-sm font-bold text-primary">
               Welcome back{welcomeName ? `, ${welcomeName}` : ""}! Taking you to your UAT steps…
             </div>
           ) : (
-            <p className="text-sm text-gray-600 text-center">
+            <p className="text-center text-sm font-medium text-gray-800">
               Enter your email to start — or to continue where you left off.
             </p>
           )}
           <div className="space-y-1.5">
-            <Label htmlFor="lookup-email" className="text-xs text-gray-500">
-              Email<span className="text-red-500 ml-0.5">*</span>
+            <Label htmlFor="lookup-email" className="text-sm font-bold text-primary">
+              Email<span className="ml-0.5 text-red-700">*</span>
             </Label>
             <Input
               id="lookup-email"
@@ -154,15 +154,15 @@ export default function RegistrationForm({
               autoComplete="email"
               placeholder="john@example.com"
               required
-              className="h-10"
+              className="h-11 rounded-lg border-2 border-primary text-base font-medium md:text-base"
               ref={emailRef}
               defaultValue={email}
               disabled={isLookingUp}
             />
-            {clientErrors.email && <p className="text-red-500 text-xs mt-1">{clientErrors.email}</p>}
-            {lookupError && <p className="text-sm text-red-600">{lookupError}</p>}
+            {clientErrors.email && <p className="mt-1 text-sm font-bold text-red-700">{clientErrors.email}</p>}
+            {lookupError && <p className="text-sm font-bold text-red-700">{lookupError}</p>}
           </div>
-          <Button type="submit" className="w-full h-10" disabled={isLookingUp}>
+          <Button type="submit" className="h-11 w-full rounded-xl border-2 border-primary font-bold" disabled={isLookingUp}>
             {isLookingUp ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -201,35 +201,35 @@ export default function RegistrationForm({
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="email" value={email} />
 
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-sm">
-          <span className="min-w-0 truncate text-gray-700">{email}</span>
+        <div className="flex items-center justify-between gap-3 rounded-lg border-2 border-primary bg-white px-3 py-2 text-sm font-medium">
+          <span className="min-w-0 truncate text-primary">{email}</span>
           <button
             type="button"
             onClick={() => setStep("email")}
-            className="flex-shrink-0 text-xs font-medium text-brand-sage-darker underline underline-offset-2 hover:text-primary"
+            className="flex-shrink-0 rounded text-sm font-bold text-primary underline underline-offset-4 hover:text-primary/70"
           >
             Change
           </button>
         </div>
-        <p className="text-sm text-gray-600">New here — add your name and mobile to start.</p>
+        <p className="text-sm font-medium text-gray-800">New here — add your name and mobile to start.</p>
         <input type="hidden" name="mobile" value={phone ? `+${phone}` : ""} />
 
         {state.returning && state.testerName && (
-          <div className="p-3 bg-brand-sage-lightest border border-brand-sage-lighter rounded-lg text-sm text-brand-sage-darker">
+          <div className="rounded-lg border-2 border-primary bg-brand-sage-lightest p-3 text-sm font-bold text-primary">
             Welcome back, {state.testerName}! Redirecting to your UAT steps...
           </div>
         )}
 
         <div className="space-y-1.5">
-          <Label htmlFor="name" className="text-xs text-gray-500">
-            Full Name<span className="text-red-500 ml-0.5">*</span>
+          <Label htmlFor="name" className="text-sm font-bold text-primary">
+            Full Name<span className="ml-0.5 text-red-700">*</span>
           </Label>
           <Input
             id="name"
             name="name"
             placeholder="John Smith"
             required
-            className="h-10"
+            className="h-11 rounded-lg border-2 border-primary text-base font-medium md:text-base"
             ref={nameRef}
             onBlur={(e) => {
               if (!e.target.value.trim()) {
@@ -239,19 +239,19 @@ export default function RegistrationForm({
               }
             }}
           />
-          {clientErrors.name && <p className="text-red-500 text-xs mt-1">{clientErrors.name}</p>}
+          {clientErrors.name && <p className="mt-1 text-sm font-bold text-red-700">{clientErrors.name}</p>}
           {state.fieldErrors?.name && (
-            <p className="text-sm text-red-600">{state.fieldErrors.name[0]}</p>
+            <p className="text-sm font-bold text-red-700">{state.fieldErrors.name[0]}</p>
           )}
         </div>
 
         {state.fieldErrors?.email && (
-          <p className="text-sm text-red-600">{state.fieldErrors.email[0]}</p>
+          <p className="text-sm font-bold text-red-700">{state.fieldErrors.email[0]}</p>
         )}
 
         <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500">
-            Mobile Number<span className="text-red-500 ml-0.5">*</span>
+          <Label className="text-sm font-bold text-primary">
+            Mobile Number<span className="ml-0.5 text-red-700">*</span>
           </Label>
           <div ref={phoneWrapperRef}>
           <PhoneInput
@@ -270,23 +270,23 @@ export default function RegistrationForm({
             }}
             inputProps={{ required: true }}
             containerStyle={{ width: "100%" }}
-            inputStyle={{ width: "100%", height: "40px", fontSize: "14px" }}
+            inputStyle={{ width: "100%", height: "44px", fontSize: "15px", fontWeight: 500, border: "2px solid hsl(240 10% 8%)", borderRadius: "8px" }}
             enableSearch
             searchPlaceholder="Search country"
           />
           </div>
-          <p className="text-xs text-gray-400">Wrong country code? Tap the flag to change it.</p>
-          {clientErrors.mobile && <p className="text-red-500 text-xs mt-1">{clientErrors.mobile}</p>}
+          <p className="text-sm font-medium text-gray-700">Wrong country code? Tap the flag to change it.</p>
+          {clientErrors.mobile && <p className="mt-1 text-sm font-bold text-red-700">{clientErrors.mobile}</p>}
           {state.fieldErrors?.mobile && (
-            <p className="text-sm text-red-600">{state.fieldErrors.mobile[0]}</p>
+            <p className="text-sm font-bold text-red-700">{state.fieldErrors.mobile[0]}</p>
           )}
         </div>
 
         {state.error && (
-          <p className="text-sm text-red-600">{state.error}</p>
+          <p className="text-sm font-bold text-red-700">{state.error}</p>
         )}
 
-        <Button type="submit" className="w-full h-10">
+        <Button type="submit" className="h-11 w-full rounded-xl border-2 border-primary font-bold">
           Start Testing
         </Button>
         {previewButton}

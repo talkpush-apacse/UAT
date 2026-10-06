@@ -1,7 +1,6 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Bookmark, Lightbulb } from "lucide-react"
 import RichText from "./rich-text"
 
 /**
@@ -20,50 +19,30 @@ export default function PhaseHeaderCard({
   tip: string | null
 }) {
   return (
-    <Card className="rounded-xl shadow-sm border-l-4 border-l-brand-lavender bg-brand-lavender-lightest">
-      <CardContent className="py-5">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-lavender-lighter flex items-center justify-center text-brand-lavender-darker">
-            <Bookmark className="h-4 w-4" />
-          </div>
+    <Card className="rounded-xl border-2 border-primary bg-brand-lavender-lightest shadow-none">
+      <CardContent className="p-4 sm:p-5">
+        {label && <p className="mb-1.5 text-sm font-bold text-primary">{label}</p>}
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-lavender-darker bg-white border border-brand-lavender-lighter rounded-full px-2 py-0.5">
-                Section Header
-              </span>
-              {label && (
-                <span className="text-[11px] font-mono uppercase tracking-wide text-brand-lavender-darker">
-                  {label}
-                </span>
-              )}
-            </div>
+        <RichText
+          linkClassName="text-primary font-bold hover:text-primary/70"
+          className="prose prose-sm prose-gray max-w-none text-[17px] font-medium leading-relaxed text-primary
+            prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5
+            prose-strong:font-bold prose-strong:text-primary"
+        >
+          {action}
+        </RichText>
 
+        {tip && (
+          <div className="mt-3 rounded-lg border-2 border-primary bg-brand-amber-lightest px-3 py-2.5 text-[15px] font-medium leading-relaxed text-primary">
+            <span className="font-bold">Tip: </span>
             <RichText
-              linkClassName="text-brand-lavender-darker"
-              className="prose prose-sm prose-gray max-w-none text-base leading-relaxed text-gray-800
-                prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
-                prose-strong:text-gray-900"
+              linkClassName="text-primary font-bold hover:text-primary/70"
+              className="prose prose-sm max-w-none text-[15px] font-medium text-primary prose-p:my-0.5 prose-ul:my-0.5 prose-strong:font-bold prose-strong:text-primary"
             >
-              {action}
+              {tip}
             </RichText>
-
-            {tip && (
-              <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
-                <Lightbulb className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                <div className="min-w-0 flex-1 text-sm text-amber-800 leading-relaxed">
-                  <span className="font-semibold">Tip: </span>
-                  <RichText
-                    linkClassName="text-amber-900"
-                    className="prose prose-sm max-w-none prose-p:my-0.5 prose-ul:my-0.5 prose-strong:text-amber-900"
-                  >
-                    {tip}
-                  </RichText>
-                </div>
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   )

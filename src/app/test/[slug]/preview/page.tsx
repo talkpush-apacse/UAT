@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ClipboardList, UserPlus } from "lucide-react"
+import { UserPlus } from "lucide-react"
 import { createAnonSupabaseClient } from "@/lib/supabase/server"
 import ChecklistView from "@/components/tester/checklist-view"
 
@@ -28,21 +28,16 @@ export default async function ChecklistPreviewPage({
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 pt-6">
-        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-sage-lightest text-brand-sage-darker">
-              <ClipboardList className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">UAT Steps Preview</p>
-              <p className="text-sm text-gray-500">
-                Review the steps before registering. Your responses will be saved after you start testing.
-              </p>
-            </div>
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border-2 border-primary bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-bold text-primary">UAT steps preview</p>
+            <p className="text-sm font-medium text-gray-700">
+              Review the steps before registering. Your responses are saved once you start testing.
+            </p>
           </div>
           <Link
             href={`/test/${project.slug}`}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <UserPlus className="h-4 w-4" />
             Register
