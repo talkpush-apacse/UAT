@@ -37,9 +37,8 @@ import {
   Bookmark,
 } from "lucide-react"
 import MDEditor from "./lazy-md-editor"
-import ReactMarkdown from "react-markdown"
-import rehypeRaw from "rehype-raw"
 import RichActionEditor from "./RichActionEditor"
+import ActionBody from "@/components/tester/action-body"
 import { SampleMediaInput } from "./sample-media-input"
 import { type ChecklistItem, ACTOR_STYLES, PATH_STYLES } from "./types"
 import { resolveViewSampleUrl } from "@/lib/utils/sample-url"
@@ -370,9 +369,7 @@ export function SortableStepCard({
                 )}
               </div>
 
-              <div className="prose prose-sm prose-gray max-w-none text-sm text-gray-800 leading-relaxed prose-p:my-0.5 prose-strong:text-gray-900">
-                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{item.action}</ReactMarkdown>
-              </div>
+              <ActionBody compact highlightFirstLink={false}>{item.action}</ActionBody>
 
               {item.tip && (
                 <div className="mt-2 inline-flex items-center gap-1 text-xs text-amber-600">
@@ -500,9 +497,7 @@ export function SortableStepCard({
               )}
             </div>
 
-            <div className="prose prose-sm prose-gray max-w-none text-sm text-gray-800 leading-relaxed prose-p:my-0.5 prose-ul:my-0.5 prose-ol:my-0.5 prose-li:my-0">
-              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{item.action}</ReactMarkdown>
-            </div>
+            <ActionBody compact highlightFirstLink={false}>{item.action}</ActionBody>
 
             {/* Indicator icons */}
             {(item.crm_module || item.tip || item.view_sample?.trim()) && (
