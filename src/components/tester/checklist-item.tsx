@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ExternalLink } from "lucide-react"
 import FileUpload from "./file-upload"
 import RichText, { UrlLink } from "./rich-text"
+import ActionBody from "./action-body"
 import { resolveViewSampleUrl } from "@/lib/utils/sample-url"
 import { errorCategoryFor, trackEvent, type StepContext } from "@/lib/mixpanel"
 
@@ -307,7 +308,7 @@ export default function ChecklistItem({
     // Step ID anchor for deep-linking
     <Card
       id={`step-${item.step_number}`}
-      className="scroll-mt-44 rounded-xl border-2 border-primary bg-white shadow-none"
+      className="scroll-mt-28 rounded-xl border-2 border-primary bg-white shadow-none"
     >
       <CardContent className="p-4 sm:p-5">
         {/* Meta line: step number, who acts, where, and save state */}
@@ -337,15 +338,10 @@ export default function ChecklistItem({
           </div>
         </div>
 
-        {/* Instructions — URLs auto-linked, long ones shortened */}
-        <RichText
-          linkClassName="text-primary font-bold hover:text-primary/70"
-          className="prose prose-sm prose-gray mb-4 max-w-none text-[17px] font-medium leading-relaxed text-primary
-            prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5
-            prose-strong:font-bold prose-strong:text-primary"
-        >
-          {item.action}
-        </RichText>
+        {/* Instructions — steps, main link as a button, warnings as a callout, "Expected:" as its own block */}
+        <div className="mb-4">
+          <ActionBody>{item.action}</ActionBody>
+        </div>
 
         {item.tip && (
           <div className="mb-4 rounded-lg border-2 border-primary bg-brand-amber-lightest px-3 py-2.5 text-[15px] font-medium leading-relaxed text-primary">

@@ -270,7 +270,7 @@ function ClassicChecklistView({
         {!previewMode && (
           <Progress
             value={progressPct}
-            className="h-3.5 border-2 border-primary bg-white"
+            className="h-2.5 border-2 border-primary bg-white"
             aria-label="Test completion progress"
             aria-valuenow={completedCount}
             aria-valuemin={0}
@@ -281,14 +281,14 @@ function ClassicChecklistView({
           <button
             type="button"
             onClick={() => scrollToStep(unansweredItems[0].step_number)}
-            className={`mt-2.5 inline-flex items-center gap-1 text-sm ${TESTER_LINK}`}
+            className={`mt-1.5 inline-flex items-center gap-1 text-sm ${TESTER_LINK}`}
           >
             Next unanswered: Step {unansweredItems[0].step_number}
             <ArrowDown className="h-4 w-4" />
           </button>
         )}
         {failedSaveItems.length > 0 && (
-          <div role="alert" className="mt-3 flex items-start gap-2 rounded-lg border-2 border-red-700 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
+          <div role="alert" className="mt-2 flex items-start gap-2 rounded-lg border-2 border-red-700 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
             <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <p>
               {failedSaveItems.length === 1 ? "1 answer didn't save" : `${failedSaveItems.length} answers didn't save`}

@@ -305,7 +305,7 @@ export default function ChecklistWizardView({
       >
         <Progress
           value={progressPct}
-          className="h-3.5 border-2 border-primary bg-white"
+          className="h-2.5 border-2 border-primary bg-white"
           aria-label="Wizard step progress"
           aria-valuenow={currentIndex + 1}
           aria-valuemin={1}

@@ -2,21 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import MDEditor from "./lazy-md-editor"
-
-/* ------------------------------------------------------------------ */
-/*  Color presets                                                       */
-/* ------------------------------------------------------------------ */
-
-const COLOR_PRESETS = [
-  { name: "Red",    hex: "#dc2626" },
-  { name: "Orange", hex: "#ea580c" },
-  { name: "Amber",  hex: "#d97706" },
-  { name: "Green",  hex: "#16a34a" },
-  { name: "Blue",   hex: "#2563eb" },
-  { name: "Purple", hex: "#9333ea" },
-  { name: "Teal",   hex: "#0d9488" },
-  { name: "Gray",   hex: "#6b7280" },
-]
+import ActionBody from "@/components/tester/action-body"
+import { splitIntoSteps } from "@/lib/utils/action-text"
 
 /* ------------------------------------------------------------------ */
 /*  Helper: insert text at a textarea's cursor / selection             */
@@ -61,23 +48,22 @@ interface Props {
 export default function RichActionEditor({ value, onChange, height = 120 }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [showLinkDialog, setShowLinkDialog] = useState(false)
-  const [showColorPicker, setShowColorPicker] = useState(false)
+  const [undoSplit, setUndoSplit] = useState<{ before: string; after: string } | null>(null)
   const [linkText, setLinkText] = useState("")
   const [linkUrl, setLinkUrl] = useState("")
   const linkTextRef = useRef<HTMLInputElement>(null)
 
   /* ── Close pickers on outside click ── */
   useEffect(() => {
-    if (!showColorPicker && !showLinkDialog) return
+    if (!showLinkDialog) return
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setShowColorPicker(false)
         setShowLinkDialog(false)
       }
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
-  }, [showColorPicker, showLinkDialog])
+  }, [showLinkDialog])
 
   /* ── Focus link text input when dialog opens ── */
   useEffect(() => {
@@ -97,7 +83,6 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
     const selected = ta ? value.slice(ta.selectionStart, ta.selectionEnd) : ""
     setLinkText(selected)
     setLinkUrl("")
-    setShowColorPicker(false)
     setShowLinkDialog(true)
   }
 
@@ -121,19 +106,28 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
     setLinkUrl("")
   }
 
-  /* ── Insert color span ── */
-  const handleInsertColor = (hex: string) => {
+  /* ── Insert a warning callout (a "> " paragraph, shown to testers as a red box) ── */
+  const handleInsertWarning = () => {
     const ta = getTextarea()
     if (!ta) return
-    insertAtCursor(
-      ta,
-      `<span style="color:${hex}">`,
-      "</span>",
-      "colored text",
-      value,
-      onChange
-    )
-    setShowColorPicker(false)
+    const selected = value.slice(ta.selectionStart, ta.selectionEnd).trim().replace(/\s*\n+\s*/g, " ")
+    const before = value.slice(0, ta.selectionStart).replace(/\s+$/, "")
+    const after = value.slice(ta.selectionEnd).replace(/^\s+/, "")
+    onChange([before, `> ${selected || "Warning text"}`, after].filter(Boolean).join("\n\n"))
+    setShowLinkDialog(false)
+  }
+
+  /* ── Turn one long paragraph into a numbered list (undoable) ── */
+  const splitResult = splitIntoSteps(value)
+  const canUndoSplit = undoSplit !== null && value === undoSplit.after
+  const handleSplit = () => {
+    if (!splitResult) return
+    setUndoSplit({ before: value, after: splitResult })
+    onChange(splitResult)
+  }
+  const handleUndoSplit = () => {
+    if (undoSplit) onChange(undoSplit.before)
+    setUndoSplit(null)
   }
 
   /* ── Keyboard: Enter in link dialog ── */
@@ -157,36 +151,41 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
           Link
         </button>
 
-        {/* Color button */}
+        {/* Warning button */}
         <button
           type="button"
-          onClick={() => { setShowLinkDialog(false); setShowColorPicker(p => !p) }}
-          title="Add text color"
+          onClick={handleInsertWarning}
+          title='Add a warning box. Testers see it as a red callout.'
           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-gray-200 bg-white text-gray-600 hover:bg-brand-sage-lightest hover:border-brand-sage-lighter hover:text-brand-sage-darker transition-colors"
         >
-          <ColorIcon />
-          Color
+          <WarningIcon />
+          Warning
         </button>
 
-        {/* Color picker dropdown */}
-        {showColorPicker && (
-          <div className="absolute top-8 left-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
-            <p className="text-[10px] text-gray-400 font-medium mb-1.5 uppercase tracking-wide px-0.5">
-              Text Color
-            </p>
-            <div className="grid grid-cols-4 gap-1.5">
-              {COLOR_PRESETS.map(({ name, hex }) => (
-                <button
-                  key={hex}
-                  type="button"
-                  title={name}
-                  onClick={() => handleInsertColor(hex)}
-                  className="w-7 h-7 rounded-full border-2 border-white shadow ring-1 ring-gray-200 hover:ring-2 hover:ring-offset-1 transition-all"
-                  style={{ backgroundColor: hex }}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Split into numbered steps */}
+        {canUndoSplit ? (
+          <button
+            type="button"
+            onClick={handleUndoSplit}
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Undo split
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSplit}
+            disabled={!splitResult}
+            title={
+              splitResult
+                ? "Turn each sentence into a numbered step (you can undo)"
+                : "Works on a plain paragraph of 3 or more sentences"
+            }
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-gray-200 bg-white text-gray-600 hover:bg-brand-sage-lightest hover:border-brand-sage-lighter hover:text-brand-sage-darker transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-gray-200 disabled:hover:text-gray-600"
+          >
+            <ListIcon />
+            Split into steps
+          </button>
         )}
 
         {/* Link dialog dropdown */}
@@ -247,6 +246,28 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
         height={height}
         preview="edit"
       />
+
+      <p className="mt-1 text-xs text-gray-500">
+        Write <span className="font-mono">Expected: …</span> for the expected-result box. Start a paragraph with{" "}
+        <span className="font-mono">&gt;</span> for a warning box.
+      </p>
+      {value.length > 600 && !/^\s*\d+[.)]\s/m.test(value) && (
+        <p className="mt-1 text-xs text-amber-700">
+          Long step ({value.length} characters). Testers give it a single Pass/Fail, so consider a numbered list or
+          splitting it into two steps.
+        </p>
+      )}
+
+      {value.trim() && (
+        <details open className="mt-2 rounded-md border border-dashed border-gray-300 bg-gray-50">
+          <summary className="cursor-pointer select-none px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
+            How testers see this
+          </summary>
+          <div className="border-t border-dashed border-gray-300 bg-white p-3">
+            <ActionBody>{value}</ActionBody>
+          </div>
+        </details>
+      )}
     </div>
   )
 }
@@ -262,13 +283,25 @@ function LinkIcon() {
   )
 }
 
-function ColorIcon() {
+function WarningIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="4 20 8 12 12 20" />
-      <polyline points="20 20 16 12 12 20" />
-      <line x1="6" y1="16" x2="18" y2="16" />
-      <line x1="2" y1="22" x2="22" y2="22" stroke="#dc2626" strokeWidth="3" />
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  )
+}
+
+function ListIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="10" y1="6" x2="21" y2="6" />
+      <line x1="10" y1="12" x2="21" y2="12" />
+      <line x1="10" y1="18" x2="21" y2="18" />
+      <path d="M4 6h1v4" />
+      <path d="M4 10h2" />
+      <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
     </svg>
   )
 }
