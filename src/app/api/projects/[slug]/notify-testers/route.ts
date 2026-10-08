@@ -7,10 +7,13 @@ import { buildUatReviewedEmailHtml, buildUatReviewedEmailText } from "@/lib/emai
 
 export const dynamic = "force-dynamic"
 
+const MAX_MESSAGE_LENGTH = 1000
+
 /* ------------------------------------------------------------------ */
 /*  POST /api/projects/[slug]/notify-testers                           */
 /*  Sends a "review complete" email to each specified tester.          */
-/*  Accepts an optional testerIds array to target specific testers.    */
+/*  Accepts an optional testerIds array to target specific testers    */
+/*  and an optional plain-text message shown in every email.           */
 /* ------------------------------------------------------------------ */
 
 export async function POST(
@@ -36,6 +39,8 @@ export async function POST(
     const body = await request.json().catch(() => ({}))
     const origin: string | null = body.origin ?? null
     const testerIds: string[] | null = Array.isArray(body.testerIds) ? body.testerIds : null
+    const message: string =
+      typeof body.message === "string" ? body.message.trim().slice(0, MAX_MESSAGE_LENGTH) : ""
     const baseUrl = (origin || process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app").trim()
     // The logo must load from the public app address, not from wherever the admin clicked send (e.g. localhost).
     const logoUrl = `${(process.env.NEXT_PUBLIC_APP_URL || baseUrl).trim().replace(/\/$/, "")}/talkpush-logo-wordmark.png`
@@ -147,7 +152,7 @@ export async function POST(
         pendingCount,
         resultsUrl,
         logoUrl,
-        message: "",
+        message,
       }
 
       try {

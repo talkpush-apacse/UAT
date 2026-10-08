@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Textarea } from "@/components/ui/textarea"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +19,8 @@ import { Mail, Loader2, Check, AlertTriangle } from "lucide-react"
 
 type Tester = { id: string; name: string; email: string }
 
+const MAX_MESSAGE_LENGTH = 1000
+
 export default function NotifyTestersButton({
   slug,
   testers,
@@ -29,6 +32,7 @@ export default function NotifyTestersButton({
   const [sentCount, setSentCount] = useState(0)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [message, setMessage] = useState("")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     new Set(testers.map((t) => t.id))
   )
@@ -60,6 +64,7 @@ export default function NotifyTestersButton({
         body: JSON.stringify({
           origin: window.location.origin,
           testerIds: Array.from(selectedIds),
+          message: message.trim(),
         }),
       })
 
@@ -72,6 +77,7 @@ export default function NotifyTestersButton({
       }
 
       setSentCount(data.sent)
+      if (!data.errors || data.errors.length === 0) setMessage("")
 
       if (data.errors && data.errors.length > 0) {
         setState("done")
@@ -172,6 +178,24 @@ export default function NotifyTestersButton({
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Optional custom message */}
+          <div className="space-y-1.5">
+            <label htmlFor="notify-message" className="text-sm font-medium text-gray-700">
+              Message to testers <span className="font-normal text-gray-400">(optional)</span>
+            </label>
+            <Textarea
+              id="notify-message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
+              maxLength={MAX_MESSAGE_LENGTH}
+              rows={4}
+              placeholder="Add a note that will appear in every email, e.g. what to do next."
+            />
+            <p className="text-xs text-gray-400 text-right">
+              {message.length} / {MAX_MESSAGE_LENGTH}
+            </p>
           </div>
 
           <AlertDialogFooter>
