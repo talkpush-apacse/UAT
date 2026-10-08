@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { BrevoClient } from "@getbrevo/brevo"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
+import { resolutionGroup } from "@/lib/utils/resolution-status"
 
 export const dynamic = "force-dynamic"
 
@@ -120,9 +121,10 @@ export async function POST(
 
       for (const resp of nonPassResponses) {
         const review = reviewMap.get(`${tester.id}::${resp.checklist_item_id}`)
-        if (review?.resolution_status === "Done") {
+        const group = resolutionGroup(review?.resolution_status)
+        if (group === "resolved") {
           resolvedCount++
-        } else if (review?.resolution_status === "In Progress") {
+        } else if (group === "in-progress") {
           inProgressCount++
         } else {
           pendingCount++

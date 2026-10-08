@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
+import { resolutionGroup } from "@/lib/utils/resolution-status"
 import {
   ArrowLeft,
   CheckCircle2,
@@ -131,23 +132,6 @@ export default function TesterResultsView({
     [adminReviews]
   )
 
-  // Compute stats
-  const stats = useMemo(() => {
-    const answered = responses.filter((r) => r.status !== null)
-    const passCount = answered.filter((r) => r.status === "Pass").length
-    const failCount = answered.filter((r) => r.status === "Fail").length
-    const blockedCount = answered.filter((r) => r.status === "Blocked").length
-    const issueCount = failCount + blockedCount
-    const resolvedCount = adminReviews.filter((r) => r.resolution_status === "resolved").length
-
-    return {
-      total: answered.length,
-      passCount,
-      issueCount,
-      resolvedCount,
-    }
-  }, [responses, adminReviews])
-
   // Build issue list (non-pass steps)
   const issueSteps = useMemo(() => {
     const items: {
@@ -167,6 +151,22 @@ export default function TesterResultsView({
 
     return items
   }, [checklistItems, responseMap, reviewMap])
+
+  // Compute stats. Issues and Resolved come from the same list shown below, so the counts always match it.
+  const stats = useMemo(() => {
+    const answered = responses.filter((r) => r.status !== null)
+    const passCount = answered.filter((r) => r.status === "Pass").length
+    const resolvedCount = issueSteps.filter(
+      ({ review }) => resolutionGroup(review?.resolution_status) === "resolved"
+    ).length
+
+    return {
+      total: answered.length,
+      passCount,
+      issueCount: issueSteps.length,
+      resolvedCount,
+    }
+  }, [responses, issueSteps])
 
   return (
     <div className="max-w-2xl mx-auto px-4 pb-12 pt-6">
@@ -233,8 +233,7 @@ export default function TesterResultsView({
           </h2>
 
           {issueSteps.map(({ item, response, review }) => {
-            const resolutionKey = review?.resolution_status ?? "pending"
-            const resolution = RESOLUTION_CONFIG[resolutionKey] ?? RESOLUTION_CONFIG.pending
+            const resolution = RESOLUTION_CONFIG[resolutionGroup(review?.resolution_status)]
             const ResIcon = resolution.icon
             const cleanedAction = cleanActionText(item.action)
 
