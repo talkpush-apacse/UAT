@@ -15,6 +15,19 @@ const SAMPLE_MIME_EXTENSIONS: Record<string, string> = {
 
 const MAX_SAMPLE_BYTES = 10 * 1024 * 1024;
 
+// How a step's `action` text is shown to testers (see src/components/tester/action-body.tsx).
+// Shared by the create and update tools so an AI author learns the same conventions either way.
+const ACTION_FORMAT_GUIDE =
+  "Written for a tester with no prior context. Markdown works; raw HTML does not (tags are stripped, so no colours). " +
+  "Formatting: (1) Testers give each step ONE Pass/Fail, so keep a step to one outcome, aim for under ~600 characters, " +
+  "and split a long flow into several steps. (2) For more than one action, use a numbered list ('1. ...' on separate lines) " +
+  "instead of a long paragraph. (3) Put the expected outcome last, in its own paragraph starting exactly 'Expected:' " +
+  "(not 'Expected value:'); testers see it in a separate 'Expected result' box. (4) Start a paragraph with '> ' for a " +
+  "warning callout, reserved for something that makes the step fail if missed (e.g. 'use an email never used on this page'). " +
+  "(5) The first http(s) link in the step is shown as a button, so put the main link first and write it bare or as [text](url). " +
+  "(6) Anything needed to pass the step belongs here, not in the tip. Example: " +
+  "'1. Open https://example.com/apply.\\n2. Fill in the form with a new email address.\\n3. Submit.\\n\\nExpected: the page says your application was received.'";
+
 function getSafeFileName(fileName: string): string {
   return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
@@ -69,7 +82,8 @@ export function registerChecklistStepTools(server: McpServer) {
     {
       title: "Create UAT Steps",
       description:
-        "Add new UAT steps or section headers to a checklist. Auto-increments sort_order; step_number is sequential for testable steps and NULL for section headers.",
+        "Add new UAT steps or section headers to a checklist. Auto-increments sort_order; step_number is sequential for testable steps and NULL for section headers. " +
+        "Read the `action` field description first: it explains how to format step text (numbered lists, 'Expected:' block, '>' warnings) so it is easy for testers to read.",
       inputSchema: {
         slug: z.string().describe("The UAT checklist slug"),
         items: z
@@ -93,7 +107,9 @@ export function registerChecklistStepTools(server: McpServer) {
               action: z
                 .string()
                 .describe(
-                  "For a step: what the actor does. For a section header: the title and description text."
+                  "For a step: what the actor does. " +
+                    ACTION_FORMAT_GUIDE +
+                    " For a section header: the title and description text (one short line; no Expected block)."
                 ),
               path: z
                 .string()
@@ -106,7 +122,10 @@ export function registerChecklistStepTools(server: McpServer) {
               tip: z
                 .string()
                 .optional()
-                .describe("Helpful tip displayed to testers (optional)"),
+                .describe(
+                  "Supplementary context only, shown in a Tip box under the step (why a limitation exists, timing, what to do if ambiguous). " +
+                    "Never put anything required to pass the step here; put it in `action`. Keep it short (the admin editor limit is 500 characters). Optional."
+                ),
               view_sample: z
                 .string()
                 .optional()
@@ -191,7 +210,12 @@ export function registerChecklistStepTools(server: McpServer) {
           .enum(["Candidate", "Talkpush", "Recruiter", "Referrer/Vendor"])
           .optional()
           .describe("Replacement actor role — who performs this step. Only pass if changing."),
-        action: z.string().optional().describe("Replacement instruction text shown to the tester. Only pass if changing."),
+        action: z
+          .string()
+          .optional()
+          .describe(
+            "Replacement instruction text shown to the tester. Only pass if changing. For a testable step: " + ACTION_FORMAT_GUIDE
+          ),
         path: z.string().optional().describe("Replacement URL path or app location for this step. Only pass if changing."),
         crm_module: z.string().optional().describe("Replacement CRM module name where this step is performed. Only pass if changing."),
         tip: z.string().optional().describe("Replacement helper text displayed to testers. Only pass if changing."),
