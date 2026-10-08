@@ -3,6 +3,7 @@ import { BrevoClient } from "@getbrevo/brevo"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import { resolutionGroup } from "@/lib/utils/resolution-status"
+import { buildUatReviewedEmailHtml, buildUatReviewedEmailText } from "@/lib/email/uat-reviewed-email"
 
 export const dynamic = "force-dynamic"
 
@@ -36,6 +37,8 @@ export async function POST(
     const origin: string | null = body.origin ?? null
     const testerIds: string[] | null = Array.isArray(body.testerIds) ? body.testerIds : null
     const baseUrl = (origin || process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app").trim()
+    // The logo must load from the public app address, not from wherever the admin clicked send (e.g. localhost).
+    const logoUrl = `${(process.env.NEXT_PUBLIC_APP_URL || baseUrl).trim().replace(/\/$/, "")}/talkpush-logo-wordmark.png`
 
     const brevo = new BrevoClient({ apiKey: brevoKey })
     const supabase = createAdminClient()
@@ -135,8 +138,7 @@ export async function POST(
       const resultsUrl = `${baseUrl}/test/${project.slug}/results?tester=${tester.id}`
       const firstName = tester.name.split(" ")[0]
 
-      // Build HTML email
-      const html = buildEmailHtml({
+      const emailInput = {
         firstName,
         companyName: project.company_name,
         totalIssues,
@@ -144,14 +146,17 @@ export async function POST(
         inProgressCount,
         pendingCount,
         resultsUrl,
-      })
+        logoUrl,
+        message: "",
+      }
 
       try {
         await brevo.transactionalEmails.sendTransacEmail({
           sender: { name: "Talkpush APAC", email: "updates@se-talkpush.com" },
           to: [{ email: tester.email, name: tester.name }],
           subject: `Your UAT results for ${project.company_name} have been reviewed`,
-          htmlContent: html,
+          htmlContent: buildUatReviewedEmailHtml(emailInput),
+          textContent: buildUatReviewedEmailText(emailInput),
         })
         sentCount++
       } catch (emailErr) {
@@ -166,93 +171,4 @@ export async function POST(
     console.error("Notify testers API - unexpected error:", err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 })
   }
-}
-
-/* ------------------------------------------------------------------ */
-/*  Email HTML template                                                */
-/* ------------------------------------------------------------------ */
-
-function buildEmailHtml({
-  firstName,
-  companyName,
-  totalIssues,
-  resolvedCount,
-  inProgressCount,
-  pendingCount,
-  resultsUrl,
-}: {
-  firstName: string
-  companyName: string
-  totalIssues: number
-  resolvedCount: number
-  inProgressCount: number
-  pendingCount: number
-  resultsUrl: string
-}): string {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UAT Results Reviewed</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb;">
-  <div style="max-width: 520px; margin: 0 auto; padding: 40px 20px;">
-    <!-- Logo / Header -->
-    <div style="text-align: center; margin-bottom: 32px;">
-      <div style="display: inline-block; background-color: #6B9E7A; color: white; font-weight: 700; font-size: 14px; padding: 8px 16px; border-radius: 8px; letter-spacing: 0.5px;">
-        TALKPUSH UAT
-      </div>
-    </div>
-
-    <!-- Main card -->
-    <div style="background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-      <h1 style="font-size: 20px; font-weight: 600; color: #111827; margin: 0 0 8px;">
-        Hi ${firstName},
-      </h1>
-      <p style="font-size: 15px; color: #6b7280; margin: 0 0 24px; line-height: 1.6;">
-        We've reviewed your UAT findings for <strong style="color: #111827;">${companyName}</strong>. Here's a quick summary:
-      </p>
-
-      <!-- Stats -->
-      <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 4px 0; font-size: 14px; color: #6b7280;">Issues reported</td>
-            <td style="padding: 4px 0; font-size: 14px; font-weight: 600; color: #111827; text-align: right;">${totalIssues}</td>
-          </tr>
-          <tr>
-            <td style="padding: 4px 0; font-size: 14px; color: #16a34a;">Resolved</td>
-            <td style="padding: 4px 0; font-size: 14px; font-weight: 600; color: #16a34a; text-align: right;">${resolvedCount}</td>
-          </tr>
-          <tr>
-            <td style="padding: 4px 0; font-size: 14px; color: #2563eb;">In Progress</td>
-            <td style="padding: 4px 0; font-size: 14px; font-weight: 600; color: #2563eb; text-align: right;">${inProgressCount}</td>
-          </tr>
-          ${pendingCount > 0 ? `
-          <tr>
-            <td style="padding: 4px 0; font-size: 14px; color: #d97706;">Pending</td>
-            <td style="padding: 4px 0; font-size: 14px; font-weight: 600; color: #d97706; text-align: right;">${pendingCount}</td>
-          </tr>
-          ` : ""}
-        </table>
-      </div>
-
-      <!-- CTA Button -->
-      <div style="text-align: center;">
-        <a href="${resultsUrl}" style="display: inline-block; background-color: #6B9E7A; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 32px; border-radius: 8px;">
-          View My Results
-        </a>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <p style="text-align: center; font-size: 12px; color: #9ca3af; margin-top: 24px; line-height: 1.5;">
-      This is an automated message from Talkpush UAT.<br>
-      You're receiving this because you participated in UAT testing.
-    </p>
-  </div>
-</body>
-</html>`
 }
