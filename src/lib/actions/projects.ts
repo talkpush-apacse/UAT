@@ -247,6 +247,21 @@ export async function duplicateProject(
       // renumbering RPC so copied steps get clean, gap-free numbers.
       await supabase.rpc('renumber_steps', { p_project_id: newProject.id })
     }
+
+    // The copy notifies the same people as the original on submit.
+    const { data: recipients, error: recipientsFetchError } = await supabase
+      .from('project_notification_recipients')
+      .select('email')
+      .eq('project_id', projectId)
+
+    if (recipientsFetchError) throw new Error(recipientsFetchError.message)
+
+    if (recipients && recipients.length > 0) {
+      const { error: recipientsError } = await supabase
+        .from('project_notification_recipients')
+        .insert(recipients.map((r) => ({ project_id: newProject.id, email: r.email })))
+      if (recipientsError) throw new Error(recipientsError.message)
+    }
   } catch (err) {
     await supabase.from('projects').delete().eq('id', newProject.id)
     return { error: err instanceof Error ? err.message : 'Failed to duplicate checklist items' }
