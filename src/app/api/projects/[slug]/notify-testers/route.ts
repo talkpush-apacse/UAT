@@ -125,6 +125,7 @@ export async function POST(
       // Count resolution statuses
       let resolvedCount = 0
       let inProgressCount = 0
+      let retestCount = 0
       let pendingCount = 0
 
       for (const resp of nonPassResponses) {
@@ -134,6 +135,8 @@ export async function POST(
           resolvedCount++
         } else if (group === "in-progress") {
           inProgressCount++
+        } else if (group === "retest") {
+          retestCount++
         } else {
           pendingCount++
         }
@@ -149,6 +152,7 @@ export async function POST(
         totalIssues,
         resolvedCount,
         inProgressCount,
+        retestCount,
         pendingCount,
         resultsUrl,
         logoUrl,

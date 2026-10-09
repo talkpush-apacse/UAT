@@ -29,6 +29,7 @@ export type UatReviewedEmailInput = {
   totalIssues: number
   resolvedCount: number
   inProgressCount: number
+  retestCount: number
   pendingCount: number
   resultsUrl: string
   logoUrl: string
@@ -45,7 +46,7 @@ export function escapeHtml(value: string): string {
 }
 
 function openCount(input: UatReviewedEmailInput): number {
-  return input.inProgressCount + input.pendingCount
+  return input.inProgressCount + input.retestCount + input.pendingCount
 }
 
 function preheader(input: UatReviewedEmailInput): string {
@@ -108,7 +109,7 @@ export function buildUatReviewedEmailHtml(input: UatReviewedEmailInput): string 
                   <td align="right" style="font-family: ${FONT}; font-size: 16px; line-height: 24px; color: ${COLORS.ink}; font-weight: 700;">${input.totalIssues}</td>
                 </tr></table>
               </td>
-            </tr>${countRow("Resolved", input.resolvedCount, COLORS.sage, false)}${countRow("In progress", input.inProgressCount, COLORS.lavender, false)}${countRow("Pending review", input.pendingCount, COLORS.amber, true)}
+            </tr>${countRow("Resolved", input.resolvedCount, COLORS.sage, false)}${countRow("Ready to retest", input.retestCount, COLORS.pink, false)}${countRow("In progress", input.inProgressCount, COLORS.lavender, false)}${countRow("Pending review", input.pendingCount, COLORS.amber, true)}
           </table>
         </td>
       </tr>`
@@ -209,6 +210,7 @@ export function buildUatReviewedEmailText(input: UatReviewedEmailInput): string 
     lines.push(
       `Issues you reported: ${input.totalIssues}`,
       `Resolved: ${input.resolvedCount}`,
+      `Ready to retest: ${input.retestCount}`,
       `In progress: ${input.inProgressCount}`,
       `Pending review: ${input.pendingCount}`,
       ""

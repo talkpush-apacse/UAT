@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Clock,
   PartyPopper,
+  RotateCcw,
   MessageSquare,
 } from "lucide-react"
 
@@ -59,6 +60,11 @@ const RESOLUTION_CONFIG: Record<
     label: "In Progress",
     badgeClass: "bg-blue-100 text-blue-900",
     icon: AlertCircle,
+  },
+  retest: {
+    label: "Ready to Retest",
+    badgeClass: "bg-purple-100 text-purple-900",
+    icon: RotateCcw,
   },
   resolved: {
     label: "Resolved",
