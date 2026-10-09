@@ -9,6 +9,7 @@ import {
 } from '@/lib/utils/admin-auth'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { logAdminLoginEvent } from '@/lib/utils/admin-login-log'
+import { safeAdminReturnPath } from '@/lib/utils/admin-redirect'
 
 export interface AuthState {
   error?: string
@@ -30,7 +31,7 @@ export async function loginAdmin(
 
   await createAdminSession()
   await logAdminLoginEvent('password', null, headers())
-  redirect('/admin')
+  redirect(safeAdminReturnPath(formData.get('next') as string | null) ?? '/admin')
 }
 
 export async function logoutAdmin(): Promise<void> {

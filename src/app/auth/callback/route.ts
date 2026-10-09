@@ -2,14 +2,15 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { isAllowedAdminEmail } from '@/lib/utils/admin-access'
 import { logAdminLoginEvent } from '@/lib/utils/admin-login-log'
+import { safeAdminReturnPath } from '@/lib/utils/admin-redirect'
 
-// Only ever redirect back into the OAuth connector consent screen — never an
-// arbitrary caller-supplied path, since that would make this unauthenticated
-// callback an open redirect.
+// Only ever redirect back into the OAuth connector consent screen or a page
+// inside /admin — never an arbitrary caller-supplied path, since that would
+// make this unauthenticated callback an open redirect.
 function resolvePostLoginPath(request: Request, requestUrl: URL): string {
   const next = requestUrl.searchParams.get('next')
   if (next && next.startsWith('/oauth/authorize?')) return next
-  return '/admin/projects'
+  return safeAdminReturnPath(next) ?? '/admin/projects'
 }
 
 export async function GET(request: Request) {
