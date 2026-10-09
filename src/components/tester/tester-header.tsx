@@ -22,7 +22,7 @@ export default function TesterHeader({
   children?: ReactNode
 }) {
   return (
-    <div className="sticky top-0 z-10 border-b-2 border-primary bg-white pb-2.5 pt-2.5">
+    <div className="sticky top-0 z-10 border-b-2 border-primary bg-white px-4 pb-2.5 pt-2.5">
       <div aria-live={ariaLive} className="mb-2 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <ClientLogosHeader clientLogoUrl={clientLogoUrl} className="hidden flex-shrink-0 sm:flex" logoClassName="h-4" />

@@ -2,7 +2,7 @@
 
 import { CheckCircle2 } from "lucide-react"
 import RichText from "./rich-text"
-import { splitExpected } from "@/lib/utils/action-text"
+import { capitalizeFirst, splitExpected } from "@/lib/utils/action-text"
 
 const TESTER_PROSE =
   "prose prose-sm prose-gray max-w-none text-[17px] font-normal leading-[1.7] text-primary " +
@@ -64,7 +64,7 @@ export default function ActionBody({
             linkClassName={linkClassName}
             className={compact ? COMPACT_PROSE : EXPECTED_PROSE}
           >
-            {expected}
+            {capitalizeFirst(expected)}
           </RichText>
         </div>
       )}

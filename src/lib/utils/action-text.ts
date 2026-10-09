@@ -29,6 +29,15 @@ export function splitExpected(text: string): { main: string; expected: string | 
   return { main, expected }
 }
 
+// Optional opening markdown/quote characters, then a lowercase letter that is not the start of a URL
+// or a camel-cased brand ("iPhone", "eBay").
+const LEADING_LOWERCASE = /^([*_"'“‘(\[]*)([a-z])(?![A-Z]|ttps?:\/\/)/
+
+/** "you see 2 emails." -> "You see 2 emails." (only the first letter; the rest is left alone). */
+export function capitalizeFirst(text: string): string {
+  return text.replace(LEADING_LOWERCASE, (_, lead: string, letter: string) => lead + letter.toUpperCase())
+}
+
 const LIST_LINE = /^\s*(?:\d+[.)]|[-*+])\s/m
 const ABBREVIATION_END = /(?:\be\.g|\bi\.e|\betc|\bvs|\bno|\bapprox|\bmr|\bmrs|\bdr)\.$/i
 // Sentence end followed by a capital, digit, quote or bracket starting the next one.
