@@ -22,11 +22,12 @@ const ACTION_FORMAT_GUIDE =
   "Formatting: (1) Testers give each step ONE Pass/Fail, so keep a step to one outcome, aim for under ~600 characters, " +
   "and split a long flow into several steps. (2) For more than one action, use a numbered list ('1. ...' on separate lines) " +
   "instead of a long paragraph. (3) Put the expected outcome last, in its own paragraph starting exactly 'Expected:' " +
-  "(not 'Expected value:'); testers see it in a separate 'Expected result' box. (4) Start a paragraph with '> ' for a " +
+  "(not 'Expected value:'); testers see it in a separate 'Expected result' box, so write it as a full sentence " +
+  "starting with a capital letter. (4) Start a paragraph with '> ' for a " +
   "warning callout, reserved for something that makes the step fail if missed (e.g. 'use an email never used on this page'). " +
   "(5) The first http(s) link in the step is shown as a button, so put the main link first and write it bare or as [text](url). " +
   "(6) Anything needed to pass the step belongs here, not in the tip. Example: " +
-  "'1. Open https://example.com/apply.\\n2. Fill in the form with a new email address.\\n3. Submit.\\n\\nExpected: the page says your application was received.'";
+  "'1. Open https://example.com/apply.\\n2. Fill in the form with a new email address.\\n3. Submit.\\n\\nExpected: The page says your application was received.'";
 
 function getSafeFileName(fileName: string): string {
   return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
