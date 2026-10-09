@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useFormState } from "react-dom"
 import { loginAdmin, type AuthState } from "@/lib/actions/auth"
 import { createClient } from "@/lib/supabase/client"
+import { safeAdminReturnPath } from "@/lib/utils/admin-redirect"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,10 +18,14 @@ export default function AdminLoginPage() {
   const [isUnauthorized, setIsUnauthorized] = useState(false)
   const [googleError, setGoogleError] = useState<string | null>(null)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  // Where to go after signing in (e.g. an emailed findings link). Re-checked
+  // on the server; this copy only carries it through the form and Google.
+  const [returnPath, setReturnPath] = useState<string | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setIsUnauthorized(params.get("error") === "unauthorized")
+    setReturnPath(safeAdminReturnPath(params.get("next")))
   }, [])
 
   async function handleGoogleSignIn() {
@@ -31,7 +36,9 @@ export default function AdminLoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: returnPath
+          ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnPath)}`
+          : `${window.location.origin}/auth/callback`,
       },
     })
 
@@ -60,6 +67,7 @@ export default function AdminLoginPage() {
         <Card className="border-gray-200 shadow-md">
           <CardContent className="pt-6">
             <form action={formAction} className="space-y-4">
+              {returnPath && <input type="hidden" name="next" value={returnPath} />}
               <div className="space-y-1.5">
                 <Label htmlFor="password" className="text-xs text-gray-500">Password</Label>
                 <Input
