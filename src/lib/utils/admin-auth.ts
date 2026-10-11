@@ -75,6 +75,34 @@ export function destroyAdminSession(): void {
   cookies().delete(COOKIE_NAME)
 }
 
+// The signed-in admin's email, when they signed in with Google (Supabase
+// Auth). Password-login admin sessions are a single shared secret with no
+// individual identity, so this returns null for them. Used to attribute OAuth
+// connector approvals (src/app/oauth/authorize/page.tsx) and review changes.
+export async function getAdminEmail(): Promise<string | null> {
+  try {
+    const supabase = createServerSupabaseClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (user?.email && isAllowedAdminEmail(user.email)) return user.email
+    return null
+  } catch {
+    return null
+  }
+}
+
+export const SHARED_PASSWORD_AUTHOR = 'Shared admin password'
+
+// Who to record as the author of a change made from the admin site: the
+// admin's email if they signed in with Google, otherwise a label for the
+// shared-password session. Null when there is no admin session at all.
+export async function getAdminAuthorLabel(): Promise<string | null> {
+  const email = await getAdminEmail()
+  if (email) return email
+  return (await verifyAdminSession()) ? SHARED_PASSWORD_AUTHOR : null
+}
+
 async function verifySupabaseAdminSession(): Promise<boolean> {
   try {
     const supabase = createServerSupabaseClient()

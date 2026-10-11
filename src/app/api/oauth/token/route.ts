@@ -59,6 +59,7 @@ export async function POST(req: Request) {
       clientId,
       resource: consumed.resource,
       scope: consumed.scope,
+      adminEmail: consumed.admin_email,
     })
 
     return NextResponse.json(

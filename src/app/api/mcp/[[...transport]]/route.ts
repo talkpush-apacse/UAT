@@ -6,6 +6,11 @@ import { registerChecklistStepTools } from "@/lib/mcp/tools/checklist-steps";
 import { registerProgressTools } from "@/lib/mcp/tools/progress-and-reviews";
 import { registerReviewTriageTools } from "@/lib/mcp/tools/review-triage";
 import { withToolCallLogging } from "@/lib/mcp/usage-logger";
+import {
+  mcpCallerContext,
+  SHARED_KEY_CALLER,
+  UNKNOWN_ADMIN_CALLER,
+} from "@/lib/mcp/caller-context";
 
 // Constant-time comparison — mirrors the pattern in lib/utils/admin-auth.ts.
 function isValidApiKey(provided: string | null, expected: string): boolean {
@@ -53,7 +58,12 @@ async function withApiKeyAuth(
     const { validateAccessToken } = await import("@/lib/oauth/store");
     const expectedResource = `${url.origin}/api/mcp`;
     const valid = await validateAccessToken(bearerToken, expectedResource);
-    if (valid) return handlerFn(req);
+    if (valid) {
+      // Whoever approved this connector at /oauth/authorize (when they signed
+      // in with Google); older connections carry no email.
+      const caller = valid.adminEmail ?? UNKNOWN_ADMIN_CALLER;
+      return mcpCallerContext.run(caller, () => handlerFn(req));
+    }
     return unauthorized(req);
   }
 
@@ -69,7 +79,7 @@ async function withApiKeyAuth(
     return unauthorized(req);
   }
 
-  return handlerFn(req);
+  return mcpCallerContext.run(SHARED_KEY_CALLER, () => handlerFn(req));
 }
 
 function unauthorized(req: Request): Response {

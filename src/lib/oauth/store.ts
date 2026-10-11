@@ -55,6 +55,7 @@ export async function createAuthorizationCode(params: {
   codeChallengeMethod: string
   resource?: string | null
   scope?: string | null
+  adminEmail?: string | null
 }): Promise<string> {
   const supabase = createAdminClient()
   const code = generateOpaqueToken("code")
@@ -68,6 +69,7 @@ export async function createAuthorizationCode(params: {
     code_challenge_method: params.codeChallengeMethod,
     resource: params.resource ?? null,
     scope: params.scope ?? null,
+    admin_email: params.adminEmail ?? null,
     expires_at: expiresAt,
   })
 
@@ -85,6 +87,7 @@ export interface ConsumedAuthorizationCode {
   code_challenge_method: string
   resource: string | null
   scope: string | null
+  admin_email: string | null
 }
 
 // Atomically marks the code as used and returns its data, or null if the
@@ -102,7 +105,7 @@ export async function consumeAuthorizationCode(
     .eq("used", false)
     .gt("expires_at", new Date().toISOString())
     .select(
-      "client_id, redirect_uri, code_challenge, code_challenge_method, resource, scope"
+      "client_id, redirect_uri, code_challenge, code_challenge_method, resource, scope, admin_email"
     )
     .maybeSingle()
 
@@ -120,6 +123,7 @@ export async function issueTokenPair(params: {
   clientId: string
   resource?: string | null
   scope?: string | null
+  adminEmail?: string | null
 }): Promise<IssuedTokenPair> {
   const supabase = createAdminClient()
   const accessToken = generateOpaqueToken("mcpat")
@@ -132,6 +136,7 @@ export async function issueTokenPair(params: {
     refresh_token_hash: sha256Hex(refreshToken),
     resource: params.resource ?? null,
     scope: params.scope ?? null,
+    admin_email: params.adminEmail ?? null,
     access_token_expires_at: new Date(now + ACCESS_TOKEN_TTL_MS).toISOString(),
     refresh_token_expires_at: new Date(now + REFRESH_TOKEN_TTL_MS).toISOString(),
   })
@@ -147,6 +152,7 @@ export interface ValidAccessToken {
   clientId: string
   resource: string | null
   scope: string | null
+  adminEmail: string | null
 }
 
 // `expectedResource` enforces token audience binding (MCP spec, RFC 8707):
@@ -160,7 +166,7 @@ export async function validateAccessToken(
   const supabase = createAdminClient()
   const { data } = await supabase
     .from("oauth_tokens")
-    .select("client_id, resource, scope, revoked, access_token_expires_at")
+    .select("client_id, resource, scope, revoked, access_token_expires_at, admin_email")
     .eq("access_token_hash", sha256Hex(token))
     .maybeSingle()
 
@@ -168,7 +174,12 @@ export async function validateAccessToken(
   if (new Date(data.access_token_expires_at).getTime() < Date.now()) return null
   if (data.resource && data.resource !== expectedResource) return null
 
-  return { clientId: data.client_id, resource: data.resource, scope: data.scope }
+  return {
+    clientId: data.client_id,
+    resource: data.resource,
+    scope: data.scope,
+    adminEmail: data.admin_email,
+  }
 }
 
 // Rotates the refresh token: the old grant row is revoked and a fresh
@@ -180,7 +191,7 @@ export async function rotateRefreshToken(refreshToken: string): Promise<IssuedTo
 
   const { data: existing } = await supabase
     .from("oauth_tokens")
-    .select("id, client_id, resource, scope, revoked, refresh_token_expires_at")
+    .select("id, client_id, resource, scope, revoked, refresh_token_expires_at, admin_email")
     .eq("refresh_token_hash", refreshTokenHash)
     .maybeSingle()
 
@@ -205,5 +216,6 @@ export async function rotateRefreshToken(refreshToken: string): Promise<IssuedTo
     clientId: existing.client_id,
     resource: existing.resource,
     scope: existing.scope,
+    adminEmail: existing.admin_email,
   })
 }

@@ -3,6 +3,7 @@ import {
   verifyAdminSession,
   verifyAdminPassword,
   createAdminSession,
+  getAdminEmail,
 } from "@/lib/utils/admin-auth"
 import { getClient, createAuthorizationCode } from "@/lib/oauth/store"
 import { isAllowedRedirectUri } from "@/lib/oauth/allowed-hosts"
@@ -141,6 +142,7 @@ export default async function OAuthAuthorizePage({ searchParams }: PageProps) {
       codeChallengeMethod: safeCodeChallengeMethod,
       resource,
       scope,
+      adminEmail: await getAdminEmail(),
     })
 
     const params = new URLSearchParams({ code })
