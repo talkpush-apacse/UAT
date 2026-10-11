@@ -1,6 +1,7 @@
 import { BrevoClient } from "@getbrevo/brevo"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { EMAIL_SENDER } from "@/lib/email/sender"
+import { getSenderBlockMessage } from "@/lib/email/sender-check"
 import {
   buildTestSubmittedEmailHtml,
   buildTestSubmittedEmailText,
@@ -42,6 +43,12 @@ async function sendNotification(testerId: string): Promise<void> {
   const brevoKey = process.env.BREVO_API_KEY
   if (!brevoKey) {
     console.error("Submit notification skipped: email is not configured")
+    return
+  }
+
+  // Nobody is watching this send, so a rejected sender would vanish silently.
+  if (await getSenderBlockMessage(brevoKey)) {
+    console.error("Submit notification skipped: sender is not verified in Brevo")
     return
   }
 

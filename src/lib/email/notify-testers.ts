@@ -4,6 +4,7 @@ import type { Database } from "@/lib/types/database"
 import { resolutionGroup } from "@/lib/utils/resolution-status"
 import { buildUatReviewedEmailHtml, buildUatReviewedEmailText } from "@/lib/email/uat-reviewed-email"
 import { EMAIL_SENDER } from "@/lib/email/sender"
+import { getSenderBlockMessage } from "@/lib/email/sender-check"
 
 // Shared by the admin "Notify Testers" button (API route) and the MCP
 // notify_testers tool, so both always compute and send exactly the same email.
@@ -150,7 +151,12 @@ export async function sendReviewedEmails(
   brevoKey: string,
   plan: ReviewedEmailPlan,
   options: { message: string; baseUrl: string }
-): Promise<{ sent: number; errors: string[] }> {
+): Promise<{ sent: number; errors: string[]; blocked?: string }> {
+  // Brevo accepts a send from an unregistered sender and rejects it later, so
+  // ask first. When blocked, nothing is sent and callers show `blocked`.
+  const blocked = await getSenderBlockMessage(brevoKey)
+  if (blocked) return { sent: 0, errors: [], blocked }
+
   const brevo = new BrevoClient({ apiKey: brevoKey })
   const logoUrl = `${(process.env.NEXT_PUBLIC_APP_URL || options.baseUrl).trim().replace(/\/$/, "")}/talkpush-logo-wordmark.png`
 

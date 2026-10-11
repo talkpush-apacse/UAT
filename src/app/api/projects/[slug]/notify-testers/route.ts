@@ -54,7 +54,11 @@ export async function POST(
       return NextResponse.json({ sent: 0, errors: [] })
     }
 
-    const { sent, errors } = await sendReviewedEmails(brevoKey, plan, { message, baseUrl })
+    const { sent, errors, blocked } = await sendReviewedEmails(brevoKey, plan, { message, baseUrl })
+    if (blocked) {
+      // Nothing was sent; the button shows this message instead of "Sent!".
+      return NextResponse.json({ error: blocked }, { status: 502 })
+    }
     return NextResponse.json({ sent, errors })
   } catch (err) {
     console.error("Notify testers API - unexpected error:", err instanceof Error ? err.message : String(err))
