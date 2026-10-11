@@ -82,7 +82,7 @@ export default async function TesterResultsPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <TesterResultsView
         project={{ slug: project.slug, companyName: project.company_name }}
         testerName={tester.name}
