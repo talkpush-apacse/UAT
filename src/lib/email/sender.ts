@@ -4,6 +4,6 @@
 // succeeds, the send is rejected afterwards), so keep this on a registered
 // sender. Replies from recipients go to this mailbox.
 export const EMAIL_SENDER = {
-  name: "Talkpush APAC",
+  name: "Talkpush Ops Team",
   email: "operations@talkpush.com",
 } as const
