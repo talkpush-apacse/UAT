@@ -89,7 +89,13 @@ Migrations live in `supabase/migrations/` and are applied with the Supabase CLI.
 
 `/api/mcp/[[...transport]]` exposes a remote MCP endpoint powered by `mcp-handler`. All tools use `createAdminClient()` (service role). Authentication is via `x-api-key` header or `?api_key=` query param checked against `MCP_API_KEY`.
 
-Registered tools: `search`, `fetch`, `list_projects`, `create_project`, `get_project`, `get_checklist`, `create_checklist_items`, `update_checklist_item`, `delete_checklist_items`, `reorder_checklist`, `get_project_progress`, `list_testers`, `get_admin_reviews`.
+Registered tools: `search`, `fetch`, `list_projects`, `create_project`, `get_project`, `get_checklist`, `create_checklist_items`, `update_checklist_item`, `delete_checklist_items`, `reorder_checklist`, `get_project_progress`, `list_testers`, `get_admin_reviews`, `save_admin_reviews`, `notify_testers`.
+
+Review triage tools (`src/lib/mcp/tools/review-triage.ts`):
+
+- `save_admin_reviews` sets resolution status / finding type / comment per tester step (identified by tester email + step number), recording history like the admin screen. Comments are visible to testers on their results page and feed the client analytics page. History has no author column, so MCP changes are not attributed to a person.
+- `notify_testers` emails testers their review results in two steps: a preview call (sends nothing) returns a `confirmation_code`; sending requires that code. The code is an HMAC over the checklist, recipients and note plus a 10-minute expiry (`src/lib/mcp/confirmation.ts`). It is stateless, so a still-valid code could be replayed inside its window.
+- Both reuse shared code with the admin screen: `src/lib/reviews/upsert-admin-review.ts` and `src/lib/email/notify-testers.ts`.
 
 ### Type Safety
 
