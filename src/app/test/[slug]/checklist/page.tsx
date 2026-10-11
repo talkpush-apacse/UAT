@@ -73,7 +73,7 @@ export default async function ChecklistPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <ChecklistView
         project={project}
         tester={tester}

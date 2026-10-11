@@ -1,6 +1,6 @@
 export default function ChecklistLoading() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-4">
         <div className="h-6 w-48 bg-muted animate-pulse rounded" />
         <div className="h-2 w-full bg-muted animate-pulse rounded" />

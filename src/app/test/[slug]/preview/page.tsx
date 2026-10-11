@@ -26,7 +26,7 @@ export default async function ChecklistPreviewPage({
     .order("sort_order")
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 pt-6">
         <div className="mb-4 flex flex-col gap-3 rounded-xl border-2 border-primary bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
