@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyAdminSession } from "@/lib/utils/admin-auth"
 import { resolutionGroup } from "@/lib/utils/resolution-status"
 import { buildUatReviewedEmailHtml, buildUatReviewedEmailText } from "@/lib/email/uat-reviewed-email"
+import { EMAIL_SENDER } from "@/lib/email/sender"
 
 export const dynamic = "force-dynamic"
 
@@ -161,7 +162,7 @@ export async function POST(
 
       try {
         await brevo.transactionalEmails.sendTransacEmail({
-          sender: { name: "Talkpush APAC", email: "updates@se-talkpush.com" },
+          sender: EMAIL_SENDER,
           to: [{ email: tester.email, name: tester.name }],
           subject: `Your UAT results for ${project.company_name} have been reviewed`,
           htmlContent: buildUatReviewedEmailHtml(emailInput),

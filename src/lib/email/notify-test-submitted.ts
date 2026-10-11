@@ -1,5 +1,6 @@
 import { BrevoClient } from "@getbrevo/brevo"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { EMAIL_SENDER } from "@/lib/email/sender"
 import {
   buildTestSubmittedEmailHtml,
   buildTestSubmittedEmailText,
@@ -11,10 +12,6 @@ import {
 // public action.
 
 const SUBMIT_NOTIFICATION_TIMEOUT_MS = 5000
-
-// A sender Brevo currently accepts. The tester-facing "reviewed" email still
-// uses updates@se-talkpush.com, which Brevo rejected as not validated.
-const SENDER_EMAIL = "operations@talkpush.com"
 
 /**
  * Emails the checklist's notification list that a tester just submitted.
@@ -120,7 +117,7 @@ async function sendNotification(testerId: string): Promise<void> {
 
   const brevo = new BrevoClient({ apiKey: brevoKey })
   await brevo.transactionalEmails.sendTransacEmail({
-    sender: { name: "Talkpush APAC", email: SENDER_EMAIL },
+    sender: EMAIL_SENDER,
     to,
     subject: buildTestSubmittedSubject(tester.name, project.company_name),
     htmlContent: buildTestSubmittedEmailHtml(input),
