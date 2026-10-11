@@ -14,6 +14,7 @@ import {
   reviewedEmailSubject,
   sendReviewedEmails,
 } from "@/lib/email/notify-testers";
+import { getSenderBlockMessage } from "@/lib/email/sender-check";
 import {
   CODE_TTL_MS,
   createNotifyConfirmationCode,
@@ -298,6 +299,11 @@ export function registerReviewTriageTools(server: McpServer) {
 
       // ---- Step 1: preview (sends nothing) ----
       if (!confirmation_code) {
+        // Don't hand out a code for a send that Brevo would reject afterwards.
+        const blocked = await getSenderBlockMessage(brevoKey);
+        if (blocked) {
+          return { ...toolResult({ mode: "blocked", sends_email: false, error: blocked }), isError: true };
+        }
         return toolResult({
           mode: "preview",
           sends_email: false,
@@ -339,10 +345,13 @@ export function registerReviewTriageTools(server: McpServer) {
         };
       }
 
-      const { sent, errors } = await sendReviewedEmails(brevoKey, plan, {
+      const { sent, errors, blocked } = await sendReviewedEmails(brevoKey, plan, {
         message: cleanMessage,
         baseUrl: getAppBaseUrl(),
       });
+      if (blocked) {
+        return { ...toolResult({ mode: "blocked", sent: 0, error: blocked }), isError: true };
+      }
 
       return toolResult({
         mode: "sent",
@@ -352,7 +361,7 @@ export function registerReviewTriageTools(server: McpServer) {
         errors,
         recipients_emailed: plan.recipients.map((r) => r.email),
         note:
-          "Brevo accepted these for sending. Delivery problems (such as an unregistered sender) are reported by Brevo afterwards and are not visible here.",
+          "Brevo accepted these for sending. Later delivery problems (such as a bounced address) are reported by Brevo afterwards and are not visible here.",
       });
     }
   );
