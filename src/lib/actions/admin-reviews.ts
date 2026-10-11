@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { verifyAdminSession } from '@/lib/utils/admin-auth'
+import { verifyAdminSession, getAdminAuthorLabel } from '@/lib/utils/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { upsertAdminReview } from '@/lib/reviews/upsert-admin-review'
 
@@ -28,6 +28,7 @@ export async function saveAdminReview(data: {
     findingType: data.behaviorType,
     resolutionStatus: data.resolutionStatus,
     notes: data.notes,
+    changedBy: await getAdminAuthorLabel(),
   })
   if (result.error) return { error: result.error }
 
@@ -52,6 +53,7 @@ export async function bulkMarkResolved(
 
   const supabase = createAdminClient()
   const now = new Date().toISOString()
+  const changedBy = await getAdminAuthorLabel()
 
   // Build composite keys for the batch lookup. Deduped — items can repeat the
   // same checklist item or tester across many pairs, and an unbounded .in()
@@ -94,6 +96,7 @@ export async function bulkMarkResolved(
     field_changed: string
     old_value: string | null
     new_value: string | null
+    changed_by: string | null
   }[] = []
 
   for (const item of items) {
@@ -116,6 +119,7 @@ export async function bulkMarkResolved(
       field_changed: 'resolution_status',
       old_value: oldResolution,
       new_value: 'Done',
+      changed_by: changedBy,
     })
   }
 
@@ -165,6 +169,7 @@ export async function completeAllReviews(
 
   const supabase = createAdminClient()
   const now = new Date().toISOString()
+  const changedBy = await getAdminAuthorLabel()
 
   // Build arrays for the batch lookup. Deduped — items can repeat the same
   // checklist item or tester across many pairs, and an unbounded .in() list
@@ -213,6 +218,7 @@ export async function completeAllReviews(
     field_changed: string
     old_value: string | null
     new_value: string | null
+    changed_by: string | null
   }[] = []
 
   let categorizedCount = 0
@@ -250,6 +256,7 @@ export async function completeAllReviews(
         field_changed: 'finding_type',
         old_value: oldBehavior,
         new_value: newBehavior,
+        changed_by: changedBy,
       })
     }
 
@@ -260,6 +267,7 @@ export async function completeAllReviews(
         field_changed: 'resolution_status',
         old_value: oldResolution,
         new_value: newResolution,
+        changed_by: changedBy,
       })
     }
   }

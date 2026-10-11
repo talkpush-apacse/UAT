@@ -120,6 +120,12 @@ function ActivityTimeline({ history }: { history: HistoryEntry[] }) {
                   {" "}
                   {displayValue(entry.oldValue)} → {displayValue(entry.newValue)}
                 </span>
+                {entry.changedBy && (
+                  <span className="text-gray-400">
+                    {" "}
+                    · by <span className="text-gray-600">{entry.changedBy}</span>
+                  </span>
+                )}
               </div>
             </div>
           ))}

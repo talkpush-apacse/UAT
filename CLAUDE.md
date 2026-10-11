@@ -93,7 +93,8 @@ Registered tools: `search`, `fetch`, `list_projects`, `create_project`, `get_pro
 
 Review triage tools (`src/lib/mcp/tools/review-triage.ts`):
 
-- `save_admin_reviews` sets resolution status / finding type / comment per tester step (identified by tester email + step number), recording history like the admin screen. Comments are visible to testers on their results page and feed the client analytics page. History has no author column, so MCP changes are not attributed to a person.
+- `save_admin_reviews` sets resolution status / finding type / comment per tester step (identified by tester email + step number), recording history like the admin screen. Comments are visible to testers on their results page and feed the client analytics page.
+- Review history records who made each change in `admin_review_history.changed_by`: the admin's email (Google sign-in), "Shared admin password", or for MCP "<email> (via MCP)" / "Unknown admin (via MCP)" / "Shared key (via MCP)". The MCP caller comes from `src/lib/mcp/caller-context.ts`: the OAuth consent page (`/oauth/authorize`) stores the approving admin's email on the code and token (`admin_email`); connections approved before this, or with the shared password, have none. Older history rows have no author.
 - `notify_testers` emails testers their review results in two steps: a preview call (sends nothing) returns a `confirmation_code`; sending requires that code. The code is an HMAC over the checklist, recipients and note plus a 10-minute expiry (`src/lib/mcp/confirmation.ts`). It is stateless, so a still-valid code could be replayed inside its window.
 - Both reuse shared code with the admin screen: `src/lib/reviews/upsert-admin-review.ts` and `src/lib/email/notify-testers.ts`.
 

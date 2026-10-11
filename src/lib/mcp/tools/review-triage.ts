@@ -15,6 +15,7 @@ import {
   sendReviewedEmails,
 } from "@/lib/email/notify-testers";
 import { getSenderBlockMessage } from "@/lib/email/sender-check";
+import { getMcpAuthorLabel } from "@/lib/mcp/caller-context";
 import {
   CODE_TTL_MS,
   createNotifyConfirmationCode,
@@ -186,6 +187,7 @@ export function registerReviewTriageTools(server: McpServer) {
           findingType: after.finding_type,
           resolutionStatus: after.resolution_status,
           notes: after.comment,
+          changedBy: getMcpAuthorLabel(),
         });
         if (saved.error) {
           fail(saved.error);
