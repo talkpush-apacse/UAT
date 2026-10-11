@@ -4,6 +4,7 @@ import { registerDiscoveryTools } from "@/lib/mcp/tools/discovery";
 import { registerProjectTools } from "@/lib/mcp/tools/projects";
 import { registerChecklistStepTools } from "@/lib/mcp/tools/checklist-steps";
 import { registerProgressTools } from "@/lib/mcp/tools/progress-and-reviews";
+import { registerReviewTriageTools } from "@/lib/mcp/tools/review-triage";
 import { withToolCallLogging } from "@/lib/mcp/usage-logger";
 
 // Constant-time comparison — mirrors the pattern in lib/utils/admin-auth.ts.
@@ -23,6 +24,7 @@ const handler = createMcpHandler(
     registerProjectTools(loggedServer);
     registerChecklistStepTools(loggedServer);
     registerProgressTools(loggedServer);
+    registerReviewTriageTools(loggedServer);
   },
   {
     capabilities: {},

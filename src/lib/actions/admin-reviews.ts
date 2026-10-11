@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { verifyAdminSession } from '@/lib/utils/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { upsertAdminReview } from '@/lib/reviews/upsert-admin-review'
 
 /* ------------------------------------------------------------------ */
 /*  Save a single admin review (with history tracking)                 */
@@ -21,92 +22,14 @@ export async function saveAdminReview(data: {
 
   const supabase = createAdminClient()
 
-  // 1. Fetch the current row (if exists) to compare for history tracking
-  const { data: existing } = await supabase
-    .from('admin_reviews')
-    .select('finding_type, resolution_status, notes')
-    .eq('checklist_item_id', data.checklistItemId)
-    .eq('tester_id', data.testerId)
-    .maybeSingle()
-
-  // 2. Upsert the review
-  const payload = {
-    checklist_item_id: data.checklistItemId,
-    tester_id: data.testerId,
-    finding_type: data.behaviorType,
-    resolution_status: data.resolutionStatus,
+  const result = await upsertAdminReview(supabase, {
+    checklistItemId: data.checklistItemId,
+    testerId: data.testerId,
+    findingType: data.behaviorType,
+    resolutionStatus: data.resolutionStatus,
     notes: data.notes,
-    updated_at: new Date().toISOString(),
-  }
-
-  const { error } = await supabase
-    .from('admin_reviews')
-    .upsert(payload, { onConflict: 'checklist_item_id,tester_id' })
-
-  if (error) {
-    console.error('saveAdminReview failed:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      payload,
-    })
-    return { error: error.message }
-  }
-
-  // 3. Track changes in history (fire-and-forget — don't block the response)
-  const historyRows: {
-    checklist_item_id: string
-    tester_id: string
-    field_changed: string
-    old_value: string | null
-    new_value: string | null
-  }[] = []
-
-  const oldBehavior = existing?.finding_type ?? null
-  const oldResolution = existing?.resolution_status ?? null
-  const oldNotes = existing?.notes ?? null
-
-  if (oldBehavior !== data.behaviorType) {
-    historyRows.push({
-      checklist_item_id: data.checklistItemId,
-      tester_id: data.testerId,
-      field_changed: 'finding_type',
-      old_value: oldBehavior,
-      new_value: data.behaviorType,
-    })
-  }
-
-  if (oldResolution !== data.resolutionStatus) {
-    historyRows.push({
-      checklist_item_id: data.checklistItemId,
-      tester_id: data.testerId,
-      field_changed: 'resolution_status',
-      old_value: oldResolution,
-      new_value: data.resolutionStatus,
-    })
-  }
-
-  if (oldNotes !== data.notes) {
-    historyRows.push({
-      checklist_item_id: data.checklistItemId,
-      tester_id: data.testerId,
-      field_changed: 'notes',
-      old_value: oldNotes,
-      new_value: data.notes,
-    })
-  }
-
-  if (historyRows.length > 0) {
-    const { error: historyError } = await supabase
-      .from('admin_review_history')
-      .insert(historyRows)
-
-    if (historyError) {
-      // Non-critical — log but don't fail the save
-      console.error('History insert failed:', historyError.message)
-    }
-  }
+  })
+  if (result.error) return { error: result.error }
 
   revalidatePath(`/admin/projects/${data.projectSlug}/review`)
   // Also revalidate the public share analytics page
