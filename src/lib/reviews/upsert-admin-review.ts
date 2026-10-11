@@ -24,6 +24,8 @@ export interface AdminReviewInput {
   findingType: string | null
   resolutionStatus: string
   notes: string | null
+  /** Who made this change (admin email, shared-password label, or MCP caller). */
+  changedBy?: string | null
 }
 
 /**
@@ -78,7 +80,9 @@ export async function upsertAdminReview(
     field_changed: string
     old_value: string | null
     new_value: string | null
+    changed_by: string | null
   }[] = []
+  const changedBy = data.changedBy ?? null
 
   const oldBehavior = existing?.finding_type ?? null
   const oldResolution = existing?.resolution_status ?? null
@@ -91,6 +95,7 @@ export async function upsertAdminReview(
       field_changed: 'finding_type',
       old_value: oldBehavior,
       new_value: data.findingType,
+      changed_by: changedBy,
     })
   }
 
@@ -101,6 +106,7 @@ export async function upsertAdminReview(
       field_changed: 'resolution_status',
       old_value: oldResolution,
       new_value: data.resolutionStatus,
+      changed_by: changedBy,
     })
   }
 
@@ -111,6 +117,7 @@ export async function upsertAdminReview(
       field_changed: 'notes',
       old_value: oldNotes,
       new_value: data.notes,
+      changed_by: changedBy,
     })
   }
 

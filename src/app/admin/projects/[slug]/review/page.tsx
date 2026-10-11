@@ -15,6 +15,8 @@ export type HistoryEntry = {
   oldValue: string | null
   newValue: string | null
   changedAt: string
+  /** Who made the change; null for changes recorded before authors were tracked. */
+  changedBy: string | null
 }
 
 export type AttachmentData = {
@@ -121,6 +123,7 @@ export default async function ReviewPage({
     old_value: string | null
     new_value: string | null
     changed_at: string
+    changed_by: string | null
   }[] = []
 
   let attachmentsList: AttachmentData[] = []
@@ -141,7 +144,7 @@ export default async function ReviewPage({
         .in("checklist_item_id", itemIds),
       supabase
         .from("admin_review_history")
-        .select("checklist_item_id, tester_id, field_changed, old_value, new_value, changed_at")
+        .select("checklist_item_id, tester_id, field_changed, old_value, new_value, changed_at, changed_by")
         .in("checklist_item_id", itemIds)
         .order("changed_at", { ascending: false }),
     ])
@@ -185,6 +188,7 @@ export default async function ReviewPage({
       oldValue: h.old_value,
       newValue: h.new_value,
       changedAt: h.changed_at,
+      changedBy: h.changed_by,
     })
   })
 
