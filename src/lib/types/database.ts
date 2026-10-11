@@ -68,6 +68,7 @@ export type Database = {
       }
       admin_review_history: {
         Row: {
+          changed_by: string | null
           changed_at: string
           checklist_item_id: string
           field_changed: string
@@ -77,6 +78,7 @@ export type Database = {
           tester_id: string
         }
         Insert: {
+          changed_by?: string | null
           changed_at?: string
           checklist_item_id: string
           field_changed: string
@@ -86,6 +88,7 @@ export type Database = {
           tester_id: string
         }
         Update: {
+          changed_by?: string | null
           changed_at?: string
           checklist_item_id?: string
           field_changed?: string
@@ -311,6 +314,7 @@ export type Database = {
       }
       mcp_tool_calls: {
         Row: {
+          caller: string | null
           created_at: string
           duration_ms: number
           id: string
@@ -318,6 +322,7 @@ export type Database = {
           tool_name: string
         }
         Insert: {
+          caller?: string | null
           created_at?: string
           duration_ms: number
           id?: string
@@ -325,6 +330,7 @@ export type Database = {
           tool_name: string
         }
         Update: {
+          caller?: string | null
           created_at?: string
           duration_ms?: number
           id?: string
@@ -335,6 +341,7 @@ export type Database = {
       }
       oauth_authorization_codes: {
         Row: {
+          admin_email: string | null
           client_id: string
           code: string
           code_challenge: string
@@ -347,6 +354,7 @@ export type Database = {
           used: boolean
         }
         Insert: {
+          admin_email?: string | null
           client_id: string
           code: string
           code_challenge: string
@@ -359,6 +367,7 @@ export type Database = {
           used?: boolean
         }
         Update: {
+          admin_email?: string | null
           client_id?: string
           code?: string
           code_challenge?: string
@@ -406,6 +415,7 @@ export type Database = {
       }
       oauth_tokens: {
         Row: {
+          admin_email: string | null
           access_token_expires_at: string
           access_token_hash: string
           client_id: string
@@ -418,6 +428,7 @@ export type Database = {
           scope: string | null
         }
         Insert: {
+          admin_email?: string | null
           access_token_expires_at: string
           access_token_hash: string
           client_id: string
@@ -430,6 +441,7 @@ export type Database = {
           scope?: string | null
         }
         Update: {
+          admin_email?: string | null
           access_token_expires_at?: string
           access_token_hash?: string
           client_id?: string
