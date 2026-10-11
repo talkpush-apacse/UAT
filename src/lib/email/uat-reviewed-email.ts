@@ -181,7 +181,7 @@ export function buildUatReviewedEmailHtml(input: UatReviewedEmailInput): string 
           <!-- Footer -->
           <tr>
             <td style="padding: 20px 8px 0 8px;">
-              <p style="margin: 0; font-family: ${FONT}; font-size: 14px; line-height: 20px; font-weight: 500; color: ${COLORS.textSecondary}; text-align: center;">Sent by Talkpush APAC because you took part in UAT testing for ${companyName}.</p>
+              <p style="margin: 0; font-family: ${FONT}; font-size: 14px; line-height: 20px; font-weight: 500; color: ${COLORS.textSecondary}; text-align: center;">Sent by Talkpush Ops Team because you took part in UAT testing for ${companyName}.</p>
             </td>
           </tr>
         </table>
@@ -221,7 +221,7 @@ export function buildUatReviewedEmailText(input: UatReviewedEmailInput): string 
     "View My Results:",
     input.resultsUrl,
     "",
-    `Sent by Talkpush APAC because you took part in UAT testing for ${input.companyName}.`
+    `Sent by Talkpush Ops Team because you took part in UAT testing for ${input.companyName}.`
   )
 
   return lines.join("\n")
