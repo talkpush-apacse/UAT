@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { SESSION_DURATION_MS } from '@/lib/utils/session-constants'
 import { isAllowedAdminEmail } from '@/lib/utils/admin-access'
+import { safeAdminReturnPath } from '@/lib/utils/admin-redirect'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -40,7 +41,14 @@ export async function middleware(request: NextRequest) {
     const { isAllowed, response } = await hasValidSupabaseAdminSession(request)
     if (isAllowed) return response
 
-    return NextResponse.redirect(new URL('/admin/login', request.url))
+    // Remember where they were headed (e.g. an emailed findings link) so
+    // sign-in can send them back there. Validated again on the way out.
+    const loginUrl = new URL('/admin/login', request.url)
+    const returnPath = safeAdminReturnPath(`${pathname}${request.nextUrl.search}`)
+    if (returnPath && returnPath !== '/admin') {
+      loginUrl.searchParams.set('next', returnPath)
+    }
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()

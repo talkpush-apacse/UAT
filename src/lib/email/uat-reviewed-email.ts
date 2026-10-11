@@ -7,7 +7,7 @@
 /*  inline styles so it renders in Outlook, Gmail and Apple Mail.     */
 /* ------------------------------------------------------------------ */
 
-const COLORS = {
+export const COLORS = {
   ink: "#121216",
   inkCream: "#F1EFE4",
   paper: "#FFFFF5",
@@ -21,7 +21,7 @@ const COLORS = {
   amber: "#F2B457",
 }
 
-const FONT = `'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif`
+export const FONT = `'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif`
 
 export type UatReviewedEmailInput = {
   firstName: string
@@ -56,7 +56,7 @@ function preheader(input: UatReviewedEmailInput): string {
   return `Your findings for ${input.companyName} have been reviewed: ${input.resolvedCount} resolved, ${openCount(input)} still open.`
 }
 
-function countRow(label: string, count: number, color: string, isLast: boolean): string {
+export function countRow(label: string, count: number, color: string, isLast: boolean): string {
   const border = isLast ? "" : `border-bottom: 1px solid ${COLORS.hairline};`
   return `
           <tr>

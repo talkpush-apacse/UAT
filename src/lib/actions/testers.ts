@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyAdminSession } from '@/lib/utils/admin-auth'
 import { registerTesterSchema, lookupTesterSchema } from '@/lib/schemas/tester'
 import { getStepsMissingEvidence } from '@/lib/utils/response-validation'
+import { notifyTestSubmitted } from '@/lib/email/notify-test-submitted'
 
 export interface RegisterTesterState {
   error?: string
@@ -192,11 +193,21 @@ export async function markTestComplete(
     return { error: 'Some failed, blocked, or up-for-review steps are missing a comment or screenshot.' }
   }
 
-  const { error } = await supabase
+  // Only match a tester who hasn't completed yet, and get the row back, so we
+  // can tell the first completion apart from a repeat submit or double click.
+  const { data: completed, error } = await supabase
     .from('testers')
     .update({ test_completed: 'Yes' })
     .eq('id', testerId)
+    .is('test_completed', null)
+    .select('id')
   if (error) return { error: error.message }
+
+  // First completion only: one email per submission. The helper never throws
+  // and gives up after a few seconds, so it can't break the tester's submit.
+  if (completed && completed.length > 0) {
+    await notifyTestSubmitted(testerId)
+  }
   return {}
 }
 
