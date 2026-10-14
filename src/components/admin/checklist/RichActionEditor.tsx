@@ -155,7 +155,7 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
         <button
           type="button"
           onClick={handleInsertWarning}
-          title='Add a warning box. Testers see it as a red callout.'
+          title='Add a warning box. Testers see it first, in a red banner above the steps.'
           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-gray-200 bg-white text-gray-600 hover:bg-brand-sage-lightest hover:border-brand-sage-lighter hover:text-brand-sage-darker transition-colors"
         >
           <WarningIcon />
@@ -249,7 +249,7 @@ export default function RichActionEditor({ value, onChange, height = 120 }: Prop
 
       <p className="mt-1 text-xs text-gray-500">
         Write <span className="font-mono">Expected: …</span> for the expected-result box. Start a paragraph with{" "}
-        <span className="font-mono">&gt;</span> for a warning box.
+        <span className="font-mono">&gt;</span> for a warning box. Warnings are always shown first, above the steps: name the exact button or field and say what to do instead.
       </p>
       {value.length > 600 && !/^\s*\d+[.)]\s/m.test(value) && (
         <p className="mt-1 text-xs text-amber-700">
