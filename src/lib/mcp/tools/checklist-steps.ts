@@ -24,7 +24,10 @@ const ACTION_FORMAT_GUIDE =
   "instead of a long paragraph. (3) Put the expected outcome last, in its own paragraph starting exactly 'Expected:' " +
   "(not 'Expected value:'); testers see it in a separate 'Expected result' box, so write it as a full sentence " +
   "starting with a capital letter. (4) Start a paragraph with '> ' for a " +
-  "warning callout, reserved for something that makes the step fail if missed (e.g. 'use an email never used on this page'). " +
+  "warning, reserved for something that makes the step fail if missed (e.g. 'use an email never used on this page'). " +
+  "Testers always see warnings first, in a red banner above the steps, wherever you put them. Keep each to one or two sentences, " +
+  "name the exact button, link or field, and say what to do instead (e.g. '> Do NOT click \"Choose my interview schedule\" in the email. The AI call books for you.', " +
+  "not '> Do not click the button'). " +
   "(5) The first http(s) link in the step is shown as a button, so put the main link first and write it bare or as [text](url). " +
   "(6) Anything needed to pass the step belongs here, not in the tip. Example: " +
   "'1. Open https://example.com/apply.\\n2. Fill in the form with a new email address.\\n3. Submit.\\n\\nExpected: The page says your application was received.'";

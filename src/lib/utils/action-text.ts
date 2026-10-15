@@ -29,6 +29,54 @@ export function splitExpected(text: string): { main: string; expected: string | 
   return { main, expected }
 }
 
+const QUOTE_LINE = /^\s{0,3}>/
+const FENCE_LINE = /^\s{0,3}(```|~~~)/
+const LIST_START = /^\s*(?:\d+[.)]|[-*+])\s/
+
+/**
+ * Pulls the warnings (paragraphs starting with ">") out of a step's text so
+ * they can be shown first, above the instructions, wherever the author typed
+ * them. A warning runs until the next blank line or list item, like a markdown
+ * quote. Returns the remaining text (blank lines tidied) and each warning's
+ * text without the ">" marker. Code blocks are left alone.
+ */
+export function splitWarnings(text: string): { main: string; warnings: string[] } {
+  const lines = text.split("\n")
+  const kept: string[] = []
+  const warnings: string[] = []
+  let current: string[] | null = null
+  let inFence = false
+
+  const closeWarning = () => {
+    if (!current) return
+    const body = current.join("\n").trim()
+    if (body) warnings.push(body)
+    current = null
+  }
+
+  for (const line of lines) {
+    if (FENCE_LINE.test(line)) inFence = !inFence
+    if (inFence || FENCE_LINE.test(line)) {
+      closeWarning()
+      kept.push(line)
+    } else if (QUOTE_LINE.test(line)) {
+      if (!current) current = []
+      current.push(line.replace(/^\s{0,3}>\s?/, ""))
+    } else if (current && line.trim() && !LIST_START.test(line)) {
+      // Lazy continuation: a quote carries on until a blank line.
+      current.push(line.trim())
+    } else {
+      closeWarning()
+      kept.push(line)
+    }
+  }
+  closeWarning()
+
+  if (warnings.length === 0) return { main: text, warnings: [] }
+  const main = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim()
+  return { main, warnings }
+}
+
 // Optional opening markdown/quote characters, then a lowercase letter that is not the start of a URL
 // or a camel-cased brand ("iPhone", "eBay").
 const LEADING_LOWERCASE = /^([*_"'“‘(\[]*)([a-z])(?![A-Z]|ttps?:\/\/)/
