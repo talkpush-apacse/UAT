@@ -288,7 +288,11 @@ export default function AnalyticsCharts({
     }[] = []
 
     responses.forEach((r) => {
-      if (r.status !== "Fail" && r.status !== "Blocked") return
+      // Fail/Blocked always show; Pass and N/A show only when the tester left a comment
+      const hasComment = !!r.comment?.trim()
+      const needsAttention = r.status === "Fail" || r.status === "Blocked"
+      const commentedOnly = (r.status === "Pass" || r.status === "N/A") && hasComment
+      if (!needsAttention && !commentedOnly) return
       const item = itemMap.get(r.checklist_item_id)
       const tester = testerMap.get(r.tester_id)
       if (!item || !tester) return
@@ -300,7 +304,7 @@ export default function AnalyticsCharts({
         action: stripMarkdown(item.action),
         testerName: tester.name,
         testerEmail: tester.email,
-        status: r.status,
+        status: r.status ?? "",
         findingType: review?.finding_type ?? null,
         resolutionStatus: review?.resolution_status ?? "pending",
         notes: review?.notes ?? null,
@@ -666,7 +670,7 @@ export default function AnalyticsCharts({
                   Steps Requiring Attention
                 </CardTitle>
                 <p className="text-xs text-gray-500">
-                  All steps with a Fail or Up For Review (Blocked) response, with admin review remarks
+                  All steps with a Fail or Up For Review (Blocked) response, plus any Pass or N/A step where the tester left a comment, with admin review remarks
                 </p>
               </div>
               {failedStepsRows.length > 0 && (
@@ -685,8 +689,8 @@ export default function AnalyticsCharts({
             {failedStepsRows.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                 <CheckCircle2 className="h-8 w-8 mb-2 text-green-400" />
-                <p className="text-sm font-medium">No failed or flagged steps</p>
-                <p className="text-xs mt-1">All responses are passing or not yet tested</p>
+                <p className="text-sm font-medium">No failed, flagged or commented steps</p>
+                <p className="text-xs mt-1">All responses are passing without comments or not yet tested</p>
               </div>
             ) : (() => {
               const totalPages = Math.ceil(failedStepsRows.length / ATTENTION_PAGE_SIZE)
@@ -699,7 +703,10 @@ export default function AnalyticsCharts({
                       <div
                         key={pageStart + idx}
                         className={`rounded-lg border border-gray-200 border-l-4 shadow-sm overflow-hidden bg-white ${
-                          row.status === "Fail" ? "border-l-red-500" : "border-l-amber-500"
+                          row.status === "Fail" ? "border-l-red-500"
+                          : row.status === "Pass" ? "border-l-green-500"
+                          : row.status === "N/A" ? "border-l-gray-400"
+                          : "border-l-amber-500"
                         }`}
                       >
 
@@ -727,6 +734,10 @@ export default function AnalyticsCharts({
                               <span className="text-sm font-semibold text-gray-800">{row.testerName}</span>
                               {row.status === "Fail" ? (
                                 <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Fail</span>
+                              ) : row.status === "Pass" ? (
+                                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">Pass</span>
+                              ) : row.status === "N/A" ? (
+                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">N/A</span>
                               ) : (
                                 <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">Up For Review</span>
                               )}
@@ -788,7 +799,7 @@ export default function AnalyticsCharts({
                   {totalPages > 1 && (
                     <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
                       <span className="text-xs text-gray-400">
-                        Showing {pageStart + 1}–{Math.min(pageStart + ATTENTION_PAGE_SIZE, failedStepsRows.length)} of {failedStepsRows.length} issues
+                        Showing {pageStart + 1}–{Math.min(pageStart + ATTENTION_PAGE_SIZE, failedStepsRows.length)} of {failedStepsRows.length} steps
                       </span>
                       <div className="flex items-center gap-1">
                         <button

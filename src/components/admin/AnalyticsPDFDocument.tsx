@@ -730,8 +730,8 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
         <View style={styles.sectionDivider} />
       </View>
       <Text style={styles.sectionSubtitle}>
-        All steps with a Fail or Up For Review response, with admin review
-        remarks
+        All steps with a Fail or Up For Review response, plus any Pass or N/A
+        step where the tester left a comment, with admin review remarks
       </Text>
 
       {rows.length === 0 ? (
@@ -747,7 +747,7 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
           }}
         >
           <Text style={{ fontSize: 8, color: "#6b7280" }}>
-            No failed or flagged steps
+            No failed, flagged or commented steps
           </Text>
         </View>
       ) : (
@@ -811,7 +811,13 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
                       styles.pill,
                       {
                         backgroundColor:
-                          row.status === "Fail" ? "#fee2e2" : "#fef3c7",
+                          row.status === "Fail"
+                            ? "#fee2e2"
+                            : row.status === "Pass"
+                            ? "#dcfce7"
+                            : row.status === "N/A"
+                            ? "#f3f4f6"
+                            : "#fef3c7",
                       },
                     ]}
                   >
@@ -820,11 +826,19 @@ function PDFSection4Steps({ rows }: { rows: FailedStepRow[] }) {
                         styles.pillText,
                         {
                           color:
-                            row.status === "Fail" ? "#991b1b" : "#b45309",
+                            row.status === "Fail"
+                              ? "#991b1b"
+                              : row.status === "Pass"
+                              ? "#166534"
+                              : row.status === "N/A"
+                              ? "#4b5563"
+                              : "#b45309",
                         },
                       ]}
                     >
-                      {row.status === "Fail" ? "Fail" : "Up For Review"}
+                      {row.status === "Fail" || row.status === "Pass" || row.status === "N/A"
+                        ? row.status
+                        : "Up For Review"}
                     </Text>
                   </View>
                   {row.comment ? (
