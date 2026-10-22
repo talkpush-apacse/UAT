@@ -152,6 +152,7 @@ export default function ChecklistItem({
   )
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const savedTimerRef = useRef<NodeJS.Timeout | null>(null)
   const supabaseRef = useRef(createAnonClient())
 
   const isSaveFailed = saveStatus === "error"
@@ -187,6 +188,7 @@ export default function ChecklistItem({
         })
 
       const requestId = ++latestRequestIdRef.current
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
       setSaveStatus("saving")
 
       try {
@@ -228,7 +230,7 @@ export default function ChecklistItem({
         })
 
         setSaveStatus("saved")
-        setTimeout(() => setSaveStatus("idle"), 2000)
+        savedTimerRef.current = setTimeout(() => setSaveStatus("idle"), 2000)
       } catch (err) {
         if (requestId === latestRequestIdRef.current) {
           setSaveStatus("error")
@@ -268,20 +270,29 @@ export default function ChecklistItem({
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
+      debounceRef.current = null
       save(status, value, "comment")
     }, 500)
   }
+
+  // Latest `save` in a ref so the unmount flush below runs only on unmount.
+  // `save` changes identity whenever the parent re-renders (its callback props
+  // aren't memoized), and tying the flush to it re-fired the save in a loop.
+  const saveRef = useRef(save)
+  saveRef.current = save
 
   // Flush (not cancel) a pending debounced comment save on unmount — otherwise
   // a comment typed just before navigation is silently dropped.
   useEffect(() => {
     return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
       if (debounceRef.current) {
         clearTimeout(debounceRef.current)
-        save(latestArgsRef.current.status, latestArgsRef.current.comment, "comment")
+        debounceRef.current = null
+        saveRef.current(latestArgsRef.current.status, latestArgsRef.current.comment, "comment")
       }
     }
-  }, [save])
+  }, [])
 
   // Validate the guide URL before deciding which embed variant to show — #1
   const rawSample = item.view_sample?.trim() || null
